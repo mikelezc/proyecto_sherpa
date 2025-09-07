@@ -220,7 +220,6 @@ class TwoFactorService:
         keys_to_remove = [
             "pending_user_id",
             "user_authenticated",
-            "fortytwo_user",
             "manual_user",
         ]
 

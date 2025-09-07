@@ -57,7 +57,6 @@ class ValidateQRAPIView(View):
                     "pending_user_id": result.id,
                     "user_authenticated": True,
                     "manual_user": True,
-                    "fortytwo_user": False,
                 })
                 return JsonResponse({
                     "success": True,

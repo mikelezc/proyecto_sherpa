@@ -119,16 +119,6 @@ class PasswordService:
                 f"El nombre de usuario no puede tener más de {max_length_username} caracteres"
             )
 
-        # Validate 42. prefix
-        if username.startswith("42."):
-            raise ValidationError("El prefijo '42.' está reservado para usuarios de 42")
-
-        # Validate 42 email domain
-        if re.match(r".*@student\.42.*\.com$", email.lower()):
-            raise ValidationError(
-                "Los correos con dominio @student.42*.com están reservados para usuarios de 42"
-            )
-
         PasswordService._validate_password_basic(
             CustomUser(username=username), password1, password2
         )
@@ -138,10 +128,6 @@ class PasswordService:
         """Iniciate password reset process"""
         rate_limiter = RateLimitService()
         
-        if re.match(r".*@student\.42.*\.com$", email.lower()):
-            raise ValidationError(
-                "Los usuarios de 42 deben iniciar sesión a través del botón de login de 42")
-
         # Search for user with the email (simplified)
         users = CustomUser.objects.filter(
             email=email.lower(), is_active=True)

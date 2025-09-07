@@ -40,13 +40,10 @@ class GDPRService:
             user.password = anon_password
             user.first_name = "Deleted"
             user.last_name = "User"
-            user.profile_image = None
-            user.fortytwo_image = None
             user.is_active = False
             user.two_factor_enabled = False
             user.two_factor_secret = None
             user.deleted_at = timezone.now()
-            user.fortytwo_id = None
             user.pending_email = None
             user.pending_email_token = None
             
@@ -54,7 +51,7 @@ class GDPRService:
             user.save(update_fields=[
                 'email', 'username', 'password', 'first_name', 
                 'last_name', 'is_active', 'two_factor_enabled', 'two_factor_secret', 
-                'deleted_at', 'fortytwo_id', 'pending_email', 
+                'deleted_at', 'pending_email', 
                 'pending_email_token'
             ])
 

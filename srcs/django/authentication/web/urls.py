@@ -33,10 +33,6 @@ auth_patterns = [
     path("login/", login, name="login"),
     path("logout/", logout, name="logout"),
     path("register/", register, name="register"),
-    path(
-        "auth/42/",
-        include("authentication.fortytwo_auth.urls", namespace="web_fortytwo_auth"),
-    ),
 ]
 
 # gdpr_views

@@ -1,4 +1,3 @@
-from authentication.fortytwo_auth.views import FortyTwoLoginAPIView, FortyTwoCallbackAPIView
 from authentication.services import ProfileService
 from ninja import Router, UploadedFile
 from django.http import JsonResponse
@@ -45,27 +44,6 @@ def register(request, data: RegisterSchema) -> Dict:
 def logout(request) -> Dict:
     """Logout user"""
     return LogoutAPIView.as_view()(request)
-
-# 42 endpoints
-
-@router.get("/auth/42", tags=["auth"], response=FortyTwoAuthResponseSchema)
-def fortytwo_login(request) -> Dict:
-    """42 Login"""
-    return FortyTwoLoginAPIView.as_view()(request)
-
-@router.get(
-    "/auth/42/callback", 
-    tags=["auth"],
-    response=FortyTwoCallbackResponseSchema
-)
-def fortytwo_callback(
-    request,
-    code: str,
-    state: Optional[str] = None
-) -> Dict:
-    """Callback 42 auth"""
-    data = FortyTwoCallbackRequestSchema(code=code, state=state)
-    return FortyTwoCallbackAPIView.as_view()(request, data)
 
 # GDPR endpoints
 
@@ -173,7 +151,6 @@ def get_user_profile(request) -> Dict:
             'username': profile_data['user'].username,
             'email': profile_data['user'].email,
             'is_active': profile_data['user'].is_active,
-            'is_fortytwo_user': False,
             'email_verified': profile_data['user'].email_verified,
             'two_factor_enabled': profile_data['user'].two_factor_enabled,
             'profile_image_url': None,

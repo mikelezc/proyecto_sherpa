@@ -47,36 +47,6 @@
 				</div>
 			</div>
 
-			<!-- Separator -->
-			<div class="text-center my-4">
-				<hr>
-				<span class="bg-white px-3 text-muted" style="position: relative; top: -12px;">
-					o conéctate con
-				</span>
-			</div>
-
-			<!-- 42 Button -->
-			<div class="card shadow-sm mb-4">
-				<div class="card-body p-4">
-					<div class="d-grid">
-						<a href="{% url 'fortytwo_auth:login' %}" class="button-42 w-100">
-							{% if request.GET.first_time %}
-							Register with 42
-							{% else %}
-							Login with 42
-							{% endif %}
-						</a>
-						<small class="text-muted text-center mt-2">
-							{% if request.GET.first_time %}
-							Primera vez? Regístrate con tu cuenta de 42
-							{% else %}
-							Inicia sesión con tu cuenta de 42
-							{% endif %}
-						</small>
-					</div>
-				</div>
-			</div>
-
 			<!-- Register link -->
 			<div class="text-center mt-4">
 				<p class="text-muted">¿No tienes una cuenta? <a href="{% url 'register' %}">Regístrate</a></p>
@@ -84,35 +54,6 @@
 		</div>
 	</div>
 </div>
-
-<!-- Styles -->
-<style>
-	.button-42 {
-		background-color: #007BFF;
-		color: white;
-		padding: 15px 20px;
-		/* Aumentar padding vertical */
-		border-radius: 5px;
-		text-decoration: none;
-		transition: all 0.3s ease;
-		display: block;
-		/* Cambiar a block */
-		text-align: center;
-		/* Centrar texto */
-	}
-
-	.button-42:hover {
-		background-color: #009B9D;
-		color: white;
-		text-decoration: none;
-		transform: translateY(-2px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	}
-
-	.button-42:active {
-		transform: translateY(0);
-	}
-</style>
 
 <!-- Scripts -->
 <script src="https://unpkg.com/html5-qrcode"></script>

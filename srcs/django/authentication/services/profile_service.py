@@ -38,10 +38,6 @@ class ProfileService:
             logger.warning(f"Rate limit exceeded for user {user.id} on email change")
             raise ValidationError(f"Please wait {remaining_time} seconds before requesting another email change")
 
-        if re.match(r".*@student\.42.*\.com$", new_email.lower()):
-            raise ValidationError(
-                "Los correos con dominio @student.42*.com están reservados para usuarios de 42")
-
         if CustomUser.objects.exclude(id=user.id).filter(email=new_email).exists():
             raise ValidationError("Este email ya está en uso")
 
@@ -90,10 +86,6 @@ class ProfileService:
                 # Process email changes (simplified - no 42 user restrictions)
                 email = data.get("email")
                 if email != user.email:
-                    if re.match(r".*@student\.42.*\.com$", email.lower()):
-                        raise ValidationError(
-                            "Los correos con dominio @student.42*.com están reservados para usuarios de 42")
-
                     if (
                         CustomUser.objects.exclude(id=user.id)
                         .filter(email=email)
