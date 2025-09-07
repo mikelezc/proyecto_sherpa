@@ -270,9 +270,6 @@ LOGGING = {
     },
 }
 
-# Encryption key for user data
-ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", "MzwoO0zkaS8ukiTok83cIrKSrkqJ4EnJIeYmPHYIX0g=")
-
 # JWT Configuration
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
 JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")

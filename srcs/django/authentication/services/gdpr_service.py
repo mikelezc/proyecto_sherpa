@@ -12,7 +12,7 @@ class GDPRService:
         return {
             "personal_info": {
                 "username": user.username,
-                "email": user.decrypted_email,
+                "email": user.email,
                 "date_joined": user.date_joined,
                 "last_login": user.last_login,
                 "is_active": user.is_active,
@@ -51,15 +51,12 @@ class GDPRService:
             user.pending_email = None
             user.pending_email_token = None
             
-            user.email_hash = None
-            
             # Save only the fields that exist in the model
             user.save(update_fields=[
                 'email', 'username', 'password', 'first_name', 
-                'last_name', 'profile_image', 'fortytwo_image', 
-                'is_active', 'two_factor_enabled', 'two_factor_secret', 
+                'last_name', 'is_active', 'two_factor_enabled', 'two_factor_secret', 
                 'deleted_at', 'fortytwo_id', 'pending_email', 
-                'pending_email_token', 'email_hash'
+                'pending_email_token'
             ])
 
             return True

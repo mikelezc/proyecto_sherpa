@@ -14,9 +14,6 @@ SQL_PORT=5432                              # PostgreSQL port
 DJANGO_SECRET_KEY=your-secret-key-here     # Django secret key (must be unique)
 DJANGO_ALLOWED_HOSTS=localhost             # Allowed hosts, comma separated
 
-# GDPR Configuration
-ENCRYPTION_KEY=your-32-bytes-base64-key    # GDPR Email Encryption Key (32 bytes base64-encoded)
-
 # IP server 
 IP_SERVER=                                 # execute ./configure_ip.sh
 

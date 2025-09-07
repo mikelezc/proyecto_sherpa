@@ -159,7 +159,7 @@ class TwoFactorService:
                 subject,
                 strip_tags(html_message),
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
             )

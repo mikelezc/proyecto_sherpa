@@ -98,7 +98,7 @@ class MailSendingService:
                 "domain": settings.SITE_URL,
                 "uid": token["uid"],
                 "token": token["token"],
-                "email": user.decrypted_email,
+                "email": user.email,
             }
             html_message = render_to_string(
                 "authentication/email_verification.html", context
@@ -109,7 +109,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],  
+                [user.email],  
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -130,7 +130,7 @@ class MailSendingService:
             subject = "¡Bienvenido a PongOrama!"
             context = {
                 "user": user,
-                "email": user.decrypted_email,  
+                "email": user.email,  
             }
             html_message = render_to_string("authentication/welcome_email.html", context)
             plain_message = strip_tags(html_message)
@@ -139,7 +139,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],  
+                [user.email],  
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -162,7 +162,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -221,7 +221,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -252,7 +252,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -286,7 +286,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
                 connection=connection,

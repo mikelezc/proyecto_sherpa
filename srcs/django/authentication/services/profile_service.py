@@ -134,7 +134,7 @@ class ProfileService:
         data = {
             "id": user.id,
             "username": user.username,
-            "email": user.decrypted_email,
+            "email": user.email,
             "is_active": user.is_active,
             "email_verified": user.email_verified,
             "date_joined": user.date_joined.isoformat(),

@@ -1,11 +1,9 @@
 from django.contrib.auth.models import AbstractUser
-from cryptography.fernet import Fernet
 from django.utils import timezone
 from django.conf import settings
 from django.db import models
 from django.apps import apps
 import logging
-import hashlib
 
 # This model is used to store the user information and manage the user's account
 
@@ -42,7 +40,6 @@ class CustomUser(AbstractUser):
     pending_email_token = models.CharField(max_length=255, blank=True, null=True)
     inactivity_notified = models.BooleanField(default=False)
     inactivity_notification_date = models.DateTimeField(null=True, blank=True)
-    email_hash = models.CharField(max_length=64, db_index=True, unique=True, null=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
     # Add manager
@@ -50,53 +47,8 @@ class CustomUser(AbstractUser):
     objects = CustomUserManager()
     all_objects = models.Manager()
 
-    @property
-    def decrypted_email(self):
-        """Returns the decrypted email for use in the application"""
-        try:
-            if not hasattr(settings, 'ENCRYPTION_KEY') or not settings.ENCRYPTION_KEY:
-                logger.error("ENCRYPTION_KEY not found in settings or is empty")
-                return self.email
-                
-            if self.email:
-                if self.email.startswith('gAAAAAB'):  # If it's encrypted (Fernet prefix - gAAAAAB)
-                    cipher_suite = Fernet(settings.ENCRYPTION_KEY)
-                    return cipher_suite.decrypt(self.email.encode()).decode()
-                return self.email  # If it's not encrypted
-        except Exception as e:
-            logger.error(f"Error decrypting email for user {self.id}: {str(e)}")
-            return self.email
-        return None
-
-    def _generate_email_hash(self, email):
-        """Generate a hash for email comparison
-		   This is used to compare emails without storing them in plain text.
-           to know if a mail user is already registered.
-           
-           Fernet encryption is used to store the email in the database.
-           It encripted with a different key each time and it cant be used to compare emails.
-		"""
-        if not email:
-            return None
-        normalized_email = email.lower().strip() # Normalize (lowercase and strip)
-        return hashlib.sha256(normalized_email.encode()).hexdigest() # Hash email for comparison with other users
-
     def save(self, *args, **kwargs):
-        """Encrypt email before saving"""
-        if self.email and not self.email.startswith('gAAAAAB'):
-            try:
-                if not hasattr(settings, 'ENCRYPTION_KEY') or not settings.ENCRYPTION_KEY:
-                    logger.error("ENCRYPTION_KEY not found in settings or is empty")
-                    super().save(*args, **kwargs)
-                    return
-                    
-                # Generate hash before encryption
-                self.email_hash = self._generate_email_hash(self.email)
-                    
-                cipher_suite = Fernet(settings.ENCRYPTION_KEY)
-                self.email = cipher_suite.encrypt(self.email.encode()).decode()
-            except Exception as e:
-                logger.error(f"Error encrypting email for user {self.id}: {str(e)}")
+        """Save user - simplified without email encryption"""
         super().save(*args, **kwargs)
 
     def get_last_activity(self):
