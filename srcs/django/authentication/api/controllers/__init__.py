@@ -152,11 +152,9 @@ def get_user_profile(request) -> Dict:
             'email': profile_data['user'].email,
             'is_active': profile_data['user'].is_active,
             'email_verified': profile_data['user'].email_verified,
-            'two_factor_enabled': profile_data['user'].two_factor_enabled,
             'profile_image_url': None,
             'date_joined': profile_data['user'].date_joined.isoformat() if profile_data['user'].date_joined else None,
             'last_login': profile_data['user'].last_login.isoformat() if profile_data['user'].last_login else None,
-            'show_qr': profile_data['show_qr']
         }
     except ValidationError as e:
         return JsonResponse({'error': str(e)}, status=400)
@@ -177,35 +175,3 @@ def password_reset_confirm(request, data: PasswordResetConfirmSchema) -> Dict:
     """Confirm password reset"""
     request.data = data.dict()
     return PasswordResetConfirmAPIView.as_view()(request)
-
-# QR endpoints
-
-@router.get("/qr/generate", tags=["2fa"])
-def generate_qr(request) -> Dict:
-    """Generate QR code to authenticate"""
-    return GenerateQRAPIView.as_view()(request)
-
-@router.post("/qr/validate", tags=["2fa"])
-def validate_qr(request, data: QRSchema) -> Dict:
-    """Validate QR code to login"""
-    request.data = data.dict()
-    return ValidateQRAPIView.as_view()(request)
-
-# 2FA endpoints
-
-@router.post("/2fa/enable", tags=["2fa"])
-def enable_2fa(request) -> Dict:
-    """Enable 2FA"""
-    return Enable2FAView.as_view()(request)
-
-@router.post("/2fa/verify", tags=["2fa"])
-def verify_2fa(request, data: TwoFactorSchema) -> Dict:
-    """Verify 2FA"""
-    request.data = data.dict()
-    return Verify2FAAPIView.as_view()(request)
-
-@router.post("/2fa/disable", tags=["2fa"])
-def disable_2fa(request) -> Dict:
-    """Disable 2FA"""
-    return Disable2FAView.as_view()(request)
-

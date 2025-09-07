@@ -20,7 +20,6 @@ class GDPRService:
 				"date_of_acceptance": user.date_joined, # This is the date of the registration
             },
             "security_settings": {
-                "two_factor_enabled": user.two_factor_enabled,
                 "email_verified": user.email_verified,
             },
         }
@@ -41,8 +40,6 @@ class GDPRService:
             user.first_name = "Deleted"
             user.last_name = "User"
             user.is_active = False
-            user.two_factor_enabled = False
-            user.two_factor_secret = None
             user.deleted_at = timezone.now()
             user.pending_email = None
             user.pending_email_token = None
@@ -50,7 +47,7 @@ class GDPRService:
             # Save only the fields that exist in the model
             user.save(update_fields=[
                 'email', 'username', 'password', 'first_name', 
-                'last_name', 'is_active', 'two_factor_enabled', 'two_factor_secret', 
+                'last_name', 'is_active',
                 'deleted_at', 'pending_email', 
                 'pending_email_token'
             ])

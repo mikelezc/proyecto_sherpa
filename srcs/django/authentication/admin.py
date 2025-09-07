@@ -25,7 +25,6 @@ class CustomUserAdmin(admin.ModelAdmin):
     list_filter = (
         "is_active",
         "email_verified",
-        "two_factor_enabled",
         "date_joined",
         "last_login",
     )
@@ -35,7 +34,6 @@ class CustomUserAdmin(admin.ModelAdmin):
         "last_login",
         "date_joined",
         "email_verification_token",
-        "last_2fa_time",
     )
 
     # Default ordering
@@ -59,18 +57,6 @@ class CustomUserAdmin(admin.ModelAdmin):
             "Account Status",
             {
                 "fields": ("is_active", "email_verified"),
-                "classes": ("collapse",),
-            },
-        ),
-        (
-            "Security",
-            {
-                "fields": (
-                    "two_factor_enabled",
-                    "two_factor_secret",
-                    "last_2fa_code",
-                    "last_2fa_time",
-                ),
                 "classes": ("collapse",),
             },
         ),

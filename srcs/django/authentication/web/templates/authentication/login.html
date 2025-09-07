@@ -35,18 +35,6 @@
 				</div>
 			</div>
 
-			<!-- QR section -->
-			<div class="card shadow-sm mb-4">
-				<div class="card-body p-4">
-					<div class="text-center">
-						<h5 class="mb-3">Login con QR</h5>
-						<div id="reader"></div>
-						<div id="result"></div>
-						<p class="text-muted small mt-3">Escanea un código QR para iniciar sesión</p>
-					</div>
-				</div>
-			</div>
-
 			<!-- Register link -->
 			<div class="text-center mt-4">
 				<p class="text-muted">¿No tienes una cuenta? <a href="{% url 'register' %}">Regístrate</a></p>
@@ -55,48 +43,4 @@
 	</div>
 </div>
 
-<!-- Scripts -->
-<script src="https://unpkg.com/html5-qrcode"></script>
-<script>
-	function onScanSuccess(decodedText, decodedResult) {
-		fetch('/validate_qr/', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				username: decodedText
-			})
-		})
-			.then(response => response.json())
-			.then(data => {
-				if (data.success) {
-					if (data.require_2fa) {
-						// Redirigir a la página de verificación 2FA
-						window.location.href = data.redirect_url;
-					} else {
-						// Login directo
-						window.location.href = data.redirect_url;
-					}
-				} else {
-					alert(data.error || 'Error al validar el código QR');
-				}
-			})
-			.catch(error => {
-				console.error('Error:', error);
-				alert('Error al procesar el código QR');
-			});
-	}
-
-	function onScanFailure(error) {
-		console.warn(`Error de escaneo: ${error}`);
-	}
-
-	// Inicializar escáner
-	let html5QrcodeScanner = new Html5QrcodeScanner(
-		"reader",
-		{ fps: 10, qrbox: { width: 250, height: 250 } }
-	);
-	html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-</script>
 {% endblock %}

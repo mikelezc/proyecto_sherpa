@@ -15,17 +15,12 @@ redis>=4.5.4
 
 # Authentication and security
 PyJWT>=2.8.0
-pyotp>=2.9.0
 cryptography>=41.0.0
-qrcode>=7.4.2
 django-ninja>=0.22.0
 
 # HTTP and utilities
 requests>=2.31.0
 python-dotenv>=1.0.0
-
-# Image processing (for user avatars)
-Pillow>=10.0.0
 
 # Production server
 gunicorn>=21.2.0

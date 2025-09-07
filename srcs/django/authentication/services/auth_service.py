@@ -3,7 +3,6 @@ from authentication.forms.auth_forms import RegistrationForm
 from django.core.exceptions import ValidationError
 from authentication.models import PreviousPassword
 from .rate_limit_service import RateLimitService
-from .two_factor_service import TwoFactorService
 from .password_service import PasswordService
 from authentication.models import CustomUser
 from .mail_service import MailSendingService
@@ -63,19 +62,7 @@ class AuthenticationService:
         # Reset rate limit on successful login
         rate_limiter.reset_limit(ip, 'login')
 
-        if user.two_factor_enabled:
-            request.session.update(
-                {
-                    "pending_user_id": user.id,
-                    "user_authenticated": True,
-                    "manual_user": True,
-                }
-            )
-
-            code = TwoFactorService.generate_2fa_code(user)
-            TwoFactorService.send_2fa_code(user, code)
-            return "verify_2fa"
-
+        # Login user directly (2FA removed)
         auth_login(request, user)
         if not remember:
             request.session.set_expiry(0)

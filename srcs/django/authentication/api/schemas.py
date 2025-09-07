@@ -46,11 +46,6 @@ class GDPRExportSchema(Schema):
     download_url: str
 
 
-# QR schemas
-class QRSchema(Schema):
-    username: str
-
-
 # Password schemas
 class PasswordResetSchema(Schema):
     email: str
@@ -61,11 +56,6 @@ class PasswordResetConfirmSchema(Schema):
     new_password2: str
     uidb64: str
     token: str
-
-
-# Two factor schemas
-class TwoFactorSchema(Schema):
-    code: str
 
 
 # Profile schemas
@@ -98,8 +88,6 @@ class UserProfileSchema(Schema):
     email: str
     is_active: bool
     email_verified: bool
-    two_factor_enabled: bool
     profile_image_url: Optional[str]
     date_joined: Optional[str]
     last_login: Optional[str]
-    show_qr: bool

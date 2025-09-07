@@ -21,13 +21,6 @@ from .views import (
     # verify_email_views
     VerifyEmailAPIView,
     VerifyEmailChangeAPIView,
-    # qr_views
-    GenerateQRAPIView,
-    ValidateQRAPIView,
-    # two_factor_views
-    Enable2FAView,
-    Verify2FAAPIView,
-    Disable2FAView,
 )
 
 # Django Ninja Configuration
@@ -47,16 +40,6 @@ auth_patterns = [
     path("login/", LoginAPIView.as_view(), name="api_login"),
     path("logout/", LogoutAPIView.as_view(), name="api_logout"),
     path("register/", RegisterAPIView.as_view(), name="api_register"),
-]
-
-# QR patterns
-qr_patterns = [
-    path(
-        "generate-qr/<str:username>/",
-        GenerateQRAPIView.as_view(),
-        name="api_generate_qr",
-    ),
-    path("validate-qr/", ValidateQRAPIView.as_view(), name="api_validate_qr"),
 ]
 
 # GDPR views
@@ -110,21 +93,12 @@ verification_patterns = [
     ),
 ]
 
-# Two-factor authentication views
-two_factor_patterns = [
-    path("enable-2fa/", Enable2FAView.as_view(), name="api_enable_2fa"),
-    path("verify-2fa/", Verify2FAAPIView.as_view(), name="api_verify_2fa"),
-    path("disable-2fa/", Disable2FAView.as_view(), name="api_disable_2fa"),
-]
-
 urlpatterns = [
     *auth_patterns,
-    *qr_patterns,
     *gdpr_patterns,
     *profile_patterns,
     *password_patterns,
     *verification_patterns,
-    *two_factor_patterns,
     path("ninja/", api.urls),
 ]
 

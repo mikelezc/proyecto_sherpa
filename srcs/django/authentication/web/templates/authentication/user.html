@@ -40,44 +40,20 @@
 						</div>
 					</div>
 
-					<!-- New QR section -->
-					{% if show_qr %}
-					<div class="mt-4">
-						<div class="text-center">
-							<img src="{% url 'generate_qr' username=user.username %}" alt="QR Code"
-								class="img-fluid mb-3" style="max-width: 200px;">
-							<p class="text-muted">Usa este código QR para iniciar sesión desde otro dispositivo</p>
-						</div>
-					</div>
-					{% endif %}
+				</div>
+			</div>
 
-					<!-- New 2FA section -->
-					<div class="card mt-3">
-						<div class="card-body">
-							<h5>Autenticación en dos pasos</h5>
-							{% if user.two_factor_enabled %}
-							<p>2FA está activado</p>
-							<form method="post" action="{% url 'disable_2fa' %}">
-								{% csrf_token %}
-								<button type="submit" class="btn btn-danger">Desactivar 2FA</button>
-							</form>
-							{% else %}
-							<p>2FA está desactivado</p>
-							<a href="{% url 'enable_2fa' %}" class="btn btn-primary">Activar 2FA</a>
-							{% endif %}
-						</div>
-					</div>
-				</div>
-				<div class="card-footer">
-					<div class="d-flex justify-content-between align-items-center">
-						<button onclick="window.location.href='{% url 'edit_profile' %}'"
-							class="btn btn-outline-primary">Editar Perfil</button>
-						<a href="{% url 'gdpr_settings' %}" class="btn btn-outline-info">Configuración GDPR</a>
-						<a href="{% url 'logout' %}" class="btn btn-danger">Cerrar Sesión</a>
-					</div>
-				</div>
+		</div>
+		<div class="card-footer">
+			<div class="d-flex justify-content-between align-items-center">
+				<button onclick="window.location.href='{% url 'edit_profile' %}'" class="btn btn-outline-primary">Editar
+					Perfil</button>
+				<a href="{% url 'gdpr_settings' %}" class="btn btn-outline-info">Configuración GDPR</a>
+				<a href="{% url 'logout' %}" class="btn btn-danger">Cerrar Sesión</a>
 			</div>
 		</div>
 	</div>
+</div>
+</div>
 </div>
 {% endblock %}
