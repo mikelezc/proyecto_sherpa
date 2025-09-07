@@ -2,51 +2,56 @@
 
 Sistema completo de gestión de tareas desarrollado con Django, con arquitectura de microservicios usando Docker y procesamiento asíncrono con Celery.
 
-## 🏗️ Arquitectura
+## Quick Start
 
-### Servicios Docker (5 contenedores):
-- **django_web** - Aplicación Django principal
-- **postgres_db** - Base de datos PostgreSQL 15  
-- **redis_cache** - Sistema de caché y broker para Celery
-- **celery_worker** - Procesamiento de tareas en segundo plano
-- **celery_beat** - Programador de tareas periódicas
-
-### Stack Tecnológico:
-- **Backend**: Django 5.2.6, Python 3.10
-- **Base de datos**: PostgreSQL 15.14
-- **Cache & Message Broker**: Redis 7.4.5
-- **Task Queue**: Celery 5.5.3
-- **API**: Django REST Framework + django-ninja
-- **Frontend**: Bootstrap 5, JavaScript ES6
-- **Containerización**: Docker & Docker Compose
-
-## 🚀 Quick Start
-
-### 1. Clonar y configurar
-
+### 1. Clonar el repositorio
 ```bash
-git clone <repository-url>
-cd proyecto_sherpa
-
-# Configurar variables de entorno (opcional, tiene valores por defecto)
-cp srcs/env_example.md .env
+git clone <repo>
+cd task-management-system
 ```
 
-### 2. Ejecutar con Docker
-
+### 2. Configurar variables de entorno (opcional)
 ```bash
-# Construir y ejecutar todos los servicios
-docker-compose up --build
-
-# Ejecutar en segundo plano
-docker-compose up --build -d
+cp .env.sample .env
 ```
 
-### 3. Configuración inicial
-
+### 3. Ejecutar con Docker
 ```bash
-# Crear superusuario para el admin
-docker-compose exec django_web python manage.py createsuperuser
+docker-compose up
+```
+
+### 4. Acceder a la aplicación
+- **Frontend Web**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/api/docs/
+- **Admin Panel**: http://localhost:8000/admin/
+
+## Architecture
+
+### Brief description of architecture
+
+**Microservices Architecture** usando Docker con 5 servicios:
+
+- **django_web** - Aplicación Django principal con API REST y frontend
+- **postgres_db** - Base de datos PostgreSQL 15 con optimizaciones de performance  
+- **redis_cache** - Sistema de caché y message broker para Celery
+- **celery_worker** - Worker para procesamiento de tareas en background
+- **celery_beat** - Scheduler para tareas periódicas programadas
+
+**Technology Stack:**
+- **Backend**: Django 5.2.6 + Django Ninja (API)
+- **Database**: PostgreSQL 15.14 con full-text search
+- **Cache**: Redis 7.4.5
+- **Background Tasks**: Celery 5.5.3
+- **Frontend**: Django Templates + Bootstrap 5
+- **Containerization**: Docker + Docker Compose
+
+**Key Features:**
+- RESTful API con documentación automática
+- Sistema de autenticación completo
+- Gestión de tareas con CRUD completo
+- Procesamiento asíncrono con Celery
+- Frontend web para demostración
+- Optimizaciones de base de datos PostgreSQL
 
 # Ejecutar migraciones (opcional, se ejecutan automáticamente)
 docker-compose exec django_web python manage.py migrate

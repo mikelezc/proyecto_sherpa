@@ -1,53 +1,114 @@
-# 🚀 API Documentation - OPTIMIZADA 
+# API Documentation
 
-## 🎯 **NUEVAS OPTIMIZACIONES PostgreSQL (v2.0)**
+## Overview
 
-### ⚡ **Full-Text Search Implementado**
-- **Vector de búsqueda:** `SearchVector` con `GinIndex` para PostgreSQL
-- **Búsqueda inteligente:** Automáticamente usa full-text o fallback
-- **Performance:** 10x más rápido en búsquedas de texto
+VERY BASICALLY, this API provides endpoints for task management and user authentication. The API is built with Django Ninja and includes automatic Swagger documentation.
 
-### 🔧 **Database Optimizations**
-- **Custom Managers:** TaskManager, CommentManager, TaskHistoryManager  
-- **Queries optimizadas:** select_related() y prefetch_related() automáticos
-- **Índices compuestos:** Para consultas frecuentes
-- **Database Constraints:** Check constraints a nivel de BD
+## Interactive Documentation
 
----
-
-## 📋 Descripción General
-
-Este proyecto incluye un sistema completo de APIs REST para gestión de tareas y usuarios. Todas las APIs están implementadas con Django Ninja y incluyen documentación automática con Swagger.
-
-## 🚀 URLs de Documentación Interactiva
-
-**Swagger UI (Recomendado para pruebas):**
+**Swagger UI** (Recommended for testing):
 - **Authentication API**: http://localhost:8000/api/auth/ninja/docs
 - **Task Management API**: http://localhost:8000/api/tasks/ninja/docs
 
-**OpenAPI JSON:**
-- Authentication: http://localhost:8000/api/auth/ninja/openapi.json  
-- Tasks: http://localhost:8000/api/tasks/ninja/openapi.json
+## Quick Setup
 
-## 🔧 Configuración Inicial
-
-### 1. Iniciar el Proyecto
 ```bash
-cd proyecto_sherpa
-docker-compose up -d
-```
-
-### 2. Verificar que funciona
-```bash
+docker-compose up
 curl http://localhost:8000/health/
-# Debería devolver: {"status": "healthy", "database": "healthy", "redis": "healthy"}
 ```
 
-## 🔐 1. Authentication API
+## Authentication API
 
-**Base URL**: `http://localhost:8000/api/auth/ninja/auth/`
+**Base URL**: `/api/auth/ninja/`
 
-### 📝 Registro de Usuario
+### User Registration
+```bash
+POST /api/auth/ninja/auth/register/
+{
+  "username": "testuser",
+  "email": "test@example.com", 
+  "password1": "securepass123",
+  "password2": "securepass123"
+}
+```
+
+### User Login  
+```bash
+POST /api/auth/ninja/auth/login/
+{
+  "username": "testuser",
+  "password": "securepass123"
+}
+```
+
+### Get Users (with search)
+```bash
+GET /api/auth/ninja/users/?search=test&page=1&page_size=10
+```
+
+## Task Management API
+
+**Base URL**: `/api/tasks/ninja/`
+
+### List Tasks
+```bash
+GET /api/tasks/ninja/tasks/?page=1&page_size=10&status=todo
+```
+
+### Create Task
+```bash
+POST /api/tasks/ninja/tasks/
+{
+  "title": "New Task",
+  "description": "Task description",
+  "status": "todo",
+  "priority": "medium"
+}
+```
+
+### Update Task
+```bash
+PUT /api/tasks/ninja/tasks/{id}/
+{
+  "title": "Updated Task",
+  "status": "in_progress"
+}
+```
+
+### Delete Task
+```bash
+DELETE /api/tasks/ninja/tasks/{id}/
+```
+
+### Advanced Search
+```bash
+GET /api/tasks/ninja/tasks/search/?q=keyword&filters=status:todo,priority:high
+```
+
+## Response Format
+
+All responses follow this format:
+```json
+{
+  "status": "success|error",
+  "data": { ... },
+  "message": "Optional message"
+}
+```
+
+## Authentication
+
+Most endpoints require authentication. Include the session cookie or JWT token in requests.
+
+## Error Handling
+
+- **400**: Bad Request - Invalid data
+- **401**: Unauthorized - Authentication required
+- **403**: Forbidden - Insufficient permissions  
+- **404**: Not Found - Resource not found
+- **500**: Internal Server Error
+
+For detailed interactive documentation with all endpoints, schemas, and examples, visit the Swagger UI links above.
 ```bash
 curl -X POST "http://localhost:8000/api/auth/ninja/auth/register" \
   -H "Content-Type: application/json" \
