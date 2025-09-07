@@ -7,6 +7,7 @@ from .views import (
     LoginAPIView,
     LogoutAPIView,
     RegisterAPIView,
+    RefreshTokenAPIView,
     # pass_reset_views
     PasswordResetAPIView,
     PasswordResetConfirmAPIView,
@@ -36,6 +37,7 @@ auth_patterns = [
     path("login/", LoginAPIView.as_view(), name="api_login"),
     path("logout/", LogoutAPIView.as_view(), name="api_logout"),
     path("register/", RegisterAPIView.as_view(), name="api_register"),
+    path("refresh/", RefreshTokenAPIView.as_view(), name="api_refresh"),
 ]
 
 # Profile views

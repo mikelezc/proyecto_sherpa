@@ -39,6 +39,10 @@ class RegisterSchema(Schema):
     privacy_policy: bool = False
 
 
+class RefreshTokenSchema(Schema):
+    refresh_token: str
+
+
 # GDPR schemas
 class GDPRExportSchema(Schema):
     status: str

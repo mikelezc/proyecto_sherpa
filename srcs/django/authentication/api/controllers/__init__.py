@@ -45,6 +45,12 @@ def logout(request) -> Dict:
     """Logout user"""
     return LogoutAPIView.as_view()(request)
 
+@router.post("/refresh", tags=["auth"])
+def refresh_token(request, data: RefreshTokenSchema) -> Dict:
+    """Refresh access token"""
+    request.data = data.dict()
+    return RefreshTokenAPIView.as_view()(request)
+
 # GDPR endpoints
 
 # this is deprecated 

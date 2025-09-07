@@ -1,4 +1,4 @@
-from .auth_views import LoginAPIView, LogoutAPIView, RegisterAPIView
+from .auth_views import LoginAPIView, LogoutAPIView, RegisterAPIView, RefreshTokenAPIView
 from .profile_views import EditProfileAPIView, UserProfileAPIView, DeleteAccountAPIView
 from .pass_reset_views import PasswordResetAPIView, PasswordResetConfirmAPIView
 from .verify_email_views import VerifyEmailAPIView, VerifyEmailChangeAPIView
@@ -12,6 +12,7 @@ __all__ = [
     'LoginAPIView',
     'LogoutAPIView', 
     'RegisterAPIView',
+    'RefreshTokenAPIView',
 
     # Profile views
     'EditProfileAPIView',
