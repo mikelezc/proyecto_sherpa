@@ -24,13 +24,14 @@ class AuthenticationService:
 
     @staticmethod
     def register_user(username, email, password):
-        """Basic user registration"""
+        """Basic user registration - simplified for demo"""
         # The mail will be encrypted in the save() method
         user = CustomUser.objects.create_user(
             username=username.lower(),
             email=email.lower(),  # It will be encrypted in the save() method
             password=password,
-            is_active=False,
+            is_active=True,  # Simplified: activate immediately
+            email_verified=True,  # Simplified: no email verification required
         )
         return user
 
@@ -56,9 +57,6 @@ class AuthenticationService:
             logger.warning(f"Failed login attempt for user {username} from IP {ip}")
             raise ValidationError("Incorrect username or password")
 
-        if not user.email_verified:
-            raise ValidationError("Please verify your email to activate your account")
-
         # Reset rate limit on successful login
         rate_limiter.reset_limit(ip, 'login')
 
@@ -75,9 +73,6 @@ class AuthenticationService:
         Manages the complete registration process
         Includes form validation, user creation and email verification
         """
-        if not form_data.get("privacy_policy"):
-            raise ValidationError(AuthenticationService.MESSAGES["privacy_policy"])
-
         username = escape(form_data.get("username", "").strip())
         email = escape(form_data.get("email", "").strip())
         password = form_data.get("password1")
@@ -90,7 +85,7 @@ class AuthenticationService:
 
         form = RegistrationForm(form_data)
         if form.is_valid():
-            # User registration
+            # User registration - simplified for demo
             user = AuthenticationService.register_user(
                 form.cleaned_data["username"],
                 form.cleaned_data["email"],
@@ -100,9 +95,7 @@ class AuthenticationService:
             # Save previous password
             PreviousPassword.objects.create(user=user, password=user.password)
 
-            # Generate and send email verification token
-            token = TokenService.generate_email_verification_token(user)
-            MailSendingService.send_verification_email(user, token)
+            # Simplified: no email verification required
             return True
 
         return False

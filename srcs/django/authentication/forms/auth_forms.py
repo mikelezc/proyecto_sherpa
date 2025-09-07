@@ -10,10 +10,9 @@ from django import forms
 # (user will be activated after verifying the email)
 
 class RegistrationForm(UserCreationForm):
-    """User registration form"""
+    """User registration form - simplified for demo"""
 
     email = forms.EmailField(required=True)
-    privacy_policy = forms.BooleanField(required=True)
 
     class Meta:
         model = CustomUser
@@ -22,7 +21,8 @@ class RegistrationForm(UserCreationForm):
     def save(self, commit=True):
         user = super().save(commit=False)
         user.email = self.cleaned_data["email"]
-        user.is_active = False
+        user.is_active = True  # Simplified: activate immediately
+        user.email_verified = True  # Simplified: no email verification
         if commit:
             user.save()
         return user
