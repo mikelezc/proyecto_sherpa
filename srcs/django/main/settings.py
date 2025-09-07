@@ -178,6 +178,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tasks.tasks.generate_daily_summary",
         "schedule": 86400.0,  # Every day
     },
+    "cleanup-archived-tasks": {
+        "task": "tasks.tasks.cleanup_archived_tasks",
+        "schedule": 604800.0,  # Every week (7 days * 24 hours * 60 minutes * 60 seconds)
+    },
 }
 
 # REST Framework configuration
