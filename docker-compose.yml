@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   task-management-network:
     driver: bridge
