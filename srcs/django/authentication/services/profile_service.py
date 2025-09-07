@@ -7,7 +7,6 @@ from authentication.models import UserSession
 from .mail_service import MailSendingService
 from .token_service import TokenService
 from ..models import PreviousPassword
-from .gdpr_service import GDPRService
 from django.conf import settings
 from ..models import CustomUser
 from pathlib import Path
@@ -149,8 +148,8 @@ class ProfileService:
             # First delete user sessions
             UserSession.objects.filter(user=user).delete()
             
-            # Then we delete the user data
-            GDPRService.delete_user_data(user)
+            # Delete user account (simplified version)
+            user.delete()
             return True
             
         except Exception as e:

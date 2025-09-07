@@ -8,7 +8,6 @@ import os
 # To create a task, use the shared_task() decorator.
 # The task is then registered by the worker (Celery) and can be executed later.
 
-# Celery is a distributed task queue that is used to handle asynchronous tasks in Django web applications.
 
 logger = logging.getLogger(__name__)
 

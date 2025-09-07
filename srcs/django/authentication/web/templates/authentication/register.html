@@ -36,8 +36,7 @@
 							<input type="checkbox" class="form-check-input" id="privacy_policy" name="privacy_policy"
 								required>
 							<label class="form-check-label" for="privacy_policy">
-								He leído y acepto la <a href="{% url 'privacy_policy' %}" target="_blank">política de
-									privacidad</a>
+								Acepto los términos y condiciones del servicio
 							</label>
 						</div>
 
@@ -47,6 +46,32 @@
 					</form>
 				</div>
 			</div>
+
+			<!-- Info for demo purposes -->
+			<div class="alert alert-warning text-center mt-3"
+				style="border: 2px solid #ffc107; background-color: #fff3cd; animation: pulse 2s infinite;">
+				<h5><i class="bi bi-envelope"></i> <strong>Verificación de Email Requerida</strong></h5>
+				<p class="mb-2">Después del registro, revisa los logs del servidor para encontrar el enlace de
+					verificación:</p>
+				<code
+					style="font-size: 1.1em; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">docker-compose logs web -f</code>
+			</div>
+
+			<style>
+				@keyframes pulse {
+					0% {
+						transform: scale(1);
+					}
+
+					50% {
+						transform: scale(1.02);
+					}
+
+					100% {
+						transform: scale(1);
+					}
+				}
+			</style>
 
 			<!-- Login link -->
 			<div class="text-center mt-4">

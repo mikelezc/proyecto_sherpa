@@ -6,10 +6,6 @@ from .views import (
     login,
     register,
     logout,
-    # gdpr_views
-    gdpr_settings,
-    export_personal_data,
-    privacy_policy,
     # pass_reset_views
     CustomPasswordResetView,
     CustomPasswordResetConfirmView,
@@ -27,13 +23,6 @@ auth_patterns = [
     path("login/", login, name="login"),
     path("logout/", logout, name="logout"),
     path("register/", register, name="register"),
-]
-
-# gdpr_views
-gdpr_patterns = [
-    path("gdpr-settings/", gdpr_settings, name="gdpr_settings"),
-    path("export-data/", export_personal_data, name="export_data"),
-    path("privacy-policy/", privacy_policy, name="privacy_policy"),
 ]
 
 # pass_reset_views
@@ -82,6 +71,5 @@ urlpatterns = [
     *auth_patterns,
     *profile_patterns,
     *password_patterns,
-    *gdpr_patterns,
     *verify_email_patterns,
 ]

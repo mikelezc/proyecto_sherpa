@@ -2,7 +2,6 @@ from .auth_service import AuthenticationService
 from .mail_service import MailSendingService
 from .token_service import TokenService
 from .profile_service import ProfileService
-from .gdpr_service import GDPRService
 from .password_service import PasswordService
 
 __all__ = [
@@ -10,6 +9,5 @@ __all__ = [
     "MailSendingService",
     "TokenService",
     "ProfileService",
-    "GDPRService",
     "PasswordService",
 ]

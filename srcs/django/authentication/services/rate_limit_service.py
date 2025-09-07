@@ -29,25 +29,20 @@ class RateLimitService:
              # db=0 -> default database, decode_responses=True -> decode bytes to strings
             host="redis", port=6379, db=0, decode_responses=True)
         
-        # Authentication rate limits
+        # Authentication rate limits (Demo-friendly values)
         self.LIMITS = { 
-            'login': {'max_attempts': 5, 'window': 300, 'block': 900},        # 5 attempts / 5 min, block 15 min
-            'password_reset': {'max_attempts': 3, 'window': 600, 'block': 1800},  # 3 attempts / 10 min, block 30 min
-            'email_verification': {'max_attempts': 3, 'window': 1800, 'block': 3600},  # 3 attempts / 30 min, block 1h
+            'login': {'max_attempts': 10, 'window': 300, 'block': 300},        # 10 attempts / 5 min, block 5 min
+            'password_reset': {'max_attempts': 5, 'window': 600, 'block': 600},  # 5 attempts / 10 min, block 10 min
+            'email_verification': {'max_attempts': 10, 'window': 1800, 'block': 300},  # 10 attempts / 30 min, block 5 min
         }
         
-        # Profile management rate limits
+        # Profile management rate limits (Demo-friendly values)
         self.LIMITS.update({
-            'email_change': {'max_attempts': 2, 'window': 3600, 'block': 7200},  # 2 attempts / hour, block 2h
-            'profile_update': {'max_attempts': 5, 'window': 300, 'block': 900},  # 5 attempts / 5 min, block 15 min
-            'email_send': {'max_attempts': 5, 'window': 3600, 'block': 7200},    # 5 attempts / hour, block 2h
+            'email_change': {'max_attempts': 5, 'window': 3600, 'block': 600},  # 5 attempts / hour, block 10 min
+            'profile_update': {'max_attempts': 10, 'window': 300, 'block': 300},  # 10 attempts / 5 min, block 5 min
+            'email_send': {'max_attempts': 10, 'window': 3600, 'block': 600},    # 10 attempts / hour, block 10 min
         })
         
-        # QR code rate limits
-        self.LIMITS.update({
-            'qr_generation': {'max_attempts': 10, 'window': 3600, 'block': 900},  # 10 intentos/hora
-            'qr_validation': {'max_attempts': 5, 'window': 300, 'block': 900},   # 5 intentos/5min
-        })
         # Token expiration times (in minutes)
         self.TOKEN_EXPIRY = { # Token expiration times
             'auth': 15,             # Authentication token (15 min)

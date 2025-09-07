@@ -7,10 +7,6 @@ from .views import (
     LoginAPIView,
     LogoutAPIView,
     RegisterAPIView,
-    # gdpr_views
-    GDPRSettingsAPIView,
-    ExportPersonalDataAPIView,
-    PrivacyPolicyAPIView,
     # pass_reset_views
     PasswordResetAPIView,
     PasswordResetConfirmAPIView,
@@ -40,22 +36,6 @@ auth_patterns = [
     path("login/", LoginAPIView.as_view(), name="api_login"),
     path("logout/", LogoutAPIView.as_view(), name="api_logout"),
     path("register/", RegisterAPIView.as_view(), name="api_register"),
-]
-
-# GDPR views
-gdpr_patterns = [
-    path("gdpr/settings/", GDPRSettingsAPIView.as_view(), name="api_gdpr_settings"),
-    path(
-        "gdpr/export-data/download/",
-        ExportPersonalDataAPIView.as_view(),
-        {"download": True},
-        name="api_export_data_download"
-    ),
-    path(
-        "gdpr/privacy-policy/",
-        PrivacyPolicyAPIView.as_view(),
-        name="api_privacy_policy",
-    ),
 ]
 
 # Profile views
@@ -95,7 +75,6 @@ verification_patterns = [
 
 urlpatterns = [
     *auth_patterns,
-    *gdpr_patterns,
     *profile_patterns,
     *password_patterns,
     *verification_patterns,
