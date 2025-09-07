@@ -20,6 +20,9 @@ def login(request):
                 request.POST.get("password"),
                 request.POST.get("remember", None),
             )
+            # After logging in, redirect to task list as per requirements
+            if redirect_to == "user":
+                return redirect('tasks_web:task_list')
             return redirect(redirect_to)
         except ValidationError as e:
             messages.error(request, str(e))

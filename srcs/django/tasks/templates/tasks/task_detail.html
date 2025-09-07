@@ -1,0 +1,272 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}{{ task.title }} - Task Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+	<h1 class="h2">📋 {{ task.title }}</h1>
+	<div class="btn-toolbar mb-2 mb-md-0">
+		<div class="btn-group me-2">
+			<a href="{% url 'tasks_web:task_list' %}" class="btn btn-outline-secondary">
+				← Back to Tasks
+			</a>
+			{% if task.created_by == request.user or request.user in task.assigned_to.all %}
+			<a href="{% url 'tasks_web:task_edit' task.id %}" class="btn btn-primary">
+				✏️ Edit Task
+			</a>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+<div class="row">
+	<!-- Main Task Information -->
+	<div class="col-lg-8">
+		<div class="card mb-4">
+			<div class="card-header">
+				<h6 class="mb-0">📝 Task Details</h6>
+			</div>
+			<div class="card-body">
+				<div class="row mb-3">
+					<div class="col-md-6">
+						<strong>Status:</strong>
+						<span class="badge 
+							{% if task.status == 'todo' %}bg-secondary
+							{% elif task.status == 'in_progress' %}bg-warning
+							{% elif task.status == 'review' %}bg-info
+							{% elif task.status == 'done' %}bg-success
+							{% else %}bg-dark{% endif %}">
+							{{ task.get_status_display }}
+						</span>
+					</div>
+					<div class="col-md-6">
+						<strong>Priority:</strong>
+						<span class="badge 
+							{% if task.priority == 'low' %}bg-secondary
+							{% elif task.priority == 'medium' %}bg-warning
+							{% elif task.priority == 'high' %}bg-danger
+							{% elif task.priority == 'critical' %}bg-dark
+							{% else %}bg-light text-dark{% endif %}">
+							{{ task.get_priority_display }}
+						</span>
+					</div>
+				</div>
+
+				<div class="row mb-3">
+					<div class="col-md-6">
+						<strong>Created by:</strong> {{ task.created_by.get_full_name|default:task.created_by.username
+						}}
+					</div>
+					<div class="col-md-6">
+						<strong>Created on:</strong> {{ task.created_at|date:"M d, Y H:i" }}
+					</div>
+				</div>
+
+				{% if task.due_date %}
+				<div class="row mb-3">
+					<div class="col-md-6">
+						<strong>Due date:</strong>
+						<span class="{% if task.is_overdue %}text-danger{% endif %}">
+							{{ task.due_date|date:"M d, Y H:i" }}
+							{% if task.is_overdue %}(OVERDUE){% endif %}
+						</span>
+					</div>
+					{% if task.estimated_hours %}
+					<div class="col-md-6">
+						<strong>Estimated hours:</strong> {{ task.estimated_hours }}h
+					</div>
+					{% endif %}
+				</div>
+				{% endif %}
+
+				{% if task.team %}
+				<div class="row mb-3">
+					<div class="col-md-12">
+						<strong>Team:</strong> {{ task.team.name }}
+					</div>
+				</div>
+				{% endif %}
+
+				{% if task.parent_task %}
+				<div class="row mb-3">
+					<div class="col-md-12">
+						<strong>Parent Task:</strong>
+						<a href="{% url 'tasks_web:task_detail' task.parent_task.id %}">{{ task.parent_task.title }}</a>
+					</div>
+				</div>
+				{% endif %}
+
+				<div class="row mb-3">
+					<div class="col-12">
+						<strong>Description:</strong>
+						<div class="mt-2 p-3 bg-light rounded">
+							{{ task.description|linebreaks }}
+						</div>
+					</div>
+				</div>
+
+				{% if task.tags.exists %}
+				<div class="row mb-3">
+					<div class="col-12">
+						<strong>Tags:</strong><br>
+						{% for tag in task.tags.all %}
+						<span class="badge bg-info me-1">{{ tag.name }}</span>
+						{% endfor %}
+					</div>
+				</div>
+				{% endif %}
+			</div>
+		</div>
+
+		<!-- Subtasks -->
+		{% if task.subtasks.exists %}
+		<div class="card mb-4">
+			<div class="card-header">
+				<h6 class="mb-0">📂 Subtasks ({{ task.subtasks.count }})</h6>
+			</div>
+			<div class="card-body">
+				<div class="list-group list-group-flush">
+					{% for subtask in task.subtasks.all %}
+					<div class="list-group-item d-flex justify-content-between align-items-center">
+						<div>
+							<a href="{% url 'tasks_web:task_detail' subtask.id %}">{{ subtask.title }}</a>
+							<small class="text-muted d-block">{{ subtask.get_status_display }}</small>
+						</div>
+						<span class="badge 
+							{% if subtask.status == 'todo' %}bg-secondary
+							{% elif subtask.status == 'in_progress' %}bg-warning
+							{% elif subtask.status == 'review' %}bg-info
+							{% elif subtask.status == 'done' %}bg-success
+							{% else %}bg-dark{% endif %}">
+							{{ subtask.get_status_display }}
+						</span>
+					</div>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+		{% endif %}
+
+		<!-- Comments -->
+		<div class="card mb-4">
+			<div class="card-header">
+				<h6 class="mb-0">💬 Comments ({{ comments.count }})</h6>
+			</div>
+			<div class="card-body">
+				{% if comments %}
+				{% for comment in comments %}
+				<div class="border-bottom pb-3 mb-3">
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+						<small class="text-muted">{{ comment.created_at|date:"M d, Y H:i" }}</small>
+					</div>
+					<p class="mb-0">{{ comment.content|linebreaks }}</p>
+				</div>
+				{% endfor %}
+				{% else %}
+				<p class="text-muted mb-0">No comments yet.</p>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<!-- Sidebar -->
+	<div class="col-lg-4">
+		<!-- Assigned Users -->
+		<div class="card mb-4">
+			<div class="card-header">
+				<h6 class="mb-0">👥 Assigned Users</h6>
+			</div>
+			<div class="card-body">
+				{% if task.assigned_to.exists %}
+				{% for user in task.assigned_to.all %}
+				<div class="d-flex align-items-center mb-2">
+					<div class="me-2">
+						<div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+							style="width: 32px; height: 32px; font-size: 14px;">
+							{{ user.first_name.0|default:user.username.0|upper }}
+						</div>
+					</div>
+					<div>
+						<div class="fw-bold">{{ user.get_full_name|default:user.username }}</div>
+						<small class="text-muted">{{ user.email }}</small>
+					</div>
+				</div>
+				{% endfor %}
+				{% else %}
+				<p class="text-muted mb-0">No users assigned</p>
+				{% endif %}
+			</div>
+		</div>
+
+		<!-- Task History -->
+		<div class="card mb-4">
+			<div class="card-header">
+				<h6 class="mb-0">📊 Recent History</h6>
+			</div>
+			<div class="card-body">
+				{% if history %}
+				{% for entry in history %}
+				<div class="border-bottom pb-2 mb-2">
+					<div class="d-flex justify-content-between align-items-center">
+						<small class="fw-bold">{{ entry.user.username }}</small>
+						<small class="text-muted">{{ entry.created_at|date:"M d, H:i" }}</small>
+					</div>
+					<small class="text-muted">{{ entry.action }}</small>
+					{% if entry.changes %}
+					<div class="mt-1">
+						<code class="small">{{ entry.changes|truncatechars:50 }}</code>
+					</div>
+					{% endif %}
+				</div>
+				{% endfor %}
+				{% else %}
+				<p class="text-muted mb-0">No history available</p>
+				{% endif %}
+			</div>
+		</div>
+
+		<!-- Quick Actions -->
+		<div class="card">
+			<div class="card-header">
+				<h6 class="mb-0">⚡ Quick Actions</h6>
+			</div>
+			<div class="card-body">
+				<div class="d-grid gap-2">
+					{% if task.created_by == request.user or request.user in task.assigned_to.all %}
+					<a href="{% url 'tasks_web:task_edit' task.id %}" class="btn btn-outline-primary btn-sm">
+						✏️ Edit Task
+					</a>
+					{% endif %}
+
+					{% if task.status != 'done' %}
+					<button class="btn btn-outline-success btn-sm" onclick="markAsDone()">
+						✅ Mark as Done
+					</button>
+					{% endif %}
+
+					<a href="{% url 'tasks_web:task_create' %}?parent_task={{ task.id }}"
+						class="btn btn-outline-info btn-sm">
+						📋 Create Subtask
+					</a>
+
+					<a href="{% url 'tasks_web:task_list' %}" class="btn btn-outline-secondary btn-sm">
+						📋 All Tasks
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- JavaScript for quick actions -->
+<script>
+	function markAsDone() {
+		if (confirm('Mark this task as done?')) {
+			// Here you could implement AJAX to update status
+			// For now, redirect to edit page
+			window.location.href = "{% url 'tasks_web:task_edit' task.id %}";
+		}
+	}
+</script>
+{% endblock %}
