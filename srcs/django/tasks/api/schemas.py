@@ -124,3 +124,67 @@ class TaskErrorSchema(Schema):
     """Error response schema"""
     error: str
     details: Optional[Dict[str, Any]] = None
+
+
+# Task Operations Schemas
+
+class TaskAssignSchema(Schema):
+    """Schema for assigning users to a task"""
+    user_ids: List[int]
+    is_primary: Optional[bool] = False
+
+
+class TaskAssignmentSchema(Schema):
+    """Schema for task assignment details"""
+    id: int
+    user: UserMinimalSchema
+    assigned_at: datetime
+    assigned_by: UserMinimalSchema
+    is_primary: bool
+
+
+class CommentCreateSchema(Schema):
+    """Schema for creating a comment"""
+    content: str
+
+
+class CommentSchema(Schema):
+    """Schema for comment details"""
+    id: int
+    author: UserMinimalSchema
+    content: str
+    created_at: datetime
+    updated_at: datetime
+    is_edited: bool
+
+
+class TaskHistorySchema(Schema):
+    """Schema for task history entry"""
+    id: int
+    user: UserMinimalSchema
+    action: str
+    changes: Dict[str, Any]
+    timestamp: datetime
+
+
+class TaskAssignResponseSchema(Schema):
+    """Response for task assignment operation"""
+    success: bool
+    message: str
+    assignments: List[TaskAssignmentSchema]
+
+
+class PaginatedCommentsSchema(Schema):
+    """Paginated comments response"""
+    count: int
+    next: Optional[str]
+    previous: Optional[str]
+    results: List[CommentSchema]
+
+
+class PaginatedHistorySchema(Schema):
+    """Paginated history response"""
+    count: int
+    next: Optional[str]
+    previous: Optional[str]
+    results: List[TaskHistorySchema]
