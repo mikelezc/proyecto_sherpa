@@ -25,6 +25,13 @@ docker-compose up
 - **API Documentation**: http://localhost:8000/api/docs/
 - **Admin Panel**: http://localhost:8000/admin/
 
+## Documentation
+
+Para información detallada consultar:
+- **API Documentation**: [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md)
+- **Architecture**: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)  
+- **Decisions**: [`docs/DECISIONS.md`](docs/DECISIONS.md)
+
 ## Architecture
 
 ### Brief description of architecture
