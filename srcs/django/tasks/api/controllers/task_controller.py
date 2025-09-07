@@ -132,17 +132,13 @@ def list_tasks(
     page_size = min(page_size, 100)
     
     # Build queryset with optimizations
-    queryset = Task.objects.select_related('created_by', 'team', 'parent_task').prefetch_related(
-        'assigned_to',
-        'tags'
-    ).filter(is_archived=False)
+    queryset = Task.objects.with_optimized_relations()
     
-    # Apply search filter
+    # Apply search filter (try full-text first, fallback to basic)
     if search:
-        queryset = queryset.filter(
-            Q(title__icontains=search) | 
-            Q(description__icontains=search)
-        )
+        queryset = queryset.search(search)
+    else:
+        queryset = queryset.active()  # Only non-archived by default
     
     # Apply status filter
     if status:
@@ -264,10 +260,7 @@ def get_task_detail(request, task_id: int):
     Returns:
     - 200: Task details
     """
-    task = Task.objects.select_related('created_by', 'team', 'parent_task').prefetch_related(
-        'assigned_to',
-        'tags'
-    ).get(id=task_id, is_archived=False)
+    task = Task.objects.with_optimized_relations().get(id=task_id, is_archived=False)
     
     return serialize_task_detail(task)
 

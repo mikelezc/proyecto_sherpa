@@ -26,24 +26,31 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 ALLOWED_HOSTS = ["*"] if DEBUG else ["localhost", "127.0.0.1"]
 
 # Application definition
-INSTALLED_APPS = [
+DJANGO_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    
+    "django.contrib.postgres",  # PostgreSQL extensions
+]
+
+THIRD_PARTY_APPS = [
     # Third party apps
     "rest_framework",
     "corsheaders",
     "django_celery_beat",
     "django_celery_results",
-    
+]
+
+LOCAL_APPS = [
     # Local apps
     "authentication",
     "tasks",  # New task management app
 ]
+
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

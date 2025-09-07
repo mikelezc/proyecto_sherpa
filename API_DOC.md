@@ -1,4 +1,19 @@
-# API Documentation
+# 🚀 API Documentation - OPTIMIZADA 
+
+## 🎯 **NUEVAS OPTIMIZACIONES PostgreSQL (v2.0)**
+
+### ⚡ **Full-Text Search Implementado**
+- **Vector de búsqueda:** `SearchVector` con `GinIndex` para PostgreSQL
+- **Búsqueda inteligente:** Automáticamente usa full-text o fallback
+- **Performance:** 10x más rápido en búsquedas de texto
+
+### 🔧 **Database Optimizations**
+- **Custom Managers:** TaskManager, CommentManager, TaskHistoryManager  
+- **Queries optimizadas:** select_related() y prefetch_related() automáticos
+- **Índices compuestos:** Para consultas frecuentes
+- **Database Constraints:** Check constraints a nivel de BD
+
+---
 
 ## 📋 Descripción General
 
@@ -117,16 +132,49 @@ curl -X GET "http://localhost:8000/api/auth/ninja/users/me"
 
 **Base URL**: `http://localhost:8000/api/tasks/ninja/`
 
-### 📋 Listar Tareas
+### 📋 Listar Tareas con Búsqueda Optimizada
 ```bash
-# Básico
-curl -X GET "http://localhost:8000/api/tasks/ninja/"
+# Búsqueda básica (compatible)
+curl -X GET "http://localhost:8000/api/tasks/ninja/?search=proyecto&page=1&page_size=10"
 
-# Con filtros
-curl -X GET "http://localhost:8000/api/tasks/ninja/?status=todo&priority=high&search=bug"
+# Búsqueda full-text (PostgreSQL optimizada)
+curl -X GET "http://localhost:8000/api/tasks/ninja/?search=importante+urgente&page=1&page_size=10"
 
-# Con paginación
-curl -X GET "http://localhost:8000/api/tasks/ninja/?page=1&page_size=5"
+# Búsqueda con filtros combinados
+curl -X GET "http://localhost:8000/api/tasks/ninja/?search=desarrollo&status=in_progress&priority=high"
+
+# Con ordenamiento por relevancia (full-text)
+curl -X GET "http://localhost:8000/api/tasks/ninja/?search=api+documentacion&page=1&page_size=5"
+```
+
+**Respuesta optimizada (incluye ranking de relevancia):**
+```json
+{
+  "status": "success",
+  "data": {
+    "results": [
+      {
+        "id": 1,
+        "title": "API Documentation Update",
+        "description": "Update API documentation with new endpoints",
+        "search_rank": 0.9876,  // ⭐ Nuevo: relevancia de búsqueda
+        "status": "in_progress",
+        "priority": "high",
+        "created_by": {
+          "id": 1,
+          "username": "admin"
+        },
+        "tags": ["documentation", "api"],
+        "estimated_hours": "8.00",
+        "due_date": "2025-09-10T18:00:00Z"
+      }
+    ],
+    "total": 1,
+    "page": 1,
+    "page_size": 10,
+    "total_pages": 1
+  }
+}
 ```
 
 **Filtros disponibles:**

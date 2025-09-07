@@ -20,9 +20,13 @@ def task_created_or_updated(sender, instance, created, **kwargs):
             action='created',
             changes={'status': instance.status}
         )
+        
+        # Update search vector for new task
+        update_task_search_vector(instance)
     else:
         # Check if status changed
         try:
+            # Get the old task from database before update
             old_task = Task.objects.get(pk=instance.pk)
             if old_task.status != instance.status:
                 TaskHistory.objects.create(
@@ -34,8 +38,36 @@ def task_created_or_updated(sender, instance, created, **kwargs):
                         'new_status': instance.status
                     }
                 )
+            
+            # Update search vector if title or description changed
+            if (old_task.title != instance.title or 
+                old_task.description != instance.description):
+                update_task_search_vector(instance)
+                
         except Task.DoesNotExist:
-            pass
+            # Task might be new, update search vector anyway
+            update_task_search_vector(instance)
+
+
+def update_task_search_vector(task_instance):
+    """
+    Update search vector for full-text search
+    """
+    try:
+        # Use raw SQL to update search vector efficiently
+        from django.db import connection
+        
+        with connection.cursor() as cursor:
+            cursor.execute("""
+                UPDATE tasks_task 
+                SET search_vector = to_tsvector('english', 
+                    COALESCE(title, '') || ' ' || COALESCE(description, '')
+                ) 
+                WHERE id = %s
+            """, [task_instance.pk])
+    except Exception as e:
+        # If PostgreSQL full-text search is not available, skip silently
+        pass
 
 
 @receiver(post_save, sender=TaskAssignment)

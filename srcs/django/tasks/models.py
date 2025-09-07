@@ -9,9 +9,114 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.indexes import GinIndex
 import uuid
 
 User = get_user_model()
+
+
+class TaskQuerySet(models.QuerySet):
+    """Custom QuerySet for Task model with optimization methods"""
+    
+    def active(self):
+        """Get non-archived tasks"""
+        return self.filter(is_archived=False)
+    
+    def archived(self):
+        """Get archived tasks"""
+        return self.filter(is_archived=True)
+    
+    def with_optimized_relations(self):
+        """Optimized query with select_related and prefetch_related"""
+        return self.select_related(
+            'created_by', 'team', 'parent_task', 'template'
+        ).prefetch_related(
+            'tags', 
+            'assigned_to',
+            'comments__author',
+            'history__user',
+            'subtasks'
+        )
+    
+    def search(self, query):
+        """
+        Smart search that tries full-text first, falls back to basic
+        """
+        if not query:
+            return self
+        
+        try:
+            # Try PostgreSQL full-text search
+            from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
+            from django.db.models import Q
+            
+            search_query = SearchQuery(query, config='english')
+            return self.annotate(
+                search=SearchVector('title', 'description', config='english'),
+                rank=SearchRank('search', search_query)
+            ).filter(
+                search=search_query
+            ).order_by('-rank', '-created_at')
+        except Exception:
+            # Fallback to basic search if PostgreSQL extensions are not available
+            from django.db.models import Q
+            return self.filter(
+                Q(title__icontains=query) | 
+                Q(description__icontains=query)
+            )
+
+
+class TaskManager(models.Manager):
+    """Custom manager for Task model"""
+    
+    def get_queryset(self):
+        """Use custom QuerySet"""
+        return TaskQuerySet(self.model, using=self._db)
+    
+    def active(self):
+        """Get non-archived tasks"""
+        return self.get_queryset().active()
+    
+    def archived(self):
+        """Get archived tasks"""
+        return self.get_queryset().archived()
+    
+    def with_optimized_relations(self):
+        """Get tasks with optimized relations"""
+        return self.get_queryset().with_optimized_relations()
+    
+    def search(self, query):
+        """
+        Smart search that tries full-text first, falls back to basic
+        """
+        return self.get_queryset().search(query)
+
+
+class TaskHistoryManager(models.Manager):
+    """Custom manager for TaskHistory model"""
+    
+    def get_queryset(self):
+        """Optimize with select_related by default"""
+        return super().get_queryset().select_related('task', 'user')
+    
+    def recent(self, days=30):
+        """Get recent history entries"""
+        from datetime import timedelta
+        since_date = timezone.now() - timedelta(days=days)
+        return self.filter(timestamp__gte=since_date)
+
+
+class CommentManager(models.Manager):
+    """Custom manager for Comment model"""
+    
+    def get_queryset(self):
+        """Optimize with select_related by default"""
+        return super().get_queryset().select_related('task', 'author')
+    
+    def for_task(self, task):
+        """Get comments for a specific task"""
+        return self.filter(task=task).order_by('created_at')
 
 
 class Tag(models.Model):
@@ -118,6 +223,12 @@ class Task(models.Model):
     template = models.ForeignKey(TaskTemplate, on_delete=models.SET_NULL, null=True, blank=True)
     is_overdue = models.BooleanField(default=False)
     
+    # Full-text search field for PostgreSQL
+    search_vector = SearchVectorField(null=True, blank=True)
+    
+    # Custom managers - Apply TaskManager
+    objects = TaskManager()
+    
     class Meta:
         ordering = ['-created_at']
         indexes = [
@@ -126,6 +237,29 @@ class Task(models.Model):
             models.Index(fields=['due_date']),
             models.Index(fields=['created_by']),
             models.Index(fields=['is_archived']),
+            # Composite indexes for common query patterns
+            models.Index(fields=['status', 'priority']),
+            models.Index(fields=['created_by', 'status']),
+            models.Index(fields=['team', 'status']),
+            models.Index(fields=['due_date', 'status']),
+            models.Index(fields=['is_archived', 'status']),
+            # Full-text search index (PostgreSQL specific)
+            GinIndex(fields=['search_vector'], name='task_search_gin_idx'),
+        ]
+        constraints = [
+            # Database-level constraints
+            models.CheckConstraint(
+                check=models.Q(due_date__gte=models.F('created_at')),
+                name='task_due_date_after_creation'
+            ),
+            models.CheckConstraint(
+                check=models.Q(estimated_hours__gte=0),
+                name='task_estimated_hours_positive'
+            ),
+            models.CheckConstraint(
+                check=models.Q(actual_hours__gte=0) | models.Q(actual_hours__isnull=True),
+                name='task_actual_hours_positive'
+            ),
         ]
     
     def __str__(self):
@@ -144,6 +278,44 @@ class Task(models.Model):
         # Temporarily skip full_clean for API testing
         # self.full_clean()
         super().save(*args, **kwargs)
+        
+        # Update search vector after saving
+        self.update_search_vector()
+    
+    def update_search_vector(self):
+        """Update the search vector for full-text search"""
+        from django.contrib.postgres.search import SearchVector
+        from django.db import connection
+        
+        # Update search vector using PostgreSQL's full-text search
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE tasks_task 
+                SET search_vector = to_tsvector('english', 
+                    COALESCE(title, '') || ' ' || COALESCE(description, '')
+                ) 
+                WHERE id = %s
+                """,
+                [self.pk]
+            )
+    
+    @classmethod
+    def search_tasks(cls, query):
+        """
+        Perform full-text search on tasks using PostgreSQL's search capabilities
+        """
+        from django.contrib.postgres.search import SearchQuery, SearchRank
+        
+        if not query:
+            return cls.objects.all()
+        
+        search_query = SearchQuery(query, config='english')
+        return cls.objects.filter(
+            search_vector=search_query
+        ).annotate(
+            rank=SearchRank('search_vector', search_query)
+        ).order_by('-rank', '-created_at')
     
     @property
     def is_past_due(self):
@@ -186,8 +358,18 @@ class Comment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_edited = models.BooleanField(default=False)
     
+    # Custom manager
+    objects = CommentManager()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
     class Meta:
         ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['task', 'created_at']),
+            models.Index(fields=['author', '-created_at']),
+        ]
     
     def __str__(self):
         return f"Comment by {self.author.username} on {self.task.title}"
@@ -217,10 +399,17 @@ class TaskHistory(models.Model):
     changes = models.JSONField(default=dict)  # What changed
     timestamp = models.DateTimeField(auto_now_add=True)
     
+    # Custom manager
+    objects = TaskHistoryManager()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+    
     class Meta:
         ordering = ['-timestamp']
         indexes = [
             models.Index(fields=['task', '-timestamp']),
+            models.Index(fields=['user', '-timestamp']),
         ]
     
     def __str__(self):
