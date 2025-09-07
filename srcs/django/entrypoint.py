@@ -76,10 +76,6 @@ def setup_django():
     # Setup Django
     django.setup()
     
-    # Create migrations for apps
-    if not run_django_command(['manage.py', 'makemigrations']):
-        logger.warning("⚠️ No new migrations to create")
-    
     # Run migrations
     if not run_django_command(['manage.py', 'migrate']):
         logger.error("❌ Failed to run migrations")

@@ -121,9 +121,7 @@ services:
     networks:
       - task-management-network
     restart: unless-stopped
-    command: >
-      sh -c "python manage.py migrate &&
-        celery -A main beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    command: celery -A main beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
 
 volumes:
   postgres_data:

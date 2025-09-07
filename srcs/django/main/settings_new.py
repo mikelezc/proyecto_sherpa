@@ -5,7 +5,6 @@ Simplified version without Vault, SSL, and game-related apps.
 
 from django.core.management.utils import get_random_secret_key
 from pathlib import Path
-from datetime import timedelta
 import logging
 import os
 
@@ -177,7 +176,7 @@ CELERY_BEAT_SCHEDULE = {
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
+        "authentication.api.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -191,7 +190,12 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Email backend for development
+# JWT Configuration
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
+JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
+JWT_EXPIRATION_TIME = int(os.environ.get("JWT_EXPIRATION_TIME", "3600"))
+
+# Email configuration (for notifications)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
@@ -269,24 +273,3 @@ LOGGING = {
         "level": "INFO",
     },
 }
-
-# Encryption key for user data
-ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", "MzwoO0zkaS8ukiTok83cIrKSrkqJ4EnJIeYmPHYIX0g=")
-
-# JWT Configuration
-JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", SECRET_KEY)
-JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
-JWT_ACCESS_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get("JWT_ACCESS_TOKEN_LIFETIME", "15")))
-JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=int(os.environ.get("JWT_REFRESH_TOKEN_LIFETIME", "7")))
-
-# Site configuration
-SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
-
-# Email configuration (using console backend for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@localhost")
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")

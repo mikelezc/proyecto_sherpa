@@ -22,6 +22,22 @@ class CustomUser(AbstractUser):
         ext = filename.split(".")[-1]
         return f"profile_images/{instance.username}.{ext}"
 
+    # Add related_name to fix the conflict
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        related_name='custom_users',
+        help_text='The groups this user belongs to.',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        related_name='custom_users',
+        help_text='Specific permissions for this user.',
+    )
+
     fortytwo_image = models.URLField(max_length=500, blank=True, null=True)
     profile_image = models.ImageField(
         upload_to=profile_image_path, null=True, blank=True
@@ -41,6 +57,11 @@ class CustomUser(AbstractUser):
     inactivity_notification_date = models.DateTimeField(null=True, blank=True)
     email_hash = models.CharField(max_length=64, db_index=True, unique=True, null=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
+
+    # Add manager
+    from .managers import CustomUserManager
+    objects = CustomUserManager()
+    all_objects = models.Manager()
 
     def get_profile_image_url(self):
         """Get the URL for the profile image of 42 API"""

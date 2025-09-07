@@ -1,0 +1,205 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Task List - Task Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+	<h1 class="h2">📋 All Tasks</h1>
+	<div class="btn-toolbar mb-2 mb-md-0">
+		<a href="{% url 'tasks_web:task_create' %}" class="btn btn-primary">
+			➕ New Task
+		</a>
+	</div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+	<div class="card-header">
+		<h6 class="mb-0">🔍 Filters</h6>
+	</div>
+	<div class="card-body">
+		<form method="get" class="row g-3">
+			<div class="col-md-4">
+				{{ filter_form.search.label_tag }}
+				{{ filter_form.search }}
+			</div>
+			<div class="col-md-2">
+				{{ filter_form.status.label_tag }}
+				{{ filter_form.status }}
+			</div>
+			<div class="col-md-2">
+				{{ filter_form.priority.label_tag }}
+				{{ filter_form.priority }}
+			</div>
+			<div class="col-md-2">
+				<label class="form-label">&nbsp;</label>
+				<div class="form-check">
+					{{ filter_form.assigned_to_me }}
+					<label class="form-check-label" for="{{ filter_form.assigned_to_me.id_for_label }}">
+						My Tasks Only
+					</label>
+				</div>
+			</div>
+			<div class="col-md-2">
+				<label class="form-label">&nbsp;</label>
+				<div class="d-grid">
+					<button type="submit" class="btn btn-outline-primary">Filter</button>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+<!-- Task Count -->
+<div class="mb-3">
+	<p class="text-muted">Showing {{ page_obj.object_list|length }} of {{ total_tasks }} tasks</p>
+</div>
+
+<!-- Tasks -->
+{% if page_obj.object_list %}
+<div class="row">
+	{% for task in page_obj.object_list %}
+	<div class="col-lg-6 col-xl-4 mb-4">
+		<div class="card task-card priority-{{ task.priority }} status-{{ task.status }}">
+			<div class="card-header d-flex justify-content-between align-items-center">
+				<h6 class="mb-0">
+					<a href="{% url 'tasks_web:task_detail' task.id %}" class="text-decoration-none">
+						{{ task.title|truncatechars:30 }}
+					</a>
+				</h6>
+				<span class="badge 
+                        {% if task.priority == 'low' %}bg-success
+                        {% elif task.priority == 'medium' %}bg-warning
+                        {% elif task.priority == 'high' %}bg-danger
+                        {% else %}bg-dark
+                        {% endif %}">
+					{{ task.get_priority_display }}
+				</span>
+			</div>
+
+			<div class="card-body">
+				<p class="card-text">{{ task.description|truncatechars:100 }}</p>
+
+				<div class="mb-2">
+					<small class="text-muted">
+						<strong>Status:</strong>
+						<span class="badge 
+                                {% if task.status == 'todo' %}bg-secondary
+                                {% elif task.status == 'in_progress' %}bg-warning
+                                {% elif task.status == 'review' %}bg-info
+                                {% elif task.status == 'done' %}bg-success
+                                {% else %}bg-dark
+                                {% endif %}">
+							{{ task.get_status_display }}
+						</span>
+					</small>
+				</div>
+
+				<div class="mb-2">
+					<small class="text-muted">
+						<strong>Due:</strong> {{ task.due_date|date:"M d, Y H:i" }}
+						{% if task.is_overdue %}
+						<span class="badge bg-danger ms-1">Overdue</span>
+						{% endif %}
+					</small>
+				</div>
+
+				<div class="mb-2">
+					<small class="text-muted">
+						<strong>Created by:</strong> {{ task.created_by.get_full_name|default:task.created_by.username
+						}}
+					</small>
+				</div>
+
+				{% if task.assigned_to.exists %}
+				<div class="mb-2">
+					<small class="text-muted">
+						<strong>Assigned to:</strong>
+						{% for user in task.assigned_to.all %}
+						<span class="badge bg-light text-dark">{{ user.get_full_name|default:user.username }}</span>
+						{% endfor %}
+					</small>
+				</div>
+				{% endif %}
+
+				{% if task.tags.exists %}
+				<div class="mb-3">
+					{% for tag in task.tags.all %}
+					<span class="badge bg-secondary me-1">{{ tag.name }}</span>
+					{% endfor %}
+				</div>
+				{% endif %}
+			</div>
+
+			<div class="card-footer d-flex justify-content-between">
+				<a href="{% url 'tasks_web:task_detail' task.id %}" class="btn btn-sm btn-outline-primary">
+					View Details
+				</a>
+				{% if task.created_by == user or user in task.assigned_to.all %}
+				<a href="{% url 'tasks_web:task_edit' task.id %}" class="btn btn-sm btn-outline-secondary">
+					Edit
+				</a>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+	{% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<nav aria-label="Task pagination">
+	<ul class="pagination justify-content-center">
+		{% if page_obj.has_previous %}
+		<li class="page-item">
+			<a class="page-link"
+				href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+				Previous
+			</a>
+		</li>
+		{% endif %}
+
+		{% for num in page_obj.paginator.page_range %}
+		{% if page_obj.number == num %}
+		<li class="page-item active">
+			<span class="page-link">{{ num }}</span>
+		</li>
+		{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+			<a class="page-link"
+				href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">
+				{{ num }}
+			</a>
+			</li>
+			{% endif %}
+			{% endfor %}
+
+			{% if page_obj.has_next %}
+			<li class="page-item">
+				<a class="page-link"
+					href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+					Next
+				</a>
+			</li>
+			{% endif %}
+	</ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card">
+	<div class="card-body text-center py-5">
+		<h5>No tasks found</h5>
+		<p class="text-muted">
+			{% if request.GET %}
+			Try adjusting your filters or
+			{% endif %}
+			create your first task to get started!
+		</p>
+		<a href="{% url 'tasks_web:task_create' %}" class="btn btn-primary">
+			➕ Create Task
+		</a>
+	</div>
+</div>
+{% endif %}
+
+{% endblock %}
