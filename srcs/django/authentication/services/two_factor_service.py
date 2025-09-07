@@ -151,7 +151,7 @@ class TwoFactorService:
                 logger.error(f"No code provided for sending to user {user_id}")
                 raise ValueError("Código 2FA no proporcionado")
             
-            subject = "Tu código de verificación PongOrama"
+            subject = "Tu código de verificación Task Management System"
             context = {"user": user, "code": code}
             html_message = render_to_string("authentication/2fa_email.html", context)
 

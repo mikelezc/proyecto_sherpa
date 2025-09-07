@@ -1,6 +1,6 @@
 """
 URL configuration for task management system.
-Simplified version without game, tournament, and dashboard apps.
+Enterprise authentication and task management routes.
 """
 
 from django.contrib import admin

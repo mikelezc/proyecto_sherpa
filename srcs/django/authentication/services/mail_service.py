@@ -92,7 +92,7 @@ class MailSendingService:
         try:
             MailSendingService._check_email_rate_limit(user.id)
             
-            subject = "Verifica tu cuenta de PongOrama"
+            subject = "Verifica tu cuenta de Task Management System"
             context = {
                 "user": user,
                 "domain": settings.SITE_URL,
@@ -127,7 +127,7 @@ class MailSendingService:
     def send_welcome_email(user):
         """Send welcome email to new user"""
         try:
-            subject = "¡Bienvenido a PongOrama!"
+            subject = "¡Bienvenido a Task Management System!"
             context = {
                 "user": user,
                 "email": user.email,  
@@ -237,7 +237,7 @@ class MailSendingService:
         try:
             MailSendingService._check_email_rate_limit(user.id)
             
-            subject = "Resetear contraseña de PongOrama"
+            subject = "Resetear contraseña de Task Management System"
             context = {
                 "user": user,
                 "verification_url": f"{settings.SITE_URL}/reset/{verification_data['uid']}/{verification_data['token']}/",

@@ -1,6 +1,6 @@
 """
 Django settings for task management system project.
-Simplified version without Vault, SSL, and game-related apps.
+Enterprise-focused configuration for authentication and task management.
 """
 
 from django.core.management.utils import get_random_secret_key
