@@ -35,6 +35,12 @@ services:
     command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   web:
     build:
@@ -61,11 +67,17 @@ services:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     networks:
       - task-management-network
     restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   celery-worker:
     build:
@@ -86,13 +98,22 @@ services:
     volumes:
       - ./srcs/django:/app
     depends_on:
-      - db
-      - redis
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - task-management-network
     restart: unless-stopped
     command: celery -A main worker --loglevel=info
+    healthcheck:
+      test: ["CMD", "celery", "-A", "main", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   celery-beat:
     build:
@@ -113,15 +134,24 @@ services:
     volumes:
       - ./srcs/django:/app
     depends_on:
-      - db
-      - redis
-      - web
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      web:
+        condition: service_healthy
     networks:
       - task-management-network
     restart: unless-stopped
     command: >
       sh -c "python manage.py migrate &&
         celery -A main beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/tmp/celerybeat.pid') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 volumes:
   postgres_data:
