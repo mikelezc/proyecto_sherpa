@@ -18,7 +18,6 @@ class GDPRService:
                 "is_active": user.is_active,
                 "acepted_privacy_policy": True, # This is acepted in the moment of the registration
 				"date_of_acceptance": user.date_joined, # This is the date of the registration
-                "is_fortytwo_user": user.is_fortytwo_user,
             },
             "security_settings": {
                 "two_factor_enabled": user.two_factor_enabled,

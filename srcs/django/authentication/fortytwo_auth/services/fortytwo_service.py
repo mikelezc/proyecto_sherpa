@@ -82,7 +82,6 @@ class FortyTwoAuthService:
             defaults={
                 "email": user_data["email"],
                 "fortytwo_id": str(user_data["id"]),
-                "is_fortytwo_user": True,
                 "is_active": False,
                 "email_verified": False,
                 "fortytwo_image": user_data.get("image", {}).get("link"),

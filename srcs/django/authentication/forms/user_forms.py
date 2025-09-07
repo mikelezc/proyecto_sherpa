@@ -19,7 +19,6 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = CustomUser
         fields = ["username", "email"]
-        readonly_fields = ["profile_image", "is_fortytwo_user", "fortytwo_id"]
 
     def clean(self):
         cleaned_data = super().clean()

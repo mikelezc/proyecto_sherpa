@@ -145,7 +145,7 @@ def delete_account(request, data: DeleteAccountSchema) -> Dict:
             
         result = ProfileService.delete_user_account(
             user=request.user,
-            password=data.confirm_password if not request.user.is_fortytwo_user else None
+            password=data.confirm_password
         )
         return {
             'status': 'success',
@@ -173,10 +173,10 @@ def get_user_profile(request) -> Dict:
             'username': profile_data['user'].username,
             'email': profile_data['user'].email,
             'is_active': profile_data['user'].is_active,
-            'is_fortytwo_user': profile_data['user'].is_fortytwo_user,
+            'is_fortytwo_user': False,
             'email_verified': profile_data['user'].email_verified,
             'two_factor_enabled': profile_data['user'].two_factor_enabled,
-            'profile_image_url': profile_data['user'].profile_image.url if profile_data['user'].profile_image else None,
+            'profile_image_url': None,
             'date_joined': profile_data['user'].date_joined.isoformat() if profile_data['user'].date_joined else None,
             'last_login': profile_data['user'].last_login.isoformat() if profile_data['user'].last_login else None,
             'show_qr': profile_data['show_qr']

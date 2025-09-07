@@ -40,8 +40,8 @@ def validate_qr(request):
                     {
                         "pending_user_id": user.id,
                         "user_authenticated": True,
-                        "manual_user": not user.is_fortytwo_user,
-                        "fortytwo_user": user.is_fortytwo_user,
+                        "manual_user": True,
+                        "fortytwo_user": False,
                     }
                 )
                 return JsonResponse(

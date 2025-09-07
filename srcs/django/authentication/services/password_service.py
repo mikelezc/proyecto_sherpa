@@ -150,8 +150,6 @@ class PasswordService:
             return False
 
         user = users.first()
-        if user.is_fortytwo_user:
-            raise ValidationError("Los usuarios de 42 no pueden usar esta función")
             
         # Verify rate limit for password_reset attempts
         is_limited, remaining_time = rate_limiter.is_rate_limited(

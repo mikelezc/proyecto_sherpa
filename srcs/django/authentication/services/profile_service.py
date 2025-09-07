@@ -86,9 +86,8 @@ class ProfileService:
             raise ValidationError(f"Please wait {remaining_time} seconds before updating your profile again")
 
         try:
-            if not user.is_fortytwo_user and "email" in data: 
-                # if the user is not a 42 user and the email is in the data
-                # (42 users cannot change their email)
+            if "email" in data: 
+                # Process email changes (simplified - no 42 user restrictions)
                 email = data.get("email")
                 if email != user.email:
                     if re.match(r".*@student\.42.*\.com$", email.lower()):
@@ -151,9 +150,9 @@ class ProfileService:
 		# This is used in the 8000 port development environment but was deprecated in production
         # We keep it here for reference purposes and avoid errors when is called when the project is running
         try:
-            if not user.is_fortytwo_user:
-                if not password or not user.check_password(password):
-                    raise ValidationError("Contraseña incorrecta")
+            # Verify password for account deletion (simplified)
+            if not password or not user.check_password(password):
+                raise ValidationError("Contraseña incorrecta")
             
             # First delete user sessions
             UserSession.objects.filter(user=user).delete()

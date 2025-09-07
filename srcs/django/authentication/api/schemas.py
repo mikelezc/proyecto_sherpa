@@ -97,7 +97,6 @@ class UserProfileSchema(Schema):
     username: str
     email: str
     is_active: bool
-    is_fortytwo_user: bool
     email_verified: bool
     two_factor_enabled: bool
     profile_image_url: Optional[str]
