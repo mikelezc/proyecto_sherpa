@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from ninja import Schema
 
 # Schema Definitions for API Data Validation
@@ -8,6 +8,12 @@ from ninja import Schema
 
 # DATA VALIDATION:
 #    - Automatically validate incoming request data against defined types
+
+
+class ErrorSchema(Schema):
+    """Error response schema"""
+    error: str
+    status_code: int
 #    - Reject invalid requests with appropriate error messages
 #    - Convert data to proper Python types (strings, integers, booleans)
 
@@ -95,3 +101,25 @@ class UserProfileSchema(Schema):
     profile_image_url: Optional[str]
     date_joined: Optional[str]
     last_login: Optional[str]
+
+
+class UserListSchema(Schema):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    date_joined: Optional[str]
+
+
+class UserUpdateSchema(Schema):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+
+
+class PaginatedUsersSchema(Schema):
+    count: int
+    next: Optional[str]
+    previous: Optional[str]
+    results: List[UserListSchema]

@@ -1,6 +1,7 @@
 from django.urls import path
 from ninja import NinjaAPI
 from authentication.api.controllers import router as auth_router
+from authentication.api.controllers.user_controller import router as user_router
 
 from .views import (
     # auth_views
@@ -20,6 +21,12 @@ from .views import (
     VerifyEmailChangeAPIView,
 )
 
+from .views.user_views import (
+    UserListAPIView,
+    UserDetailAPIView,
+    UserMeAPIView,
+)
+
 # Django Ninja Configuration
 api = NinjaAPI(
     title="Authentication API",
@@ -31,6 +38,8 @@ api = NinjaAPI(
 
 # Add authentication router
 api.add_router("/auth/", auth_router)
+# Add user management router
+api.add_router("/users/", user_router)
 
 # Authentication views
 auth_patterns = [
@@ -75,11 +84,19 @@ verification_patterns = [
     ),
 ]
 
+# User management views
+user_patterns = [
+    path("users/", UserListAPIView.as_view(), name="api_users_list"),
+    path("users/<int:user_id>/", UserDetailAPIView.as_view(), name="api_user_detail"),
+    path("users/me/", UserMeAPIView.as_view(), name="api_user_me"),
+]
+
 urlpatterns = [
     *auth_patterns,
     *profile_patterns,
     *password_patterns,
     *verification_patterns,
+    *user_patterns,
     path("ninja/", api.urls),
 ]
 
