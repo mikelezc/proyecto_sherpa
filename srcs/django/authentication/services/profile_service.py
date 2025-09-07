@@ -25,13 +25,8 @@ class ProfileService:
 
     @staticmethod
     def handle_image_restoration(user):
-        """Handles profile image restoration"""
-        if user.is_fortytwo_user:
-            ProfileService.restore_default_image(user)
-            return "Imagen de perfil restaurada a la imagen de 42"
-        else:
-            ProfileService.restore_default_image(user)
-            return "Imagen de perfil restaurada a la imagen por defecto"
+        """Simplified - no longer handles images"""
+        return "Perfil actualizado"
 
     @staticmethod
     def handle_email_change(user, new_email):
@@ -109,79 +104,12 @@ class ProfileService:
 
                     user.email = email.lower()
 
-            profile_image = None
-
-            if data.get("profile_image_base64"):
-                # We receive the image as base64 encoded string because it's sent from the frontend
-                # We need to decode it and save it as a file
-                try:
-                    format, imgstr = data["profile_image_base64"].split(";base64,")
-                    ext = format.split("/")[-1]
-                    profile_image = ContentFile(
-                        base64.b64decode(imgstr), name=f"profile_{user.id}.{ext}"
-                    )
-                except Exception as e:
-                    raise ValidationError(f"Error procesando imagen base64: {str(e)}")
-
-            elif files and "profile_image" in files: # if the profile_image is in the files (from the frontend)
-                profile_image = files["profile_image"]
-
-            if profile_image:
-                if profile_image.size > 2 * 1024 * 1024:
-                    error_msg = f"User {user.id} attempted to upload oversized image: {profile_image.size / (1024*1024):.2f}MB (max: 2MB)"
-                    logger.warning(error_msg)
-                    raise ValidationError("La imagen no debe exceder 2MB")
-
-                valid_extensions = ["jpg", "jpeg", "png", "gif"]
-                ext = profile_image.name.split(".")[-1].lower()
-                if ext not in valid_extensions:
-                    raise ValidationError(
-                        f"Formato no permitido. Use: {', '.join(valid_extensions)}"
-                    )
-
-                # Ensure profile_images directory exists and has correct permissions
-                media_root = Path(settings.MEDIA_ROOT)
-                profile_images_dir = media_root / 'profile_images'
-                profile_images_dir.mkdir(parents=True, exist_ok=True)
-                os.chmod(profile_images_dir, 0o755)
-
-                # Generate unique filename
-                timestamp = int(time.time())
-                filename = f"profile_{user.id}_{timestamp}.{ext}"
-                relative_path = f'profile_images/{filename}'
-                file_path = media_root / relative_path
-
-                # Erase old image if it exists
-                if user.profile_image:
-                    try:
-                        old_path = Path(user.profile_image.path)
-                        if old_path.exists():
-                            os.remove(old_path)
-                    except Exception as e:
-                        logger.warning(f"Error removing old image: {e}")
-
-                # Save new image
-                try:
-                    with open(file_path, 'wb+') as destination:
-                        for chunk in profile_image.chunks():
-                            destination.write(chunk)
-                    os.chmod(file_path, 0o644)
-                    user.profile_image = relative_path
-                except Exception as e:
-                    logger.error(f"Error saving image: {e}")
-                    raise ValidationError(f"Error al guardar la imagen: {str(e)}")
-
+            # Save user changes (simplified - no image handling)
             user.save()
             rate_limiter.reset_limit(user.id, 'profile_update') # reset rate limit on successful profile update
-            
-            # Build profile image URL
-            profile_image_url = None
-            if user.profile_image:
-                profile_image_url = f"{settings.MEDIA_URL}{user.profile_image}"
 
             return {
-                "email": user.email,
-                "profile_image_url": profile_image_url
+                "email": user.email
             }
 
         except Exception as e:
@@ -190,31 +118,18 @@ class ProfileService:
 
     @staticmethod
     def restore_default_image(user):
-        """Restores default profile image"""
+        """Simplified - no longer handles images"""
         try:
-            if user.profile_image:
-                default_storage.delete(user.profile_image.path)
-
-            user.profile_image = None
-
-            if user.is_fortytwo_user:
-                user.fortytwo_image = user.fortytwo_image_url
-
             user.save()
             return True
-
         except Exception as e:
-            raise ValidationError(f"Error al restaurar imagen: {str(e)}")
+            raise ValidationError(f"Error al actualizar perfil: {str(e)}")
 
     @staticmethod
     def get_user_profile_data(user):
-        """Gets user profile data to display in the profile view"""
+        """Gets user profile data to display in the profile view (simplified)"""
         if not user.is_authenticated:
             raise ValidationError("Usuario no autenticado")
-
-        profile_image_url = None # default profile image URL
-        if user.profile_image:
-            profile_image_url = f"{settings.SITE_URL}{settings.MEDIA_URL}{user.profile_image}"
 
         data = {
             "id": user.id,
@@ -224,9 +139,6 @@ class ProfileService:
             "email_verified": user.email_verified,
             "date_joined": user.date_joined.isoformat(),
             "last_login": user.last_login.isoformat() if user.last_login else None,
-            "is_fortytwo_user": user.is_fortytwo_user,
-            "profile_image": profile_image_url,
-            "fortytwo_image": user.fortytwo_image,
         }
         return data
 

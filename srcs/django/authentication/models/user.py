@@ -13,14 +13,6 @@ logger = logging.getLogger(__name__)
 
 class CustomUser(AbstractUser):
     id = models.AutoField(primary_key=True) # id is the primary key for the user
-    DEFAULT_PROFILE_IMAGE = (
-        "https://ui-avatars.com/api/?name={}&background=random&length=2"
-    )
-
-    def profile_image_path(instance, filename):
-        """Returns the path for the profile image"""
-        ext = filename.split(".")[-1]
-        return f"profile_images/{instance.username}.{ext}"
 
     # Add related_name to fix the conflict
     groups = models.ManyToManyField(
@@ -38,12 +30,7 @@ class CustomUser(AbstractUser):
         help_text='Specific permissions for this user.',
     )
 
-    fortytwo_image = models.URLField(max_length=500, blank=True, null=True)
-    profile_image = models.ImageField(
-        upload_to=profile_image_path, null=True, blank=True
-    )
-    fortytwo_id = models.CharField(max_length=50, blank=True, null=True)
-    is_fortytwo_user = models.BooleanField(default=False)
+    # Core user fields (simplified)
     email_verified = models.BooleanField(default=False)
     email_verification_token = models.CharField(max_length=255, blank=True, null=True)
     email_token_created_at = models.DateTimeField(null=True, blank=True)
@@ -62,23 +49,6 @@ class CustomUser(AbstractUser):
     from .managers import CustomUserManager
     objects = CustomUserManager()
     all_objects = models.Manager()
-
-    def get_profile_image_url(self):
-        """Get the URL for the profile image of 42 API"""
-        if self.profile_image and hasattr(self.profile_image, "url"):
-            return self.profile_image.url
-        if self.is_fortytwo_user and self.fortytwo_image:
-            return self.fortytwo_image
-        return self.DEFAULT_PROFILE_IMAGE.format(self.username[:2].upper())
-
-    @property
-    def fortytwo_image_url(self):
-        """Returns the URL for the profile image from 42 API"""
-        return (
-            self.fortytwo_image
-            if self.is_fortytwo_user
-            else self.get_profile_image_url()
-        )
 
     @property
     def decrypted_email(self):
