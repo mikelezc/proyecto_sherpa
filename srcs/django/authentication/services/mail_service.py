@@ -92,13 +92,13 @@ class MailSendingService:
         try:
             MailSendingService._check_email_rate_limit(user.id)
             
-            subject = "Verifica tu cuenta de PongOrama"
+            subject = "Verifica tu cuenta de Task Management System"
             context = {
                 "user": user,
                 "domain": settings.SITE_URL,
                 "uid": token["uid"],
                 "token": token["token"],
-                "email": user.decrypted_email,
+                "email": user.email,
             }
             html_message = render_to_string(
                 "authentication/email_verification.html", context
@@ -109,7 +109,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],  
+                [user.email],  
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -127,10 +127,10 @@ class MailSendingService:
     def send_welcome_email(user):
         """Send welcome email to new user"""
         try:
-            subject = "¡Bienvenido a PongOrama!"
+            subject = "¡Bienvenido a Task Management System!"
             context = {
                 "user": user,
-                "email": user.decrypted_email,  
+                "email": user.email,  
             }
             html_message = render_to_string("authentication/welcome_email.html", context)
             plain_message = strip_tags(html_message)
@@ -139,7 +139,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],  
+                [user.email],  
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -162,7 +162,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -221,7 +221,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -237,7 +237,7 @@ class MailSendingService:
         try:
             MailSendingService._check_email_rate_limit(user.id)
             
-            subject = "Resetear contraseña de PongOrama"
+            subject = "Resetear contraseña de Task Management System"
             context = {
                 "user": user,
                 "verification_url": f"{settings.SITE_URL}/reset/{verification_data['uid']}/{verification_data['token']}/",
@@ -252,7 +252,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
             )
@@ -286,7 +286,7 @@ class MailSendingService:
                 subject,
                 plain_message,
                 settings.DEFAULT_FROM_EMAIL,
-                [user.decrypted_email],
+                [user.email],
                 html_message=html_message,
                 fail_silently=False,
                 connection=connection,

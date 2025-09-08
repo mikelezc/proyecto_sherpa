@@ -20,6 +20,9 @@ def login(request):
                 request.POST.get("password"),
                 request.POST.get("remember", None),
             )
+            # After logging in, redirect to task list as per requirements
+            if redirect_to == "user":
+                return redirect('tasks_web:task_list')
             return redirect(redirect_to)
         except ValidationError as e:
             messages.error(request, str(e))
@@ -34,12 +37,12 @@ def register(request):
             result = AuthenticationService.handle_registration(request.POST)
             if isinstance(result, dict) and result.get("success"):
                 messages.success(
-                    request, AuthenticationService.MESSAGES["email_verification"]
+                    request, "Account created successfully! You can now log in."
                 )
                 return redirect("login")
             elif result:
                 messages.success(
-                    request, AuthenticationService.MESSAGES["email_verification"]
+                    request, "Account created successfully! You can now log in."
                 )
                 return redirect("login")
         except ValidationError as e:

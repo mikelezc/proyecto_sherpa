@@ -108,10 +108,8 @@ class PasswordService:
         if CustomUser.objects.filter(username=username.lower()).exists():
             raise ValidationError(f"El nombre de usuario '{username}' ya está en uso")
 
-        # Verify if email is already taken using hash comparison
-        temp_user = CustomUser(email=email.lower())
-        email_hash = temp_user._generate_email_hash(email.lower())
-        if CustomUser.objects.filter(email_hash=email_hash).exists():
+        # Verify if email is already taken (simplified)
+        if CustomUser.objects.filter(email=email.lower()).exists():
             raise ValidationError(f"El email '{email}' ya está registrado")
 
         # Validate length of username
@@ -119,16 +117,6 @@ class PasswordService:
         if len(username) > max_length_username:
             raise ValidationError(
                 f"El nombre de usuario no puede tener más de {max_length_username} caracteres"
-            )
-
-        # Validate 42. prefix
-        if username.startswith("42."):
-            raise ValidationError("El prefijo '42.' está reservado para usuarios de 42")
-
-        # Validate 42 email domain
-        if re.match(r".*@student\.42.*\.com$", email.lower()):
-            raise ValidationError(
-                "Los correos con dominio @student.42*.com están reservados para usuarios de 42"
             )
 
         PasswordService._validate_password_basic(
@@ -140,24 +128,14 @@ class PasswordService:
         """Iniciate password reset process"""
         rate_limiter = RateLimitService()
         
-        if re.match(r".*@student\.42.*\.com$", email.lower()):
-            raise ValidationError(
-                "Los usuarios de 42 deben iniciar sesión a través del botón de login de 42")
-
-        # Create a hash of the email to compare with the database
-        temp_user = CustomUser(email=email.lower())
-        email_hash = temp_user._generate_email_hash(email.lower())
-        
-        # search for the user with the email hash
+        # Search for user with the email (simplified)
         users = CustomUser.objects.filter(
-            email_hash=email_hash, is_active=True, is_fortytwo_user=False)
+            email=email.lower(), is_active=True)
 
         if not users.exists():
             return False
 
         user = users.first()
-        if user.is_fortytwo_user:
-            raise ValidationError("Los usuarios de 42 no pueden usar esta función")
             
         # Verify rate limit for password_reset attempts
         is_limited, remaining_time = rate_limiter.is_rate_limited(

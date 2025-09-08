@@ -1,21 +1,14 @@
 from django.urls import path
 from ninja import NinjaAPI
 from authentication.api.controllers import router as auth_router
-from authentication.fortytwo_auth.views import (
-    FortyTwoLoginAPIView,
-    FortyTwoCallbackAPIView,
-    FortyTwoVerify2FAView,
-)
+from authentication.api.controllers.user_controller import router as user_router
 
 from .views import (
     # auth_views
     LoginAPIView,
     LogoutAPIView,
     RegisterAPIView,
-    # gdpr_views
-    GDPRSettingsAPIView,
-    ExportPersonalDataAPIView,
-    PrivacyPolicyAPIView,
+    RefreshTokenAPIView,
     # pass_reset_views
     PasswordResetAPIView,
     PasswordResetConfirmAPIView,
@@ -26,58 +19,32 @@ from .views import (
     # verify_email_views
     VerifyEmailAPIView,
     VerifyEmailChangeAPIView,
-    # qr_views
-    GenerateQRAPIView,
-    ValidateQRAPIView,
-    # two_factor_views
-    Enable2FAView,
-    Verify2FAAPIView,
-    Disable2FAView,
+)
+
+from .views.user_views import (
+    UserListAPIView,
+    UserDetailAPIView,
+    UserMeAPIView,
 )
 
 # Django Ninja Configuration
 api = NinjaAPI(
     title="Authentication API",
     version="2.0.0",
-    description="API para autenticación y gestión de usuarios",
+    description="API para autenticación",
     urls_namespace="auth_api",
     docs_url="/docs",
 )
 
-# Add authentication router
-api.add_router("/auth/", auth_router)
+# Add authentication router to root level to match /api/auth/ routes
+api.add_router("/", auth_router)
 
 # Authentication views
 auth_patterns = [
     path("login/", LoginAPIView.as_view(), name="api_login"),
     path("logout/", LogoutAPIView.as_view(), name="api_logout"),
     path("register/", RegisterAPIView.as_view(), name="api_register"),
-]
-
-# QR patterns
-qr_patterns = [
-    path(
-        "generate-qr/<str:username>/",
-        GenerateQRAPIView.as_view(),
-        name="api_generate_qr",
-    ),
-    path("validate-qr/", ValidateQRAPIView.as_view(), name="api_validate_qr"),
-]
-
-# GDPR views
-gdpr_patterns = [
-    path("gdpr/settings/", GDPRSettingsAPIView.as_view(), name="api_gdpr_settings"),
-    path(
-        "gdpr/export-data/download/",
-        ExportPersonalDataAPIView.as_view(),
-        {"download": True},
-        name="api_export_data_download"
-    ),
-    path(
-        "gdpr/privacy-policy/",
-        PrivacyPolicyAPIView.as_view(),
-        name="api_privacy_policy",
-    ),
+    path("refresh/", RefreshTokenAPIView.as_view(), name="api_refresh"),
 ]
 
 # Profile views
@@ -115,42 +82,20 @@ verification_patterns = [
     ),
 ]
 
-# Two-factor authentication views
-two_factor_patterns = [
-    path("enable-2fa/", Enable2FAView.as_view(), name="api_enable_2fa"),
-    path("verify-2fa/", Verify2FAAPIView.as_view(), name="api_verify_2fa"),
-    path("disable-2fa/", Disable2FAView.as_view(), name="api_disable_2fa"),
-]
-
-# API URLs
-fourtytwo_patterns = [
-    path(
-        "authentication/42/api/login/",
-        FortyTwoLoginAPIView.as_view(),
-        name="api_ft_login",
-    ),
-    path(
-        "authentication/42/api/callback/",
-        FortyTwoCallbackAPIView.as_view(),
-        name="api_ft_callback",
-    ),
-    path(
-        "auth/42/verify-2fa/",
-        FortyTwoVerify2FAView.as_view(),
-        name="fortytwo_verify_2fa",
-    ),  # Cambiar ruta
+# User management views
+user_patterns = [
+    path("users/", UserListAPIView.as_view(), name="api_users_list"),
+    path("users/<int:user_id>/", UserDetailAPIView.as_view(), name="api_user_detail"),
+    path("users/me/", UserMeAPIView.as_view(), name="api_user_me"),
 ]
 
 urlpatterns = [
     *auth_patterns,
-    *qr_patterns,
-    *gdpr_patterns,
     *profile_patterns,
     *password_patterns,
     *verification_patterns,
-    *two_factor_patterns,
-    *fourtytwo_patterns,
-    path("ninja/", api.urls),
+    *user_patterns,
+    path("", api.urls),  # Changed from "ninja/" to "" to match /api/auth/docs directly
 ]
 
 """

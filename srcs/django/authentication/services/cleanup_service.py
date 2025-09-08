@@ -1,12 +1,11 @@
 from authentication.models import CustomUser, UserSession
 from .mail_service import MailSendingService
-from .gdpr_service import GDPRService
 from django.utils import timezone
 from django.conf import settings
 import logging
 
 
-# Cleanup Service for GDPR compliance and inactive user management.
+# Cleanup Service for inactive user management.
 
 # This service handles:
 # - Detection and deletion of unverified accounts past verification timeout
@@ -85,7 +84,7 @@ class CleanupService:
                 f"- Current time: {current_time}"
             )
             try:
-                GDPRService.delete_user_data(user)
+                user.delete()  # Simplified user deletion
                 deleted_count += 1	# Increment deleted count
             except Exception as e:
                 logger.error(f"Error deleting unverified user {user.username}: {str(e)}")
@@ -243,7 +242,7 @@ class CleanupService:
         if notification_age >= settings.INACTIVITY_WARNING:
             try:
                 deleted_username = user.username
-                GDPRService.delete_user_data(user)
+                user.delete()  # Simplified user deletion
                 logger.info(f"🗑️  Deleted user {deleted_username}")
             except Exception as e:
                 logger.error(f"Error deleting user {user.username}: {str(e)}")

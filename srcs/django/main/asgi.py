@@ -21,10 +21,9 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from channels.security.websocket import AllowedHostsOriginValidator
 from django.core.asgi import get_asgi_application
-from chat.routing import websocket_urlpatterns as chat_urlpatterns
-from game.routing import websocket_urlpatterns as game_urlpatterns
 
-combined_patterns = chat_urlpatterns + game_urlpatterns
+# No WebSocket patterns needed for basic task management
+combined_patterns = []
 
 application = ProtocolTypeRouter(
     {

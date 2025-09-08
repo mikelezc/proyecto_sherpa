@@ -219,3 +219,141 @@ class TokenService:
         except Exception as e:
             logger.error(f"Token verification error: {str(e)}")
             raise ValidationError("Token inválido o expirado")
+
+    #### JWT Access/Refresh Token Methods ####
+    
+    @classmethod
+    def generate_tokens(cls, user):
+        """
+        Generate both access and refresh tokens for API authentication
+        
+        Returns:
+            dict: {
+                "access_token": str,
+                "refresh_token": str,
+                "expires_in": int (seconds)
+            }
+        """
+        now = datetime.now(timezone.utc)
+        
+        # Access token (short-lived)
+        access_payload = {
+            "user_id": user.id,
+            "username": user.username,
+            "type": "access",
+            "exp": now + settings.JWT_ACCESS_TOKEN_LIFETIME,
+            "iat": now,
+        }
+        
+        # Refresh token (long-lived)
+        refresh_payload = {
+            "user_id": user.id,
+            "type": "refresh",
+            "exp": now + settings.JWT_REFRESH_TOKEN_LIFETIME,
+            "iat": now,
+        }
+        
+        access_token = jwt.encode(
+            access_payload,
+            settings.JWT_SECRET_KEY,
+            algorithm=settings.JWT_ALGORITHM,
+        )
+        
+        refresh_token = jwt.encode(
+            refresh_payload,
+            settings.JWT_SECRET_KEY,
+            algorithm=settings.JWT_ALGORITHM,
+        )
+        
+        logger.info(f"JWT tokens generated for user {user.id}")
+        
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "expires_in": int(settings.JWT_ACCESS_TOKEN_LIFETIME.total_seconds()),
+            "token_type": "Bearer"
+        }
+    
+    @classmethod
+    def refresh_access_token(cls, refresh_token):
+        """
+        Generate new access token from valid refresh token
+        
+        Args:
+            refresh_token (str): Valid refresh token
+            
+        Returns:
+            dict: New token data
+            
+        Raises:
+            ValidationError: If refresh token is invalid/expired
+        """
+        try:
+            # Decode and validate refresh token
+            payload = jwt.decode(
+                refresh_token,
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM]
+            )
+            
+            # Validate token type
+            if payload.get("type") != "refresh":
+                raise ValidationError("Token inválido: no es un refresh token")
+            
+            # Get user
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            try:
+                user = User.objects.get(id=payload.get("user_id"))
+            except User.DoesNotExist:
+                raise ValidationError("Usuario no encontrado")
+            
+            if not user.is_active:
+                raise ValidationError("Usuario inactivo")
+            
+            # Generate new tokens
+            return cls.generate_tokens(user)
+            
+        except jwt.ExpiredSignatureError:
+            logger.error("Refresh token expired")
+            raise ValidationError("Refresh token expirado")
+        except jwt.InvalidTokenError as e:
+            logger.error(f"Invalid refresh token: {str(e)}")
+            raise ValidationError("Refresh token inválido")
+        except Exception as e:
+            logger.error(f"Token refresh error: {str(e)}")
+            raise ValidationError("Error al refrescar token")
+    
+    @classmethod
+    def validate_access_token(cls, access_token):
+        """
+        Validate access token and return user data
+        
+        Args:
+            access_token (str): JWT access token
+            
+        Returns:
+            dict: User data from token
+            
+        Raises:
+            ValidationError: If token is invalid/expired
+        """
+        try:
+            payload = jwt.decode(
+                access_token,
+                settings.JWT_SECRET_KEY,
+                algorithms=[settings.JWT_ALGORITHM]
+            )
+            
+            # Validate token type
+            if payload.get("type") != "access":
+                raise ValidationError("Token inválido: no es un access token")
+                
+            return payload
+            
+        except jwt.ExpiredSignatureError:
+            raise ValidationError("Access token expirado")
+        except jwt.InvalidTokenError as e:
+            logger.error(f"Invalid access token: {str(e)}")
+            raise ValidationError("Access token inválido")
