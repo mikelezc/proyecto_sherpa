@@ -1,6 +1,6 @@
 """
 Celery tasks for the task management system
-Required by the technical test
+(Required by the technical test)
 """
 
 from celery import shared_task

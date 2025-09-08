@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from ..models import Task, Tag, Team
+from ..models import Task
 from ..forms import TaskForm, TaskFilterForm
 
 
