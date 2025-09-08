@@ -8,6 +8,20 @@ https://github.com/mikelezc/42_Transcendence
 
 Aquí se puede ver la misma base, pero aplicada con otras funciones interesantes como notificaciones vía mail, JWT, 2FA con claves, encriptación de datos antes de ser ingresados en la db, balanceador de carga, front que se sirve diréctamente de la API, un WAF, etc. Muy recomendable inspeccionarlo.
 
+## 🎯 Para Examinadores - Verificación Rápida
+
+```bash
+# Opción 1: Script automatizado (recomendado)
+./verify_for_examiners.sh
+
+# Opción 2: Manual
+cp .env.sample .env
+docker-compose up -d
+curl http://localhost:8000/health/
+```
+
+**📋 Ver [EXAMINER_GUIDE.md](EXAMINER_GUIDE.md) para instrucciones detalladas**
+
 ## Quick Start
 
 ### 1. Clonar el repositorio
@@ -41,6 +55,7 @@ docker-compose up
 
 ## Documentación Completa
 
+- **[🎯 EXAMINER GUIDE](EXAMINER_GUIDE.md)** - **Guía paso a paso para evaluadores**
 - **[Architecture](docs/ARCHITECTURE.md)** - Descripción de la arquitectura del sistema  
 - **[Decisions](docs/DECISIONS.md)** - Decisiones técnicas y características implementadas
 - **[API Documentation](docs/API_DOCUMENTATION.md)** - Guía completa de la API
