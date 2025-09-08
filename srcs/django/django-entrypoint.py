@@ -104,6 +104,14 @@ def setup_django():
         except Exception as e:
             logger.warning(f"⚠️ Could not create superuser: {e}")
     
+    # Load seed data if environment variable is set
+    if os.environ.get('LOAD_SEED_DATA', 'False').lower() == 'true':
+        logger.info("🌱 Loading seed data...")
+        if not run_django_command(['manage.py', 'seed_data']):
+            logger.warning("⚠️ Failed to load seed data (might be normal if data already exists)")
+        else:
+            logger.info("✅ Seed data loaded successfully!")
+    
     logger.info("✅ Django setup completed!")
     return True
 

@@ -14,7 +14,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./srcs/db/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - task-management-network
     healthcheck:
@@ -60,6 +59,7 @@ services:
       - SQL_PORT=5432
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - LOAD_SEED_DATA=${LOAD_SEED_DATA}
     volumes:
       - django_media:/app/media
       - ./srcs/django:/app
@@ -71,7 +71,7 @@ services:
     networks:
       - task-management-network
     restart: unless-stopped
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python entrypoint.py
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/', timeout=5)"]
       interval: 30s
