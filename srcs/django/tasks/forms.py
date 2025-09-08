@@ -17,7 +17,7 @@ class TaskForm(forms.ModelForm):
         model = Task
         fields = [
             'title', 'description', 'status', 'priority', 
-            'due_date', 'estimated_hours', 'tags', 'team', 'parent_task'
+            'due_date', 'estimated_hours', 'assigned_to', 'tags', 'team', 'parent_task'
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter task title'}),
@@ -26,6 +26,7 @@ class TaskForm(forms.ModelForm):
             'priority': forms.Select(attrs={'class': 'form-control'}),
             'due_date': forms.DateTimeInput(attrs={'class': 'form-control', 'type': 'datetime-local'}),
             'estimated_hours': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.5', 'min': '0'}),
+            'assigned_to': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
             'tags': forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
             'team': forms.Select(attrs={'class': 'form-control'}),
             'parent_task': forms.Select(attrs={'class': 'form-control'}),
@@ -36,6 +37,7 @@ class TaskForm(forms.ModelForm):
         # Make some fields optional for better UX
         self.fields['team'].required = False
         self.fields['parent_task'].required = False
+        self.fields['assigned_to'].required = False
         self.fields['tags'].required = False
         
         # Filter parent task options (exclude self and subtasks)

@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
-from ..models import Task
+from ..models import Task, TaskAssignment
 from ..forms import TaskForm, TaskFilterForm
 
 
@@ -70,10 +70,21 @@ def task_create(request):
             task = form.save(commit=False)
             task.created_by = request.user
             task.save()
-            form.save_m2m()  # Save many-to-many relationships
+            
+            # Handle assigned_to manually to include assigned_by
+            assigned_users = form.cleaned_data.get('assigned_to', [])
+            for user in assigned_users:
+                TaskAssignment.objects.create(
+                    task=task,
+                    user=user,
+                    assigned_by=request.user
+                )
+            
+            # Save other many-to-many relationships (tags)
+            task.tags.set(form.cleaned_data.get('tags', []))
             
             messages.success(request, f'Task "{task.title}" created successfully!')
-            return redirect('task_detail', task_id=task.id)
+            return redirect('tasks_web:task_detail', task_id=task.id)
     else:
         form = TaskForm()
     
@@ -92,14 +103,39 @@ def task_edit(request, task_id):
     # Check permissions (only creator or assigned users can edit)
     if task.created_by != request.user and request.user not in task.assigned_to.all():
         messages.error(request, 'You do not have permission to edit this task.')
-        return redirect('task_detail', task_id=task.id)
+        return redirect('tasks_web:task_detail', task_id=task.id)
     
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
-            form.save()
+            # Save task first
+            task = form.save(commit=False)
+            task.save()
+            
+            # Handle assigned_to changes manually
+            assigned_users = form.cleaned_data.get('assigned_to', [])
+            
+            # Remove existing assignments that are not in the new list
+            current_assignments = TaskAssignment.objects.filter(task=task)
+            for assignment in current_assignments:
+                if assignment.user not in assigned_users:
+                    assignment.delete()
+            
+            # Add new assignments
+            current_assigned_users = [a.user for a in current_assignments]
+            for user in assigned_users:
+                if user not in current_assigned_users:
+                    TaskAssignment.objects.create(
+                        task=task,
+                        user=user,
+                        assigned_by=request.user
+                    )
+            
+            # Save other many-to-many relationships (tags)
+            task.tags.set(form.cleaned_data.get('tags', []))
+            
             messages.success(request, f'Task "{task.title}" updated successfully!')
-            return redirect('task_detail', task_id=task.id)
+            return redirect('tasks_web:task_detail', task_id=task.id)
     else:
         form = TaskForm(instance=task)
     

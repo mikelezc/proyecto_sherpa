@@ -125,6 +125,31 @@
 						</div>
 					</div>
 
+					{% if form.assigned_to %}
+					<div class="mb-3">
+						<label class="form-label">Assign to Users</label>
+						<div class="row">
+							{% for user in form.assigned_to %}
+							<div class="col-md-4 mb-2">
+								<div class="form-check">
+									{{ user.tag }}
+									<label class="form-check-label" for="{{ user.id_for_label }}">
+										{{ user.choice_label }}
+									</label>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+						{% if form.assigned_to.errors %}
+						<div class="text-danger">
+							{% for error in form.assigned_to.errors %}
+							<small>{{ error }}</small>
+							{% endfor %}
+						</div>
+						{% endif %}
+					</div>
+					{% endif %}
+
 					{% if form.tags %}
 					<div class="mb-3">
 						<label class="form-label">Tags</label>
