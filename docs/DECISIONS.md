@@ -83,6 +83,107 @@
 - CRUD de tareas con interfaz intuitiva
 - Dashboard con estadísticas
 
+## Part B: Extended Features - Funcionalidades Adicionales Implementadas
+
+### Introducción
+**Por qué se priorizaron estas funcionalidades:**
+- El tiempo del test técnico es limitado, por lo que después de completar la parte A, se priorizaron las características que consideré más relevantes para hacer un proyecto lo más cercano a cómo sería luego en producción.
+
+---
+
+### Business Logic & Automation ✅ (Implementado 85%)
+
+**Task Workflow Engine:**
+- ✅ **Status transition validation**: Validación de estados implementada en `Task.save()` con constraints de base de datos
+- ✅ **Automatic task assignment**: Tarea Celery `auto_assign_tasks` en `/tasks/tasks.py` - asigna tareas basándose en disponibilidad de usuarios
+- ✅ **SLA tracking and escalation**: Tarea `check_overdue_tasks` verifica y marca tareas vencidas automáticamente
+
+**Smart Features:**
+- ✅ **Workload balancing**: Algoritmo implementado en `calculate_team_velocity` para equilibrar carga de trabajo por equipos
+- ✅ **Priority calculation**: Sistema de 4 niveles (low, medium, high, critical) con índices optimizados en base de datos
+- ✅ **Dependency management**: Implementado sistema padre-hijo con `parent_task` y cálculo automático de progreso basado en subtasks
+
+**Automation Rules (5/5 implementadas):**
+- ✅ `auto_assign_tasks`: Asignación automática basada en disponibilidad
+- ✅ `check_overdue_tasks`: Escalación de tareas de alta prioridad vencidas  
+- ✅ `send_task_notification`: Recordatorios antes de fecha límite
+- ✅ Actualización automática de tareas padre cuando se completan subtasks (lógica en modelo)
+- ✅ `calculate_team_velocity`: Métricas de velocidad de equipos
+
+---
+
+### Full-Text Search ✅ (Implementado 100%)
+
+**Por qué se implementó:**
+- Funcionalidad crítica para sistemas de gestión de tareas en producción
+- Optimización de búsquedas y mejora significativa de la experiencia de usuario
+
+**Implementación técnica:**
+- ✅ **PostgreSQL full-text search**: `SearchVector` + `GinIndex` en modelo Task
+- ✅ **Search across tasks, comments, tags**: Búsqueda unificada implementada en `TaskManager.search()`
+- ✅ **Optimized search queries**: Uso de `SearchRank` para relevancia de resultados
+- ✅ **Search vector field**: Campo `search_vector` con actualización automática vía signals
+
+**Ubicación en código:**
+- Modelo: `/tasks/models.py` líneas 227, 287-289
+- Manager: `/tasks/models.py` líneas 51-60
+- Comando management: `/tasks/management/commands/update_search_vectors.py`
+
+---
+
+### Security Features ✅ (Implementado 80%)
+
+**Rate Limiting System:**
+- ✅ **API rate limiting per user**: `RateLimitService` implementado con Redis backend
+- ✅ **Granular controls**: Diferentes límites por acción (login, register, profile_update)
+- ✅ **Demo-friendly configuration**: Límites ajustados para facilitar testing
+
+**Ubicación en código:**
+- Servicio: `/authentication/services/rate_limit_service.py`
+- Integración: `/authentication/services/auth_service.py` líneas 45-61
+
+---
+
+### Performance Optimization ✅ (Implementado 75%)
+
+**Database Optimization:**
+- ✅ **Custom managers**: Managers optimizados con `select_related()` y `prefetch_related()`
+- ✅ **Strategic indexes**: 8 índices compuestos en Task model para queries frecuentes
+- ✅ **Query optimization**: Reducción de N+1 queries mediante prefetching
+
+**Caching System:**
+- ✅ **Redis caching layer**: Redis configurado como cache backend
+- ✅ **Session storage**: Sessions almacenadas en Redis para mejor performance
+
+**Ubicación en código:**
+- Managers: `/tasks/models.py` líneas 15-110
+- Índices: `/tasks/models.py` líneas 235-244
+- Configuración Redis: `/main/settings.py` líneas 150-165
+
+---
+
+### Notification System ✅ (Implementado 60%)
+
+**Email Notifications:**
+- ✅ **Console email backend**: Configurado para desarrollo y testing
+- ✅ **Task notifications**: Sistema `send_task_notification` implementado
+- ✅ **User lifecycle emails**: Templates para verificación, password reset, etc.
+
+**Templates implementados:**
+- Verificación de email, cambio de contraseña, bienvenida, inactividad
+- Ubicación: `/authentication/web/templates/authentication/`
+
+---
+
+### Funcionalidades NO Implementadas (por limitaciones de tiempo)
+
+**❌ No priorizadas:**
+- **Kafka Event Streaming**: Requiere infraestructura adicional compleja
+- **Flask Analytics Microservice**: Fuera del scope de Django monolítico
+- **Time Tracking**: No crítico para funcionalidad base del sistema
+- **JWT Authentication**: Django sessions más apropiado como punto de partida (aunque en mi otro repo en el que basé para hacer este proyecto muestro como utilizo los JWT. Leer README.md donde lo comento)
+- **RBAC avanzado**: Permisos básicos suficientes para demostración
+
 ## Resumen Técnico
 
 Este proyecto demuestra una arquitectura Django moderna y escalable con todas las funcionalidades implementadas y completamente operativas. Cada decisión técnica fue tomada priorizando la funcionalidad, rendimiento y facilidad de mantenimiento.
