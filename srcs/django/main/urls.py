@@ -50,10 +50,13 @@ urlpatterns = [
     # Authentication web interface (templates)
     path("", include("authentication.web.urls")),
     
-    # Authentication API
+    # Authentication API endpoints
     path("api/auth/", include("authentication.api.urls")),
     
-    # Task management API
+    # User management API endpoints  
+    path("api/users/", include("authentication.api.user_urls")),
+    
+    # Task management API endpoints
     path("api/tasks/", include("tasks.api.urls")),
     
     # Task management web interface (templates)

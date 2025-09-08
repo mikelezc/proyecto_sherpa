@@ -39,8 +39,9 @@ docker-compose up
 - **[API Documentation](docs/API_DOCUMENTATION.md)** - Guía completa de la API
 
 - **Endpoints de la API en funcionamiento**:
-  - Tasks API: http://localhost:8000/api/tasks/ninja/docs
-  - Auth API: http://localhost:8000/api/auth/ninja/docs
+  - Auth API: http://localhost:8000/api/auth/docs
+  - Users API: http://localhost:8000/api/users/docs  
+  - Tasks API: http://localhost:8000/api/tasks/docs
 
 ## Características Principales
 
@@ -92,21 +93,36 @@ El sistema incluye protección contra ataques:
 
 ## API Endpoints
 
-### Autenticación (Django Ninja)
-- `POST /api/auth/ninja/auth/register/` - Registro de usuario
-- `POST /api/auth/ninja/auth/login/` - Login
-- `POST /api/auth/ninja/auth/logout/` - Logout
-- `GET /api/auth/ninja/users/` - Lista de usuarios
+### Autenticación
+- `POST /api/auth/register/` - Registro de usuario
+- `POST /api/auth/login/` - Login
+- `POST /api/auth/logout/` - Logout
+- `POST /api/auth/refresh/` - Refresh token
 
-### Tareas (Django Ninja)
-- `GET /api/tasks/ninja/tasks/` - Lista de tareas
-- `POST /api/tasks/ninja/tasks/` - Crear tarea
-- `GET /api/tasks/ninja/tasks/{id}/` - Detalle de tarea
-- `PUT /api/tasks/ninja/tasks/{id}/` - Actualizar tarea
-- `DELETE /api/tasks/ninja/tasks/{id}/` - Eliminar tarea
+### Gestión de Usuarios
+- `GET /api/users/` - Lista de usuarios con paginación
+- `GET /api/users/{id}/` - Obtener usuario específico
+- `PUT /api/users/{id}/` - Actualizar usuario específico
+- `GET /api/users/me/` - Perfil del usuario actual
+
+### Gestión de Tareas
+- `GET /api/tasks/` - Lista de tareas (con filtros, búsqueda, paginación)
+- `POST /api/tasks/` - Crear nueva tarea
+- `GET /api/tasks/{id}/` - Obtener tarea específica
+- `PUT /api/tasks/{id}/` - Actualizar tarea (completa)
+- `PATCH /api/tasks/{id}/` - Actualizar tarea (parcial)
+- `DELETE /api/tasks/{id}/` - Eliminar tarea
+
+### Operaciones de Tareas
+- `POST /api/tasks/{id}/assign/` - Asignar tarea a usuario
+- `POST /api/tasks/{id}/comments/` - Añadir comentario a tarea
+- `GET /api/tasks/{id}/comments/` - Obtener comentarios de tarea
+- `GET /api/tasks/{id}/history/` - Obtener historial de tarea
 
 ### Documentación Interactiva
-- `GET /api/tasks/ninja/docs` - Swagger UI para Tasks API
-- `GET /api/auth/ninja/docs` - Swagger UI para Auth API
-- `GET /api/tasks/ninja/openapi.json` - Especificación OpenAPI Tasks
-- `GET /api/auth/ninja/openapi.json` - Especificación OpenAPI Auth
+- `GET /api/auth/docs` - Swagger UI para Authentication API
+- `GET /api/users/docs` - Swagger UI para User Management API  
+- `GET /api/tasks/docs` - Swagger UI para Task Management API
+- `GET /api/auth/openapi.json` - Especificación OpenAPI Auth
+- `GET /api/users/openapi.json` - Especificación OpenAPI Users
+- `GET /api/tasks/openapi.json` - Especificación OpenAPI Tasks

@@ -31,15 +31,13 @@ from .views.user_views import (
 api = NinjaAPI(
     title="Authentication API",
     version="2.0.0",
-    description="API para autenticación y gestión de usuarios",
+    description="API para autenticación",
     urls_namespace="auth_api",
     docs_url="/docs",
 )
 
-# Add authentication router
-api.add_router("/auth/", auth_router)
-# Add user management router
-api.add_router("/users/", user_router)
+# Add authentication router to root level to match /api/auth/ routes
+api.add_router("/", auth_router)
 
 # Authentication views
 auth_patterns = [
@@ -97,7 +95,7 @@ urlpatterns = [
     *password_patterns,
     *verification_patterns,
     *user_patterns,
-    path("ninja/", api.urls),
+    path("", api.urls),  # Changed from "ninja/" to "" to match /api/auth/docs directly
 ]
 
 """

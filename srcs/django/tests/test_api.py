@@ -47,22 +47,22 @@ class BasicAPITest(TestCase):
     def test_task_endpoints_exist(self):
         """Test that task endpoints are accessible"""
         # Test without authentication first
-        response = self.client.get('/api/tasks/ninja/')
+        response = self.client.get('/api/tasks/')
         self.assertIn(response.status_code, [200, 401, 403])
         
         # Test with authentication
         self.client.login(username='testuser', password='testpass123')
-        response = self.client.get('/api/tasks/ninja/')
+        response = self.client.get('/api/tasks/')
         self.assertIn(response.status_code, [200, 401, 403])
 
     def test_django_ninja_documentation(self):
         """Test that Django Ninja documentation is accessible"""
         # Test auth API docs
-        response = self.client.get('/api/auth/ninja/docs')
+        response = self.client.get('/api/auth/docs')
         self.assertIn(response.status_code, [200, 404])
         
         # Test tasks API docs
-        response = self.client.get('/api/tasks/ninja/docs')
+        response = self.client.get('/api/tasks/docs')
         self.assertIn(response.status_code, [200, 404])
 
     def test_user_management_basic(self):
@@ -236,7 +236,7 @@ class APIEndpointAccessibilityTest(TestCase):
         test_urls = [
             '/api/auth/login/',
             '/api/auth/register/',
-            '/api/tasks/ninja/',
+            '/api/tasks/',
             '/health/',
         ]
         

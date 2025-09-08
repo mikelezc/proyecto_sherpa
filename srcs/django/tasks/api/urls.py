@@ -19,15 +19,27 @@ api.add_router("/", task_operations_router)
 
 # URL patterns
 urlpatterns = [
-    path("ninja/", api.urls),
+    path("", api.urls),  # Changed from "ninja/" to "" to match /api/tasks/ directly
 ]
 
 """
-Task Management API Endpoints:
+Task Management API Endpoints (following subject requirements):
 
-DJANGO NINJA (New API):
-* http://localhost:8000/api/tasks/ninja/docs         -> Swagger/OpenAPI Documentation
-* http://localhost:8000/api/tasks/ninja/openapi.json -> OpenAPI Specification
+DJANGO NINJA API:
+* GET /api/tasks/                    -> List tasks with filtering, search, pagination
+* POST /api/tasks/                   -> Create new task
+* GET /api/tasks/{id}/               -> Get specific task
+* PUT /api/tasks/{id}/               -> Update specific task (full update)
+* PATCH /api/tasks/{id}/             -> Update specific task (partial update)
+* DELETE /api/tasks/{id}/            -> Delete specific task
+* POST /api/tasks/{id}/assign/       -> Assign task to user
+* POST /api/tasks/{id}/comments/     -> Add comment to task
+* GET /api/tasks/{id}/comments/      -> Get task comments
+* GET /api/tasks/{id}/history/       -> Get task history
+
+Documentation:
+* http://localhost:8000/api/tasks/docs         -> Swagger/OpenAPI Documentation
+* http://localhost:8000/api/tasks/openapi.json -> OpenAPI Specification
 
 TASK CRUD:
 * GET    /api/tasks/ninja/               -> List tasks (with filtering, search, pagination)
