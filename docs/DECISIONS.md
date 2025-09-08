@@ -85,6 +85,32 @@
 
 ## Part B: Extended Features - Funcionalidades Adicionales Implementadas
 
+### JWT Authentication System
+**Por qué se implementó:**
+- Sistema de tokens seguros para funcionalidades específicas (email verification, password reset)
+- Complementa Django sessions sin reemplazar la autenticación principal
+- Proporciona tokens seguros para operaciones sensibles
+
+**Lo que se completó:**
+- **Servicio JWT especializado**: Sistema en `authentication/services/token_service.py`
+- **PyJWT**: Librería PyJWT>=2.8.0 incluida en requirements.txt
+- **Configuración robusta**: Settings JWT configurados (JWT_SECRET_KEY, JWT_ALGORITHM, etc.)
+- **4 tipos de tokens específicos**:
+  - Email verification tokens
+  - Password reset tokens  
+  - Auth tokens para casos especiales
+  - Access & Refresh tokens (preparado para futuro uso en API)
+- **Seguridad**: Tokens firmados con HS256, expiración controlada, rate limiting
+- **Uso complementario**: NO reemplaza Django sessions - se usa para casos específicos
+
+**Nota importante:** La API REST principal usa Django Sessions (SessionAuthentication), no JWT como autenticación primaria.
+
+**Ubicación en código:**
+- Servicio principal: `/authentication/services/token_service.py`
+- Configuración: `/main/settings.py` líneas 288-292
+- Uso en profile service: `/authentication/services/profile_service.py`
+- Uso en password service: `/authentication/services/password_service.py`
+
 ### Introducción
 **Por qué se priorizaron estas funcionalidades:**
 - El tiempo del test técnico es limitado, por lo que después de completar la parte A, se priorizaron las características que consideré más relevantes para hacer un proyecto lo más cercano a cómo sería luego en producción.
@@ -181,7 +207,6 @@
 - **Kafka Event Streaming**: Requiere infraestructura adicional compleja
 - **Flask Analytics Microservice**: Fuera del scope de Django monolítico
 - **Time Tracking**: No crítico para funcionalidad base del sistema
-- **JWT Authentication**: Django sessions más apropiado como punto de partida (aunque en mi otro repo en el que basé para hacer este proyecto muestro como utilizo los JWT. Leer README.md donde lo comento)
 - **RBAC avanzado**: Permisos básicos suficientes para demostración
 
 ## Resumen Técnico
