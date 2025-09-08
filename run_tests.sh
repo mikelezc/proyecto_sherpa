@@ -6,6 +6,21 @@ echo -e "\n\033[96m🧪 Task Management System - Enhanced Test Suite\033[0m"
 echo -e "\033[96m============================================================\033[0m\n"
 
 docker exec django_web python manage.py test --verbosity=2 2>&1 | while IFS= read -r line; do
+
+    # Filter out expected warnings that are NOT real issues
+    if [[ "$line" =~ Method\ Not\ Allowed\ \(GET\):\ /api/auth/login/ ]] || \
+       [[ "$line" =~ Method\ Not\ Allowed\ \(GET\):\ /api/auth/register/ ]] || \
+       [[ "$line" =~ Unauthorized:\ /api/auth/users/me/ ]] || \
+       [[ "$line" =~ Not\ Found:\ /static/css/styles.css ]] || \
+       [[ "$line" =~ CELERY_USER\ environment\ variable\ not\ set ]] || \
+       [[ "$line" =~ Assignment\ notifications\ sent\ for\ task ]] || \
+       [[ "$line" =~ Daily\ summaries\ sent\ to ]] || \
+       [[ "$line" =~ Marked.*tasks\ as\ overdue ]] || \
+       [[ "$line" =~ Task\ completed\ -\ Processing\ complete ]] || \
+       [[ "$line" =~ STARTING\ CLEANUP\ TASK ]] || \
+       [[ "$line" =~ END\ OF\ CLEANUP\ TASK ]]; then
+        continue
+    fi
     
     if [[ "$line" =~ .*"... ok"$ ]]; then
         echo -e "${line/... ok/... \033[92m\033[1mOK\033[0m}"
@@ -22,10 +37,12 @@ docker exec django_web python manage.py test --verbosity=2 2>&1 | while IFS= rea
     elif [[ "$line" =~ ^test_.* ]]; then
         echo -e "\033[94m$line\033[0m"
     elif [[ "$line" =~ .*WARNING.* ]] && [[ ! "$line" =~ ^test_.* ]]; then
+        # Only show unexpected WARNING
         echo -e "${line/WARNING/\033[93m⚠️ WARNING\033[0m}"
     elif [[ "$line" =~ .*ERROR.* ]] && [[ ! "$line" =~ ^test_.* ]]; then
         echo -e "${line/ERROR/\033[91m❌ ERROR\033[0m}"
     elif [[ "$line" =~ .*INFO.* ]] && [[ ! "$line" =~ ^test_.* ]]; then
+        # Only show important INFO (not from normal Celery tasks)
         echo -e "${line/INFO/\033[96mℹ️ INFO\033[0m}"
     elif [[ "$line" =~ ^Found.*test\(s\)\. ]] || [[ "$line" =~ ^Creating.* ]] || [[ "$line" =~ ^Destroying.* ]] || [[ "$line" =~ ^Operations.* ]] || [[ "$line" =~ ^Applying.* ]]; then
         echo -e "\033[96m$line\033[0m"
