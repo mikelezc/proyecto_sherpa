@@ -8,56 +8,38 @@ https://github.com/mikelezc/42_Transcendence
 
 Aquí se puede ver la misma base, pero aplicada con otras funciones interesantes como notificaciones vía mail, JWT, 2FA con claves, encriptación de datos antes de ser ingresados en la db, balanceador de carga, front que se sirve diréctamente de la API, un WAF, etc. Muy recomendable inspeccionarlo.
 
-## 🎯 Para Examinadores - Verificación Rápida
+## 🚀 Quick Start
 
+### Verificación Automática (Recomendado)
 ```bash
-# Opción 1: Script automatizado (recomendado)
-./verify_for_examiners.sh
+git clone <repository-url>
+cd proyecto_sherpa
+./quick_setup.sh
+```
 
-# Opción 2: Manual
+### Setup Manual
+```bash
+# 1. Configurar variables de entorno
 cp .env.sample .env
+
+# 2. Iniciar servicios
 docker-compose up -d
+
+# 3. Verificar funcionamiento
 curl http://localhost:8000/health/
 ```
 
-**📋 Ver [EXAMINER_GUIDE.md](EXAMINER_GUIDE.md) para instrucciones detalladas**
+### Acceso a la Aplicación
+- **Dashboard**: http://localhost:8000/
+- **Admin Panel**: http://localhost:8000/admin/ (`demo_admin` / `demo123`)
+- **API Documentation**: http://localhost:8000/api/auth/docs
 
-## Quick Start
+**✅ El archivo `.env` se genera automáticamente con credenciales seguras para desarrollo**
 
-### 1. Clonar el repositorio
-```bash
-git clone <repo>
-cd <task-management-system>
-```
+## Documentación
 
-### 2. Configurar variables de entorno
-```bash
-cp .env.sample .env
-# IMPORTANTE: Editar .env con credenciales seguras únicas
-# NUNCA usar las credenciales de ejemplo en producción
-```
-
-**⚠️ IMPORTANTE PARA SEGURIDAD:**
-- El archivo `.env` contiene credenciales sensibles y NO debe committearse
-- Generar nuevas claves secretas: `python3 -c "import secrets; print(secrets.token_urlsafe(50))"`
-- Cambiar todas las passwords por valores seguros únicos
-- El archivo `.env.sample` sirve solo como plantilla
-
-### 3. Ejecutar con Docker
-```bash
-docker-compose up
-```
-
-### 4. Acceso a la aplicación
-- **Aplicación Web**: http://localhost:8000
-- **Panel Admin**: http://localhost:8000/admin/ (Usuario: `demo_admin`, Password: `demo123`)
-- **Health Check**: http://localhost:8000/health/
-
-## Documentación Completa
-
-- **[🎯 EXAMINER GUIDE](EXAMINER_GUIDE.md)** - **Guía paso a paso para evaluadores**
-- **[Architecture](docs/ARCHITECTURE.md)** - Descripción de la arquitectura del sistema  
-- **[Decisions](docs/DECISIONS.md)** - Decisiones técnicas y características implementadas
+- **[Architecture](docs/ARCHITECTURE.md)** - Arquitectura del sistema  
+- **[Decisions](docs/DECISIONS.md)** - Decisiones técnicas e implementación
 - **[API Documentation](docs/API_DOCUMENTATION.md)** - Guía completa de la API
 
 - **Endpoints de la API en funcionamiento**:
@@ -100,6 +82,12 @@ docker-compose up
 - **Procesamiento**: Celery + Redis
 - **Frontend**: Django Templates + Bootstrap 5
 - **Conteneurización**: Docker + Docker Compose
+
+## Troubleshooting
+
+**Puerto ocupado**: `docker-compose down && docker-compose up -d`  
+**Problemas de DB**: `docker-compose down -v && docker-compose up -d`  
+**Ver logs**: `docker-compose logs django_web`
 
 ## Testing
 ```bash
