@@ -202,6 +202,9 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Testing configuration
+TEST_RUNNER = 'main.test_runner.ColoredTestRunner'
+
 # Email backend for development
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
