@@ -5,8 +5,6 @@ Health check views for Docker health checks
 from django.http import JsonResponse
 from django.db import connection
 from django.core.cache import cache
-import redis
-from django.conf import settings
 
 
 def health_check(request):

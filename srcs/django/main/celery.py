@@ -1,6 +1,5 @@
 """
 Celery configuration for task management system.
-Simplified version without Vault, SSL, and complex security configurations.
 """
 
 import os

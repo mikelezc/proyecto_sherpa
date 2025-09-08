@@ -1,6 +1,5 @@
 """
 URL configuration for task management system.
-Enterprise authentication and task management routes.
 """
 
 from django.contrib import admin

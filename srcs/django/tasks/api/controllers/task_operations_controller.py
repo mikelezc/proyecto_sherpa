@@ -3,13 +3,11 @@ Task Operations API Controllers
 Advanced task operations: assign, comments, history
 """
 
-from typing import List, Optional
+from typing import Optional
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
-from django.utils import timezone
 from ninja import Router
 from tasks.models import Task, TaskAssignment, Comment, TaskHistory
-from decimal import Decimal
 
 from ..schemas import (
     TaskAssignSchema,
