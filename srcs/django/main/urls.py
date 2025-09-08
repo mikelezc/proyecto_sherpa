@@ -1,44 +1,69 @@
-"""URL configuration for main project."""
+"""
+URL configuration for task management system.
+"""
 
-from django.core.exceptions import ImproperlyConfigured
-from django.conf.urls.static import static
-from django.urls import path, include
 from django.contrib import admin
+from django.urls import path, include
 from django.conf import settings
-import os
+from django.conf.urls.static import static
+from django.http import JsonResponse
+from django.db import connection
+from django.core.cache import cache
 
-# Check if basic configuration is correct
-if "authentication" not in settings.INSTALLED_APPS:
-    raise ImproperlyConfigured("The 'authentication' app must be in INSTALLED_APPS")
+def health_check(request):
+    """Health check endpoint for Docker"""
+    try:
+        # Check database connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            db_status = "healthy"
+    except Exception:
+        db_status = "error"
+    
+    try:
+        # Check Redis connection
+        cache.set("health_check", "ok", 30)
+        redis_status = "healthy" if cache.get("health_check") == "ok" else "error"
+    except Exception:
+        redis_status = "error"
+    
+    if db_status == "healthy" and redis_status == "healthy":
+        return JsonResponse({
+            "status": "healthy",
+            "database": db_status,
+            "redis": redis_status
+        })
+    else:
+        return JsonResponse({
+            "status": "unhealthy",
+            "database": db_status,
+            "redis": redis_status
+        }, status=503)
 
-# Check if the environment is production
-def check_nginx_config():
-    if not os.environ.get("DJANGO_DEVELOPMENT", False):  # Production environment check (put in .env)
-        media_path = "/usr/share/nginx/html/media"
-        if not os.path.exists(media_path):
-            os.makedirs(media_path, exist_ok=True)
-            os.chmod(media_path, 0o755)
-
-
-# Main URL patterns
 urlpatterns = [
-    # Web interface (development)
-    path("", include("authentication.web.urls")),
+    # Health check
+    path("health/", health_check, name="health_check"),
+    
     # Admin panel
     path("admin/", admin.site.urls),
-    # API tournament
-    path('api/tournament/', include('tournament.urls')),
-    # API endpoints (production)
-    path("api/", include("authentication.api.urls")),
-    # Game
-    path("game/", include("game.urls")),
-    # API dashboard
-    path('api/dashboard/', include('dashboard.urls')),
+    
+    # Authentication web interface (templates)
+    path("", include("authentication.web.urls")),
+    
+    # Authentication API endpoints
+    path("api/auth/", include("authentication.api.urls")),
+    
+    # User management API endpoints  
+    path("api/users/", include("authentication.api.user_urls")),
+    
+    # Task management API endpoints
+    path("api/tasks/", include("tasks.api.urls")),
+    
+    # Task management web interface (templates)
+    path("tasks/", include("tasks.web.urls")),
 ]
 
-# Media and static files configuration
+# Serve media files in development
 if settings.DEBUG:
-    # Serve media files in development
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    check_nginx_config()
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

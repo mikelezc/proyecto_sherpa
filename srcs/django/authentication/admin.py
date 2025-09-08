@@ -15,20 +15,16 @@ class CustomUserAdmin(admin.ModelAdmin):
         "email",
         "is_active",
         "email_verified",
-        "is_fortytwo_user",
-        "display_profile_image",
         "last_login",
     )
 
     # Search fields
-    search_fields = ("username", "email", "fortytwo_id")
+    search_fields = ("username", "email")
 
     # Side filters
     list_filter = (
         "is_active",
         "email_verified",
-        "is_fortytwo_user",
-        "two_factor_enabled",
         "date_joined",
         "last_login",
     )
@@ -37,9 +33,7 @@ class CustomUserAdmin(admin.ModelAdmin):
     readonly_fields = (
         "last_login",
         "date_joined",
-        "fortytwo_id",
         "email_verification_token",
-        "last_2fa_time",
     )
 
     # Default ordering
@@ -62,19 +56,7 @@ class CustomUserAdmin(admin.ModelAdmin):
         (
             "Account Status",
             {
-                "fields": ("is_active", "email_verified", "is_fortytwo_user"),
-                "classes": ("collapse",),
-            },
-        ),
-        (
-            "Security",
-            {
-                "fields": (
-                    "two_factor_enabled",
-                    "two_factor_secret",
-                    "last_2fa_code",
-                    "last_2fa_time",
-                ),
+                "fields": ("is_active", "email_verified"),
                 "classes": ("collapse",),
             },
         ),
@@ -86,27 +68,10 @@ class CustomUserAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Additional Information",
-            {
-                "fields": ("profile_image", "fortytwo_id", "fortytwo_image"),
-                "classes": ("collapse",),
-            },
-        ),
-        (
             "Important Dates",
             {"fields": ("last_login", "date_joined"), "classes": ("collapse",)},
         ),
     )
-
-    def display_profile_image(self, obj):
-        if obj.profile_image:
-            return format_html(
-                '<img src="{}" width="50" height="50" style="border-radius: 50%;" />',
-                obj.get_profile_image_url(),
-            )
-        return "No image"
-
-    display_profile_image.short_description = "Profile Image"
 
     def activate_users(self, request, queryset):
         queryset.update(is_active=True)

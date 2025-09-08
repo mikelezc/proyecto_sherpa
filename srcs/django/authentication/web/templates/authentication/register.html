@@ -32,38 +32,10 @@
 							<input type="password" class="form-control" id="password2" name="password2" required>
 						</div>
 
-						<div class="form-check mb-3">
-							<input type="checkbox" class="form-check-input" id="privacy_policy" name="privacy_policy"
-								required>
-							<label class="form-check-label" for="privacy_policy">
-								He leído y acepto la <a href="{% url 'privacy_policy' %}" target="_blank">política de
-									privacidad</a>
-							</label>
-						</div>
-
 						<div class="d-grid">
 							<button type="submit" class="btn btn-primary">Register</button>
 						</div>
 					</form>
-				</div>
-			</div>
-
-			<!-- Separator -->
-			<div class="text-center my-4">
-				<hr>
-				<span class="bg-white px-3 text-muted" style="position: relative; top: -12px;">
-					o regístrate con
-				</span>
-			</div>
-
-			<!-- 42 Button -->
-			<div class="card shadow-sm mb-4">
-				<div class="card-body p-4">
-					<div class="d-grid">
-						<a href="{% url 'fortytwo_auth:login' %}" class="button-42 w-100">
-							Register with 42
-						</a>
-					</div>
 				</div>
 			</div>
 
@@ -75,28 +47,4 @@
 	</div>
 </div>
 
-<style>
-	.button-42 {
-		background-color: #007BFF;
-		color: white;
-		padding: 15px 20px;
-		border-radius: 5px;
-		text-decoration: none;
-		transition: all 0.3s ease;
-		display: block;
-		text-align: center;
-	}
-
-	.button-42:hover {
-		background-color: #009B9D;
-		color: white;
-		text-decoration: none;
-		transform: translateY(-2px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-	}
-
-	.button-42:active {
-		transform: translateY(0);
-	}
-</style>
 {% endblock %}

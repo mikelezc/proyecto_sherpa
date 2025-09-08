@@ -1,11 +1,9 @@
 from django.contrib.auth.models import AbstractUser
-from cryptography.fernet import Fernet
 from django.utils import timezone
 from django.conf import settings
 from django.db import models
 from django.apps import apps
 import logging
-import hashlib
 
 # This model is used to store the user information and manage the user's account
 
@@ -13,99 +11,40 @@ logger = logging.getLogger(__name__)
 
 class CustomUser(AbstractUser):
     id = models.AutoField(primary_key=True) # id is the primary key for the user
-    DEFAULT_PROFILE_IMAGE = (
-        "https://ui-avatars.com/api/?name={}&background=random&length=2"
+
+    # Add related_name to fix the conflict
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        related_name='custom_users',
+        help_text='The groups this user belongs to.',
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        related_name='custom_users',
+        help_text='Specific permissions for this user.',
     )
 
-    def profile_image_path(instance, filename):
-        """Returns the path for the profile image"""
-        ext = filename.split(".")[-1]
-        return f"profile_images/{instance.username}.{ext}"
-
-    fortytwo_image = models.URLField(max_length=500, blank=True, null=True)
-    profile_image = models.ImageField(
-        upload_to=profile_image_path, null=True, blank=True
-    )
-    fortytwo_id = models.CharField(max_length=50, blank=True, null=True)
-    is_fortytwo_user = models.BooleanField(default=False)
+    # Core user fields (simplified)
     email_verified = models.BooleanField(default=False)
     email_verification_token = models.CharField(max_length=255, blank=True, null=True)
     email_token_created_at = models.DateTimeField(null=True, blank=True)
-    two_factor_enabled = models.BooleanField(default=False)
-    two_factor_secret = models.CharField(max_length=100, blank=True, null=True)
-    last_2fa_code = models.CharField(max_length=6, blank=True, null=True)
-    last_2fa_time = models.DateTimeField(null=True, blank=True)
     pending_email = models.EmailField(blank=True, null=True)
     pending_email_token = models.CharField(max_length=255, blank=True, null=True)
     inactivity_notified = models.BooleanField(default=False)
     inactivity_notification_date = models.DateTimeField(null=True, blank=True)
-    email_hash = models.CharField(max_length=64, db_index=True, unique=True, null=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
 
-    def get_profile_image_url(self):
-        """Get the URL for the profile image of 42 API"""
-        if self.profile_image and hasattr(self.profile_image, "url"):
-            return self.profile_image.url
-        if self.is_fortytwo_user and self.fortytwo_image:
-            return self.fortytwo_image
-        return self.DEFAULT_PROFILE_IMAGE.format(self.username[:2].upper())
-
-    @property
-    def fortytwo_image_url(self):
-        """Returns the URL for the profile image from 42 API"""
-        return (
-            self.fortytwo_image
-            if self.is_fortytwo_user
-            else self.get_profile_image_url()
-        )
-
-    @property
-    def decrypted_email(self):
-        """Returns the decrypted email for use in the application"""
-        try:
-            if not hasattr(settings, 'ENCRYPTION_KEY') or not settings.ENCRYPTION_KEY:
-                logger.error("ENCRYPTION_KEY not found in settings or is empty")
-                return self.email
-                
-            if self.email:
-                if self.email.startswith('gAAAAAB'):  # If it's encrypted (Fernet prefix - gAAAAAB)
-                    cipher_suite = Fernet(settings.ENCRYPTION_KEY)
-                    return cipher_suite.decrypt(self.email.encode()).decode()
-                return self.email  # If it's not encrypted
-        except Exception as e:
-            logger.error(f"Error decrypting email for user {self.id}: {str(e)}")
-            return self.email
-        return None
-
-    def _generate_email_hash(self, email):
-        """Generate a hash for email comparison
-		   This is used to compare emails without storing them in plain text.
-           to know if a mail user is already registered.
-           
-           Fernet encryption is used to store the email in the database.
-           It encripted with a different key each time and it cant be used to compare emails.
-		"""
-        if not email:
-            return None
-        normalized_email = email.lower().strip() # Normalize (lowercase and strip)
-        return hashlib.sha256(normalized_email.encode()).hexdigest() # Hash email for comparison with other users
+    # Add manager
+    from .managers import CustomUserManager
+    objects = CustomUserManager()
+    all_objects = models.Manager()
 
     def save(self, *args, **kwargs):
-        """Encrypt email before saving"""
-        if self.email and not self.email.startswith('gAAAAAB'):
-            try:
-                if not hasattr(settings, 'ENCRYPTION_KEY') or not settings.ENCRYPTION_KEY:
-                    logger.error("ENCRYPTION_KEY not found in settings or is empty")
-                    super().save(*args, **kwargs)
-                    return
-                    
-                # Generate hash before encryption
-                self.email_hash = self._generate_email_hash(self.email)
-                    
-                cipher_suite = Fernet(settings.ENCRYPTION_KEY)
-                self.email = cipher_suite.encrypt(self.email.encode()).decode()
-            except Exception as e:
-                logger.error(f"Error encrypting email for user {self.id}: {str(e)}")
+        """Save user - simplified without email encryption"""
         super().save(*args, **kwargs)
 
     def get_last_activity(self):

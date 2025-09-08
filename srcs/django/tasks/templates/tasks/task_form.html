@@ -1,0 +1,277 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}{{ title }} - Task Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+	<h1 class="h2">{{ title }}</h1>
+	<div class="btn-toolbar mb-2 mb-md-0">
+		<a href="{% url 'tasks_web:task_list' %}" class="btn btn-outline-secondary">
+			← Back to Tasks
+		</a>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-lg-8">
+		<div class="card">
+			<div class="card-header">
+				<h6 class="mb-0">Task Information</h6>
+			</div>
+			<div class="card-body">
+				<form method="post" novalidate>
+					{% csrf_token %}
+
+					<div class="mb-3">
+						<label for="{{ form.title.id_for_label }}" class="form-label">Title *</label>
+						{{ form.title }}
+						{% if form.title.errors %}
+						<div class="text-danger">
+							{% for error in form.title.errors %}
+							<small>{{ error }}</small>
+							{% endfor %}
+						</div>
+						{% endif %}
+					</div>
+
+					<div class="mb-3">
+						<label for="{{ form.description.id_for_label }}" class="form-label">Description *</label>
+						{{ form.description }}
+						{% if form.description.errors %}
+						<div class="text-danger">
+							{% for error in form.description.errors %}
+							<small>{{ error }}</small>
+							{% endfor %}
+						</div>
+						{% endif %}
+					</div>
+
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label for="{{ form.status.id_for_label }}" class="form-label">Status</label>
+							{{ form.status }}
+							{% if form.status.errors %}
+							<div class="text-danger">
+								{% for error in form.status.errors %}
+								<small>{{ error }}</small>
+								{% endfor %}
+							</div>
+							{% endif %}
+						</div>
+
+						<div class="col-md-6 mb-3">
+							<label for="{{ form.priority.id_for_label }}" class="form-label">Priority</label>
+							{{ form.priority }}
+							{% if form.priority.errors %}
+							<div class="text-danger">
+								{% for error in form.priority.errors %}
+								<small>{{ error }}</small>
+								{% endfor %}
+							</div>
+							{% endif %}
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date *</label>
+							{{ form.due_date }}
+							{% if form.due_date.errors %}
+							<div class="text-danger">
+								{% for error in form.due_date.errors %}
+								<small>{{ error }}</small>
+								{% endfor %}
+							</div>
+							{% endif %}
+						</div>
+
+						<div class="col-md-6 mb-3">
+							<label for="{{ form.estimated_hours.id_for_label }}" class="form-label">Estimated
+								Hours</label>
+							{{ form.estimated_hours }}
+							{% if form.estimated_hours.errors %}
+							<div class="text-danger">
+								{% for error in form.estimated_hours.errors %}
+								<small>{{ error }}</small>
+								{% endfor %}
+							</div>
+							{% endif %}
+						</div>
+					</div>
+
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label for="{{ form.team.id_for_label }}" class="form-label">Team</label>
+							{{ form.team }}
+							{% if form.team.errors %}
+							<div class="text-danger">
+								{% for error in form.team.errors %}
+								<small>{{ error }}</small>
+								{% endfor %}
+							</div>
+							{% endif %}
+						</div>
+
+						<div class="col-md-6 mb-3">
+							<label for="{{ form.parent_task.id_for_label }}" class="form-label">Parent Task</label>
+							{{ form.parent_task }}
+							{% if form.parent_task.errors %}
+							<div class="text-danger">
+								{% for error in form.parent_task.errors %}
+								<small>{{ error }}</small>
+								{% endfor %}
+							</div>
+							{% endif %}
+						</div>
+					</div>
+
+					{% if form.assigned_to %}
+					<div class="mb-3">
+						<label class="form-label">Assign to Users</label>
+						<div class="row">
+							{% for user in form.assigned_to %}
+							<div class="col-md-4 mb-2">
+								<div class="form-check">
+									{{ user.tag }}
+									<label class="form-check-label" for="{{ user.id_for_label }}">
+										{{ user.choice_label }}
+									</label>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+						{% if form.assigned_to.errors %}
+						<div class="text-danger">
+							{% for error in form.assigned_to.errors %}
+							<small>{{ error }}</small>
+							{% endfor %}
+						</div>
+						{% endif %}
+					</div>
+					{% endif %}
+
+					{% if form.tags %}
+					<div class="mb-3">
+						<label class="form-label">Tags</label>
+						<div class="row">
+							{% for tag in form.tags %}
+							<div class="col-md-4 mb-2">
+								<div class="form-check">
+									{{ tag.tag }}
+									<label class="form-check-label" for="{{ tag.id_for_label }}">
+										{{ tag.choice_label }}
+									</label>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+						{% if form.tags.errors %}
+						<div class="text-danger">
+							{% for error in form.tags.errors %}
+							<small>{{ error }}</small>
+							{% endfor %}
+						</div>
+						{% endif %}
+					</div>
+					{% endif %}
+
+					<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+						<a href="{% url 'tasks_web:task_list' %}" class="btn btn-outline-secondary me-md-2">
+							Cancel
+						</a>
+						<button type="submit" class="btn btn-primary">
+							{% if task %}
+							💾 Update Task
+							{% else %}
+							➕ Create Task
+							{% endif %}
+						</button>
+					</div>
+				</form>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-4">
+		<div class="card">
+			<div class="card-header">
+				<h6 class="mb-0">ℹ️ Tips</h6>
+			</div>
+			<div class="card-body">
+				<ul class="list-unstyled">
+					<li class="mb-2">
+						<strong>Title:</strong> Keep it short and descriptive
+					</li>
+					<li class="mb-2">
+						<strong>Description:</strong> Provide clear requirements and context
+					</li>
+					<li class="mb-2">
+						<strong>Priority:</strong> Use Critical sparingly for truly urgent tasks
+					</li>
+					<li class="mb-2">
+						<strong>Estimated Hours:</strong> Help with workload planning
+					</li>
+					<li class="mb-2">
+						<strong>Team:</strong> Assign to team for better collaboration
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		{% if task %}
+		<div class="card mt-3">
+			<div class="card-header">
+				<h6 class="mb-0">📊 Task Info</h6>
+			</div>
+			<div class="card-body">
+				<p><strong>Created:</strong> {{ task.created_at|date:"M d, Y H:i" }}</p>
+				<p><strong>Last Updated:</strong> {{ task.updated_at|date:"M d, Y H:i" }}</p>
+				<p><strong>Created by:</strong> {{ task.created_by.get_full_name|default:task.created_by.username }}</p>
+				{% if task.assigned_to.exists %}
+				<p><strong>Assigned to:</strong>
+					{% for user in task.assigned_to.all %}
+					<span class="badge bg-light text-dark">{{ user.get_full_name|default:user.username }}</span>
+					{% endfor %}
+				</p>
+				{% endif %}
+			</div>
+		</div>
+		{% endif %}
+	</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+	// Simple form validation and UX improvements
+	document.addEventListener('DOMContentLoaded', function () {
+		// Auto-focus title field
+		const titleField = document.getElementById('{{ form.title.id_for_label }}');
+		if (titleField) {
+			titleField.focus();
+		}
+
+		// Form validation feedback
+		const form = document.querySelector('form');
+		form.addEventListener('submit', function (e) {
+			const requiredFields = form.querySelectorAll('input[required], textarea[required], select[required]');
+			let isValid = true;
+
+			requiredFields.forEach(field => {
+				if (!field.value.trim()) {
+					field.classList.add('is-invalid');
+					isValid = false;
+				} else {
+					field.classList.remove('is-invalid');
+				}
+			});
+
+			if (!isValid) {
+				e.preventDefault();
+				alert('Please fill in all required fields.');
+			}
+		});
+	});
+</script>
+{% endblock %}

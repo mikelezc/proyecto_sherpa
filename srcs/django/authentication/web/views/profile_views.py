@@ -30,12 +30,11 @@ class EditProfileView(LoginRequiredMixin, View):
                 return redirect("edit_profile")
 
             # Email change for manual users
-            if not user.is_fortytwo_user:
-                new_email = request.POST.get("email")
-                if new_email and new_email != user.email:
-                    message = ProfileService.handle_email_change(user, new_email)
-                    messages.success(request, message)
-                    return redirect("edit_profile")
+            new_email = request.POST.get("email")
+            if new_email and new_email != user.email:
+                message = ProfileService.handle_email_change(user, new_email)
+                messages.success(request, message)
+                return redirect("edit_profile")
 
             # Password change
             if all(

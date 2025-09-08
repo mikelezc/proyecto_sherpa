@@ -1,4 +1,3 @@
-from authentication.fortytwo_auth.views import FortyTwoLoginAPIView, FortyTwoCallbackAPIView
 from authentication.services import ProfileService
 from ninja import Router, UploadedFile
 from django.http import JsonResponse
@@ -46,26 +45,11 @@ def logout(request) -> Dict:
     """Logout user"""
     return LogoutAPIView.as_view()(request)
 
-# 42 endpoints
-
-@router.get("/auth/42", tags=["auth"], response=FortyTwoAuthResponseSchema)
-def fortytwo_login(request) -> Dict:
-    """42 Login"""
-    return FortyTwoLoginAPIView.as_view()(request)
-
-@router.get(
-    "/auth/42/callback", 
-    tags=["auth"],
-    response=FortyTwoCallbackResponseSchema
-)
-def fortytwo_callback(
-    request,
-    code: str,
-    state: Optional[str] = None
-) -> Dict:
-    """Callback 42 auth"""
-    data = FortyTwoCallbackRequestSchema(code=code, state=state)
-    return FortyTwoCallbackAPIView.as_view()(request, data)
+@router.post("/refresh", tags=["auth"])
+def refresh_token(request, data: RefreshTokenSchema) -> Dict:
+    """Refresh access token"""
+    request.data = data.dict()
+    return RefreshTokenAPIView.as_view()(request)
 
 # GDPR endpoints
 
@@ -145,7 +129,7 @@ def delete_account(request, data: DeleteAccountSchema) -> Dict:
             
         result = ProfileService.delete_user_account(
             user=request.user,
-            password=data.confirm_password if not request.user.is_fortytwo_user else None
+            password=data.confirm_password
         )
         return {
             'status': 'success',
@@ -173,13 +157,10 @@ def get_user_profile(request) -> Dict:
             'username': profile_data['user'].username,
             'email': profile_data['user'].email,
             'is_active': profile_data['user'].is_active,
-            'is_fortytwo_user': profile_data['user'].is_fortytwo_user,
             'email_verified': profile_data['user'].email_verified,
-            'two_factor_enabled': profile_data['user'].two_factor_enabled,
-            'profile_image_url': profile_data['user'].profile_image.url if profile_data['user'].profile_image else None,
+            'profile_image_url': None,
             'date_joined': profile_data['user'].date_joined.isoformat() if profile_data['user'].date_joined else None,
             'last_login': profile_data['user'].last_login.isoformat() if profile_data['user'].last_login else None,
-            'show_qr': profile_data['show_qr']
         }
     except ValidationError as e:
         return JsonResponse({'error': str(e)}, status=400)
@@ -200,35 +181,3 @@ def password_reset_confirm(request, data: PasswordResetConfirmSchema) -> Dict:
     """Confirm password reset"""
     request.data = data.dict()
     return PasswordResetConfirmAPIView.as_view()(request)
-
-# QR endpoints
-
-@router.get("/qr/generate", tags=["2fa"])
-def generate_qr(request) -> Dict:
-    """Generate QR code to authenticate"""
-    return GenerateQRAPIView.as_view()(request)
-
-@router.post("/qr/validate", tags=["2fa"])
-def validate_qr(request, data: QRSchema) -> Dict:
-    """Validate QR code to login"""
-    request.data = data.dict()
-    return ValidateQRAPIView.as_view()(request)
-
-# 2FA endpoints
-
-@router.post("/2fa/enable", tags=["2fa"])
-def enable_2fa(request) -> Dict:
-    """Enable 2FA"""
-    return Enable2FAView.as_view()(request)
-
-@router.post("/2fa/verify", tags=["2fa"])
-def verify_2fa(request, data: TwoFactorSchema) -> Dict:
-    """Verify 2FA"""
-    request.data = data.dict()
-    return Verify2FAAPIView.as_view()(request)
-
-@router.post("/2fa/disable", tags=["2fa"])
-def disable_2fa(request) -> Dict:
-    """Disable 2FA"""
-    return Disable2FAView.as_view()(request)
-

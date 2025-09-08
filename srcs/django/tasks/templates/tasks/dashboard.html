@@ -1,0 +1,220 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Dashboard - Task Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+	<h1 class="h2">📊 Dashboard</h1>
+	<div class="btn-toolbar mb-2 mb-md-0">
+		<a href="{% url 'tasks_web:task_create' %}" class="btn btn-primary">
+			➕ New Task
+		</a>
+	</div>
+</div>
+
+<!-- Task Statistics -->
+<div class="row mb-4">
+	<div class="col-xl-3 col-md-6 mb-4">
+		<div class="card border-left-primary shadow h-100 py-2">
+			<div class="card-body">
+				<div class="row no-gutters align-items-center">
+					<div class="col mr-2">
+						<div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+							Total Tasks
+						</div>
+						<div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_tasks }}</div>
+					</div>
+					<div class="col-auto">
+						<i class="fas fa-tasks fa-2x text-gray-300"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-xl-3 col-md-6 mb-4">
+		<div class="card border-left-warning shadow h-100 py-2">
+			<div class="card-body">
+				<div class="row no-gutters align-items-center">
+					<div class="col mr-2">
+						<div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+							In Progress
+						</div>
+						<div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.in_progress }}</div>
+					</div>
+					<div class="col-auto">
+						<i class="fas fa-spinner fa-2x text-gray-300"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-xl-3 col-md-6 mb-4">
+		<div class="card border-left-success shadow h-100 py-2">
+			<div class="card-body">
+				<div class="row no-gutters align-items-center">
+					<div class="col mr-2">
+						<div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+							Completed
+						</div>
+						<div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.done }}</div>
+					</div>
+					<div class="col-auto">
+						<i class="fas fa-check fa-2x text-gray-300"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-xl-3 col-md-6 mb-4">
+		<div class="card border-left-danger shadow h-100 py-2">
+			<div class="card-body">
+				<div class="row no-gutters align-items-center">
+					<div class="col mr-2">
+						<div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+							Overdue
+						</div>
+						<div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.overdue }}</div>
+					</div>
+					<div class="col-auto">
+						<i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Status Breakdown -->
+<div class="row mb-4">
+	<div class="col-lg-6">
+		<div class="card shadow mb-4">
+			<div class="card-header py-3">
+				<h6 class="m-0 font-weight-bold text-primary">Task Status Breakdown</h6>
+			</div>
+			<div class="card-body">
+				<div class="row">
+					<div class="col-6">
+						<p><strong>📝 To Do:</strong> {{ stats.todo }}</p>
+						<p><strong>🔄 In Progress:</strong> {{ stats.in_progress }}</p>
+					</div>
+					<div class="col-6">
+						<p><strong>👀 In Review:</strong> {{ stats.review }}</p>
+						<p><strong>✅ Done:</strong> {{ stats.done }}</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-6">
+		<div class="card shadow mb-4">
+			<div class="card-header py-3">
+				<h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+			</div>
+			<div class="card-body">
+				<div class="d-grid gap-2">
+					<a href="{% url 'tasks_web:task_create' %}" class="btn btn-primary">
+						➕ Create New Task
+					</a>
+					<a href="{% url 'tasks_web:task_list' %}?assigned_to_me=on" class="btn btn-outline-primary">
+						📋 View My Tasks
+					</a>
+					<a href="{% url 'tasks_web:task_list' %}?priority=high" class="btn btn-outline-warning">
+						🔥 High Priority Tasks
+					</a>
+					<a href="{% url 'tasks_web:task_list' %}" class="btn btn-outline-secondary">
+						📑 All Tasks
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Recent Tasks -->
+{% if recent_tasks %}
+<div class="card shadow mb-4">
+	<div class="card-header py-3">
+		<h6 class="m-0 font-weight-bold text-primary">🕒 Recent Tasks</h6>
+	</div>
+	<div class="card-body">
+		<div class="table-responsive">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th>Status</th>
+						<th>Priority</th>
+						<th>Due Date</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for task in recent_tasks %}
+					<tr class="priority-{{ task.priority }}">
+						<td>
+							<a href="{% url 'tasks_web:task_detail' task.id %}">
+								{{ task.title }}
+							</a>
+						</td>
+						<td>
+							<span class="badge 
+                                {% if task.status == 'todo' %}bg-secondary
+                                {% elif task.status == 'in_progress' %}bg-warning
+                                {% elif task.status == 'review' %}bg-info
+                                {% elif task.status == 'done' %}bg-success
+                                {% else %}bg-dark
+                                {% endif %}">
+								{{ task.get_status_display }}
+							</span>
+						</td>
+						<td>
+							<span class="badge 
+                                {% if task.priority == 'low' %}bg-success
+                                {% elif task.priority == 'medium' %}bg-warning
+                                {% elif task.priority == 'high' %}bg-danger
+                                {% else %}bg-dark
+                                {% endif %}">
+								{{ task.get_priority_display }}
+							</span>
+						</td>
+						<td>
+							{{ task.due_date|date:"M d, Y H:i" }}
+							{% if task.is_overdue %}
+							<span class="badge bg-danger ms-1">Overdue</span>
+							{% endif %}
+						</td>
+						<td>
+							<a href="{% url 'tasks_web:task_detail' task.id %}" class="btn btn-sm btn-outline-primary">
+								View
+							</a>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="text-center mt-3">
+			<a href="{% url 'tasks_web:task_list' %}" class="btn btn-outline-primary">
+				View All Tasks →
+			</a>
+		</div>
+	</div>
+</div>
+{% else %}
+<div class="card shadow mb-4">
+	<div class="card-body text-center">
+		<h5>No tasks assigned to you yet</h5>
+		<p class="text-muted">Create your first task to get started!</p>
+		<a href="{% url 'tasks_web:task_create' %}" class="btn btn-primary">
+			➕ Create First Task
+		</a>
+	</div>
+</div>
+{% endif %}
+
+{% endblock %}

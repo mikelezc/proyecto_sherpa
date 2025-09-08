@@ -1,34 +1,74 @@
-FROM python:3.10-slim
+# Stage 1: Build stage
+FROM python:3.10-slim AS builder
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set work directory
 WORKDIR /app
 
-COPY requirements.txt .
-RUN apt-get update && apt-get install -y \
+# Install system dependencies for building
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	postgresql-client \
 	libpq-dev \
-	openssl \
-	&& pip install --no-cache-dir -r requirements.txt \
-	&& pip install --no-cache-dir gunicorn pyotp==2.8.0 \
-	&& mkdir -p /app/logs \
-	&& chmod 777 /app/logs
+	build-essential \
+	gcc \
+	g++ \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& apt-get clean
 
-# Create celery user and setup directories with proper permissions
-RUN adduser --disabled-password --gecos '' celeryuser \
-	&& mkdir -p /var/lib/celery /var/run/celery /var/log/celery /home/celeryuser/.postgresql /home/celeryuser/.pg \
-	&& chown -R celeryuser:celeryuser /var/lib/celery /var/run/celery /var/log/celery /home/celeryuser \
-	&& chmod 755 /var/lib/celery /var/run/celery /var/log/celery \
-	&& mkdir -p /root/.postgresql \
-	&& chmod 755 /root/.postgresql
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+	pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
-# Copy application files
+# Stage 2: Production stage
+FROM python:3.10-slim AS production
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set work directory
+WORKDIR /app
+
+# Install only runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+	postgresql-client \
+	libpq5 \
+	&& rm -rf /var/lib/apt/lists/* \
+	&& apt-get clean \
+	&& apt-get purge -y --auto-remove
+
+# Copy wheels from builder stage and install
+COPY --from=builder /app/wheels /wheels
+COPY --from=builder /app/requirements.txt .
+RUN pip install --upgrade pip && \
+	pip install --no-cache /wheels/* && \
+	rm -rf /wheels
+
+# Create non-root user for security
+RUN adduser --disabled-password --gecos '' appuser && \
+	mkdir -p /app/media /app/logs && \
+	chown -R appuser:appuser /app
+
+# Copy project files
 COPY . .
-COPY django-entrypoint.py /app/
 
-RUN chmod +x /app/django-entrypoint.py && \
-	chown -R celeryuser:celeryuser /app
+# Set permissions and ownership for entrypoint
+RUN chmod +x entrypoint.py && \
+	chown -R appuser:appuser /app
 
-# Setup entry script
-ENV USE_DAPHNE=True
+# Switch to non-root user
+USER appuser
 
-# Set default command
-CMD ["python", "django-entrypoint.py"]
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+	CMD python -c "import requests; requests.get('http://localhost:8000/health/', timeout=5)" || exit 1
+
+# Run entrypoint
+CMD ["python", "entrypoint.py"]

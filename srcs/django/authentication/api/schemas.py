@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 from ninja import Schema
 
 # Schema Definitions for API Data Validation
@@ -8,6 +8,12 @@ from ninja import Schema
 
 # DATA VALIDATION:
 #    - Automatically validate incoming request data against defined types
+
+
+class ErrorSchema(Schema):
+    """Error response schema"""
+    error: str
+    status_code: int
 #    - Reject invalid requests with appropriate error messages
 #    - Convert data to proper Python types (strings, integers, booleans)
 
@@ -39,16 +45,15 @@ class RegisterSchema(Schema):
     privacy_policy: bool = False
 
 
+class RefreshTokenSchema(Schema):
+    refresh_token: str
+
+
 # GDPR schemas
 class GDPRExportSchema(Schema):
     status: str
     data: Dict
     download_url: str
-
-
-# QR schemas
-class QRSchema(Schema):
-    username: str
 
 
 # Password schemas
@@ -61,11 +66,6 @@ class PasswordResetConfirmSchema(Schema):
     new_password2: str
     uidb64: str
     token: str
-
-
-# Two factor schemas
-class TwoFactorSchema(Schema):
-    code: str
 
 
 # Profile schemas
@@ -97,31 +97,29 @@ class UserProfileSchema(Schema):
     username: str
     email: str
     is_active: bool
-    is_fortytwo_user: bool
     email_verified: bool
-    two_factor_enabled: bool
     profile_image_url: Optional[str]
     date_joined: Optional[str]
     last_login: Optional[str]
-    show_qr: bool
 
 
-# Auth schemas 42
-class FortyTwoAuthResponseSchema(Schema):
-    status: str
-    auth_url: Optional[str]
-    message: Optional[str]
-    user: Optional[Dict] = None
+class UserListSchema(Schema):
+    id: int
+    username: str
+    email: str
+    is_active: bool
+    date_joined: Optional[str]
 
 
-# Auth schemas 42
-class FortyTwoCallbackRequestSchema(Schema):
-    code: Optional[str] = None
-    state: Optional[str] = None
+class UserUpdateSchema(Schema):
+    username: Optional[str] = None
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
 
 
-class FortyTwoCallbackResponseSchema(Schema):
-    status: str
-    message: str
-    user: Optional[Dict]
-    require_2fa: Optional[bool] = False
+class PaginatedUsersSchema(Schema):
+    count: int
+    next: Optional[str]
+    previous: Optional[str]
+    results: List[UserListSchema]

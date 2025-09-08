@@ -55,9 +55,24 @@ class LoginAPIView(View):
                     {"status": "pending_2fa", "message": "Código 2FA enviado"}
                 )
 
-            return JsonResponse(
-                {"status": "success", "redirect_url": f"/{redirect_to}/"}
-            )
+            # Generate JWT tokens for API authentication
+            from ...services.token_service import TokenService
+            
+            # Get the authenticated user
+            user = request.user
+            if user.is_authenticated:
+                token_data = TokenService.generate_tokens(user)
+                
+                return JsonResponse({
+                    "status": "success", 
+                    "message": "Login successful",
+                    "redirect_url": f"/{redirect_to}/",
+                    "tokens": token_data
+                })
+            else:
+                return JsonResponse(
+                    {"status": "success", "redirect_url": f"/{redirect_to}/"}
+                )
 
         except ValidationError as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=400)
@@ -166,4 +181,61 @@ class RegisterAPIView(View):
                     ),
                 },
                 status=500,
+            )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class RefreshTokenAPIView(View):
+    """
+    API endpoint for refreshing access tokens using refresh tokens.
+    
+    Methods:
+        POST: Refresh access token
+            Params:
+                refresh_token (str): Valid refresh token
+            Returns:
+                200: New tokens generated
+                400: Invalid/expired refresh token
+                401: Unauthorized
+    """
+    
+    def post(self, request, *args, **kwargs):
+        try:
+            if hasattr(request, "data"):
+                data = request.data
+            else:
+                data = json.loads(request.body)
+            
+            refresh_token = data.get("refresh_token")
+            if not refresh_token:
+                return JsonResponse(
+                    {"status": "error", "message": "Refresh token requerido"},
+                    status=400
+                )
+            
+            from ...services.token_service import TokenService
+            
+            # Generate new tokens
+            token_data = TokenService.refresh_access_token(refresh_token)
+            
+            return JsonResponse({
+                "status": "success",
+                "message": "Token refreshed successfully",
+                "data": token_data
+            })
+            
+        except ValidationError as e:
+            return JsonResponse(
+                {"status": "error", "message": str(e)}, 
+                status=401
+            )
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"status": "error", "message": "Invalid JSON data"}, 
+                status=400
+            )
+        except Exception as e:
+            return JsonResponse(
+                {"status": "error", "message": "Error interno del servidor"}, 
+                status=500
             )

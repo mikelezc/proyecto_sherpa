@@ -1,81 +1,128 @@
-# 42 Transcendence
+# Task Management System
 
-A full-featured web application with a real-time multiplayer Pong game, user authentication, chat system, and tournament features. Built with Django, PostgreSQL, and secure containerized architecture.
+Sistema completo de gestión de tareas desarrollado con Django, con arquitectura de microservicios usando Docker y procesamiento asíncrono con Celery.
 
-## About This Project
+La estructura de docker, la api de autenticación y manejo de usuarios están basadas en este otro repo que desarrollé usando este mismo framework.
 
-Transcendence is a web platform that offers:
-- Classic Pong game with multiplayer functionality
-- User authentication (local and OAuth)
-- Real-time chat system
-- Tournament organization
-- Secure architecture with Web Application Firewall
+https://github.com/mikelezc/42_Transcendence
 
-## Quick Deployment
+Aquí se puede ver la misma base, pero aplicada con otras funciones interesantes como notificaciones vía mail, JWT, 2FA con claves, encriptación de datos antes de ser ingresados en la db, balanceador de carga, front que se sirve diréctamente de la API, un WAF, etc. Muy recomendable inspeccionarlo.
 
-### 1. Setup the Environment
+## Quick Start
 
-Run the automated setup script:
-
+### 1. Clonar el repositorio
 ```bash
-# Give execution permissions
-chmod +x setup_env.sh
-
-# Execute the script
-./setup_env.sh
+git clone <repo>
+cd <task-management-system>
 ```
 
-This script automatically:
-- Generates secure credentials
-- Sets demo values for external services
-- Detects your local IP address
-- Allows customization of OAuth and email settings if needed
-
-### 2. Deploy the Application
-
+### 2. Configurar variables de entorno
 ```bash
-# Deploy using Docker Compose
-make
+cp .env.sample .env
+# Editar .env con nuevas credenciales si es necesario
 ```
 
-### 3. Access the Application
-
-After deployment, access the application at:
-- **Main URL**: https://localhost:8445
-
-## Additional Commands
-
+### 3. Ejecutar con Docker
 ```bash
-# View logs
-make logs
-
-# Stop the application
-make down
-
-# Reset the application (keeping the database)
-make re
-
-# Reset completely (including database)
-make fcleandb
+docker-compose up
 ```
 
-## Testing the Application
+### 4. Acceso a la aplicación
+- **Aplicación Web**: http://localhost:8000
+- **Panel Admin**: http://localhost:8000/admin/ (Usuario: `demo_admin`, Password: `demo123`)
+- **Health Check**: http://localhost:8000/health/
 
-For security testing, run:
+## Documentación Completa
+
+- **[Architecture](docs/ARCHITECTURE.md)** - Descripción de la arquitectura del sistema  
+- **[Decisions](docs/DECISIONS.md)** - Decisiones técnicas y características implementadas
+- **[API Documentation](docs/API_DOCUMENTATION.md)** - Guía completa de la API
+
+- **Endpoints de la API en funcionamiento**:
+  - Auth API: http://localhost:8000/api/auth/docs
+  - Users API: http://localhost:8000/api/users/docs  
+  - Tasks API: http://localhost:8000/api/tasks/docs
+
+## Características Principales
+
+- **Sistema de Autenticación Completo**
+- Registro y login de usuarios
+- Gestión de perfiles
+- Rate limiting por seguridad
+
+- **Gestión de Tareas CRUD**
+- Crear, leer, actualizar y eliminar tareas
+- Asignación a usuarios y equipos
+- Prioridades, estados y comentarios
+- Sistema de etiquetas y categorías
+
+- **Optimización de Base de Datos**
+- Full-text search con PostgreSQL
+- Índices optimizados para rendimiento
+- Constraints para integridad de datos
+
+- **Procesamiento Asíncrono**
+- Celery para tareas en background
+- Limpieza automática de datos
+
+- **API REST Profesional**
+- Django Ninja con Swagger automático
+- Validación robusta de datos
+- Documentación interactiva
+
+## Tecnologías Utilizadas
+
+- **Backend**: Django 5.2.6, Django Ninja
+- **Base de Datos**: PostgreSQL 15 
+- **Cache**: Redis 7
+- **Procesamiento**: Celery + Redis
+- **Frontend**: Django Templates + Bootstrap 5
+- **Conteneurización**: Docker + Docker Compose
+
+## Testing
 ```bash
-# Run the WAF security tests
-chmod +x security_tests/WAF/test_waf.sh
-./security_tests/WAF/test_waf.sh
+# Ejecutar todos los tests automáticamente
+./run_tests.sh
 ```
 
-## Important Notes
+## Rate Limiting
+El sistema incluye protección contra ataques:
+- **Login**: 10 intentos cada 5 minutos
+- **Verificación email**: 10 intentos cada 30 minutos
+- **Cambio email**: 5 intentos cada hora
 
-- For a publicly accessible deployment, run `./configure_ip.sh` to detect and use your external IP
-- Demo mode uses placeholder OAuth credentials - real OAuth integration requires valid 42 API credentials
-- Never commit the `.env` file to version control
+## API Endpoints
 
-## Authors
+### Autenticación
+- `POST /api/auth/register/` - Registro de usuario
+- `POST /api/auth/login/` - Login
+- `POST /api/auth/logout/` - Logout
+- `POST /api/auth/refresh/` - Refresh token
 
-- mlezcano - [GitHub Profile](https://github.com/mikelezc)
-- ampjimen - [GitHub Profile](https://github.com/Amparojd)
-- vpeinado - [GitHub Profile](https://github.com/v-peinado)
+### Gestión de Usuarios
+- `GET /api/users/` - Lista de usuarios con paginación
+- `GET /api/users/{id}/` - Obtener usuario específico
+- `PUT /api/users/{id}/` - Actualizar usuario específico
+- `GET /api/users/me/` - Perfil del usuario actual
+
+### Gestión de Tareas
+- `GET /api/tasks/` - Lista de tareas (con filtros, búsqueda, paginación)
+- `POST /api/tasks/` - Crear nueva tarea
+- `GET /api/tasks/{id}/` - Obtener tarea específica
+- `PUT /api/tasks/{id}/` - Actualizar tarea (completa)
+- `PATCH /api/tasks/{id}/` - Actualizar tarea (parcial)
+- `DELETE /api/tasks/{id}/` - Eliminar tarea
+
+### Operaciones de Tareas
+- `POST /api/tasks/{id}/assign/` - Asignar tarea a usuario
+- `POST /api/tasks/{id}/comments/` - Añadir comentario a tarea
+- `GET /api/tasks/{id}/comments/` - Obtener comentarios de tarea
+- `GET /api/tasks/{id}/history/` - Obtener historial de tarea
+
+### Documentación Interactiva
+- `GET /api/auth/docs` - Swagger UI para Authentication API
+- `GET /api/users/docs` - Swagger UI para User Management API  
+- `GET /api/tasks/docs` - Swagger UI para Task Management API
+- `GET /api/auth/openapi.json` - Especificación OpenAPI Auth
+- `GET /api/users/openapi.json` - Especificación OpenAPI Users
+- `GET /api/tasks/openapi.json` - Especificación OpenAPI Tasks
