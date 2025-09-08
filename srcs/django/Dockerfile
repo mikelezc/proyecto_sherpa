@@ -1,5 +1,5 @@
 # Stage 1: Build stage
-FROM python:3.10-slim as builder
+FROM python:3.10-slim AS builder
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -9,13 +9,14 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies for building
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	postgresql-client \
 	libpq-dev \
 	build-essential \
 	gcc \
 	g++ \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+	&& apt-get clean
 
 # Install Python dependencies
 COPY requirements.txt .
@@ -23,7 +24,7 @@ RUN pip install --upgrade pip && \
 	pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
 # Stage 2: Production stage
-FROM python:3.10-slim as production
+FROM python:3.10-slim AS production
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -33,10 +34,11 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install only runtime dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	postgresql-client \
 	libpq5 \
 	&& rm -rf /var/lib/apt/lists/* \
+	&& apt-get clean \
 	&& apt-get purge -y --auto-remove
 
 # Copy wheels from builder stage and install

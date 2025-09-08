@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
-"""
-Simplified Django entrypoint script for task management system
-"""
-
 import os
 import sys
 import time
 import socket
 import logging
-import subprocess
 import django
 from django.core.management import execute_from_command_line
 
