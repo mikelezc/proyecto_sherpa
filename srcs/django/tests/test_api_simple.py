@@ -178,9 +178,14 @@ class BasicAPITest(TestCase):
             created_by=self.user
         )
         
-        # Assign user to task
-        task.assigned_to.add(assignee)
-        self.assertIn(assignee, task.assigned_to.all())
+        # Create assignment properly with assigned_by
+        from tasks.models import TaskAssignment
+        assignment = TaskAssignment.objects.create(
+            task=task,
+            user=assignee,
+            assigned_by=self.user
+        )
+        self.assertTrue(TaskAssignment.objects.filter(task=task, user=assignee).exists())
 
     def test_search_functionality(self):
         """Test search functionality"""
@@ -226,8 +231,8 @@ class APIEndpointAccessibilityTest(TestCase):
         """Test that main API routes exist"""
         # Test main API paths exist (even if they return 401/403)
         test_urls = [
-            '/api/auth/',
-            '/api/tasks/',
+            '/api/auth/login/',
+            '/api/tasks/ninja/',
             '/health/',
         ]
         
