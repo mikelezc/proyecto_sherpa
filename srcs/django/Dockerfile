@@ -56,9 +56,8 @@ RUN adduser --disabled-password --gecos '' appuser && \
 # Copy project files
 COPY . .
 
-# Create entrypoint script from django-entrypoint.py
-RUN cp django-entrypoint.py entrypoint.py && \
-	chmod +x entrypoint.py && \
+# Set permissions and ownership for entrypoint
+RUN chmod +x entrypoint.py && \
 	chown -R appuser:appuser /app
 
 # Switch to non-root user
