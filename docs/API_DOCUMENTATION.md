@@ -2,78 +2,212 @@
 
 ## Overview
 
-VERY BASICALLY, this API provides endpoints for task management and user authentication. The API is built with Django Ninja and includes automatic Swagger documentation.
+**MUY BÁSICAMENTE**, esta API proporciona endpoints para gestión de tareas y autenticación de usuarios. La API está construida con Django Ninja e incluye documentación automática con Swagger.
 
-## Interactive Documentation
+## Documentación Interactiva
 
-**Swagger UI** (Recommended for testing):
-- **Authentication API**: http://localhost:8000/api/auth/ninja/docs
-- **Task Management API**: http://localhost:8000/api/tasks/ninja/docs
+**Swagger UI** (Recomendado para pruebas):
+- **API Completa**: http://localhost:8000/api/docs/
+- **Health Check**: http://localhost:8000/health/
 
-## Quick Setup
+## Configuración Rápida
 
 ```bash
+# Iniciar el sistema
 docker-compose up
+
+# Verificar que funciona
 curl http://localhost:8000/health/
+# Respuesta: {"status": "healthy", "database": "healthy", "redis": "healthy"}
 ```
 
-## Authentication API
+## API de Autenticación
 
-**Base URL**: `/api/auth/ninja/`
+**Base URL**: `/api/auth/`
 
-### User Registration
+### Registro de Usuario
 ```bash
-POST /api/auth/ninja/auth/register/
+POST /api/auth/register/
 {
-  "username": "testuser",
+  "username": "usuario_test",
   "email": "test@example.com", 
-  "password1": "securepass123",
-  "password2": "securepass123"
+  "password1": "password123",
+  "password2": "password123"
 }
 ```
 
-### User Login  
+### Inicio de Sesión  
 ```bash
-POST /api/auth/ninja/auth/login/
+POST /api/auth/login/
 {
-  "username": "testuser",
-  "password": "securepass123"
+  "username": "usuario_test",
+  "password": "password123"
 }
 ```
 
-### Get Users (with search)
+### Listar Usuarios (con búsqueda)
 ```bash
-GET /api/auth/ninja/users/?search=test&page=1&page_size=10
+GET /api/auth/users/?search=test&page=1&page_size=10
 ```
 
-## Task Management API
+## API de Gestión de Tareas
 
-**Base URL**: `/api/tasks/ninja/`
+**Base URL**: `/api/tasks/`
 
-### List Tasks
+### Listar Tareas
 ```bash
-GET /api/tasks/ninja/tasks/?page=1&page_size=10&status=todo
+GET /api/tasks/tasks/?page=1&page_size=10&status=todo
 ```
 
-### Create Task
+### Crear Tarea
 ```bash
-POST /api/tasks/ninja/tasks/
+POST /api/tasks/tasks/
 {
-  "title": "New Task",
-  "description": "Task description",
+  "title": "Nueva Tarea",
+  "description": "Descripción de la tarea",
   "status": "todo",
   "priority": "medium"
 }
 ```
 
-### Update Task
+### Actualizar Tarea
 ```bash
-PUT /api/tasks/ninja/tasks/{id}/
+PUT /api/tasks/tasks/{id}/
 {
-  "title": "Updated Task",
+  "title": "Tarea Actualizada",
   "status": "in_progress"
 }
 ```
+
+### Eliminar Tarea
+```bash
+DELETE /api/tasks/tasks/{id}/
+```
+
+## Campos Principales
+
+### Task (Tarea)
+- `title` (string): Título de la tarea
+- `description` (string): Descripción detallada
+- `status` (string): "todo", "in_progress", "done", "cancelled"
+- `priority` (string): "low", "medium", "high", "urgent"
+- `assigned_to` (int): ID del usuario asignado
+- `team` (int): ID del equipo
+- `due_date` (datetime): Fecha límite
+- `tags` (array): Lista de etiquetas
+
+### User (Usuario)
+- `username` (string): Nombre de usuario único
+- `email` (string): Email del usuario
+- `first_name` (string): Nombre
+- `last_name` (string): Apellido
+
+## Respuestas de Error
+
+### 400 Bad Request
+```json
+{
+  "detail": "Error de validación",
+  "errors": {
+    "title": ["Este campo es requerido"]
+  }
+}
+```
+
+### 401 Unauthorized
+```json
+{
+  "detail": "Credenciales de autenticación no proporcionadas"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "detail": "No encontrado"
+}
+```
+
+## Ejemplos de Uso Completos
+
+### Crear usuario y su primera tarea
+```bash
+# 1. Registrar usuario
+curl -X POST http://localhost:8000/api/auth/register/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "juan",
+    "email": "juan@example.com",
+    "password1": "mipassword123",
+    "password2": "mipassword123"
+  }'
+
+# 2. Iniciar sesión
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "juan",
+    "password": "mipassword123"
+  }'
+
+# 3. Crear tarea
+curl -X POST http://localhost:8000/api/tasks/tasks/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "title": "Mi primera tarea",
+    "description": "Descripción de mi tarea",
+    "priority": "high",
+    "status": "todo"
+  }'
+```
+
+### Buscar y filtrar tareas
+```bash
+# Buscar tareas por título
+GET /api/tasks/tasks/?search=proyecto
+
+# Filtrar por estado
+GET /api/tasks/tasks/?status=in_progress
+
+# Filtrar por prioridad
+GET /api/tasks/tasks/?priority=high
+
+# Tareas asignadas a un usuario
+GET /api/tasks/tasks/?assigned_to=1
+
+# Combinar filtros
+GET /api/tasks/tasks/?status=todo&priority=high&page=1
+```
+
+## Status Codes
+
+- `200 OK`: Operación exitosa
+- `201 Created`: Recurso creado exitosamente
+- `400 Bad Request`: Error en los datos enviados
+- `401 Unauthorized`: Sin autenticación
+- `403 Forbidden`: Sin permisos
+- `404 Not Found`: Recurso no encontrado
+- `500 Internal Server Error`: Error del servidor
+
+## Notas Importantes
+
+1. **Autenticación**: La mayoría de endpoints requieren autenticación
+2. **Paginación**: Las listas incluyen paginación automática
+3. **Validación**: Todos los campos son validados automáticamente
+4. **Rate Limiting**: Hay límites de velocidad para prevenir abuso
+5. **CORS**: Configurado para desarrollo local
+
+## Swagger UI
+
+Para una experiencia interactiva completa, visita:
+**http://localhost:8000/api/docs/**
+
+Aquí puedes:
+- Probar todos los endpoints
+- Ver esquemas de datos
+- Autenticarte y hacer peticiones reales
+- Descargar la especificación OpenAPI
 
 ### Delete Task
 ```bash
