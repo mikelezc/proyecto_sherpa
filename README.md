@@ -19,8 +19,15 @@ cd <task-management-system>
 ### 2. Configurar variables de entorno
 ```bash
 cp .env.sample .env
-# Editar .env con nuevas credenciales si es necesario
+# IMPORTANTE: Editar .env con credenciales seguras únicas
+# NUNCA usar las credenciales de ejemplo en producción
 ```
+
+**⚠️ IMPORTANTE PARA SEGURIDAD:**
+- El archivo `.env` contiene credenciales sensibles y NO debe committearse
+- Generar nuevas claves secretas: `python3 -c "import secrets; print(secrets.token_urlsafe(50))"`
+- Cambiar todas las passwords por valores seguros únicos
+- El archivo `.env.sample` sirve solo como plantilla
 
 ### 3. Ejecutar con Docker
 ```bash

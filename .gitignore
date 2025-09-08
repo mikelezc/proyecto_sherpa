@@ -1,6 +1,9 @@
-# Environment variables
+# Environment variables - NEVER commit these files!
 .env
 .env.*
+.env.local
+.env.production
+.env.development
 
 # OS generated files
 .DS_Store
