@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simplified Django entrypoint script for task management system
+Django entrypoint script for task management system
 """
 
 import os

@@ -1,3 +1,21 @@
+# Extension fields para reutilizar configuraciones comunes
+x-django-common: &django-common
+  build:
+    context: ./srcs/django
+    dockerfile: Dockerfile
+  env_file:
+    - .env
+  volumes:
+    - ./srcs/django:/app
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  networks:
+    - task-management-network
+  restart: unless-stopped
+
 networks:
   task-management-network:
     driver: bridge
@@ -42,35 +60,13 @@ services:
       start_period: 10s
 
   web:
-    build:
-      context: ./srcs/django
-      dockerfile: Dockerfile
+    <<: *django-common
     container_name: django_web
     ports:
       - "8000:8000"
-    environment:
-      - DEBUG=${DEBUG}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - SQL_ENGINE=django.db.backends.postgresql
-      - SQL_HOST=db
-      - SQL_PORT=5432
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - LOAD_SEED_DATA=${LOAD_SEED_DATA}
     volumes:
       - django_media:/app/media
       - ./srcs/django:/app
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - task-management-network
-    restart: unless-stopped
     command: python entrypoint.py
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health/', timeout=5)"]
@@ -80,23 +76,8 @@ services:
       start_period: 40s
 
   celery-worker:
-    build:
-      context: ./srcs/django
-      dockerfile: Dockerfile
+    <<: *django-common
     container_name: celery_worker
-    environment:
-      - DEBUG=${DEBUG}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - SQL_ENGINE=django.db.backends.postgresql
-      - SQL_HOST=db
-      - SQL_PORT=5432
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    volumes:
-      - ./srcs/django:/app
     depends_on:
       db:
         condition: service_healthy
@@ -104,9 +85,6 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
-    networks:
-      - task-management-network
-    restart: unless-stopped
     command: celery -A main worker --loglevel=info
     healthcheck:
       test: ["CMD", "celery", "-A", "main", "inspect", "ping"]
@@ -116,23 +94,8 @@ services:
       start_period: 60s
 
   celery-beat:
-    build:
-      context: ./srcs/django
-      dockerfile: Dockerfile
+    <<: *django-common
     container_name: celery_beat
-    environment:
-      - DEBUG=${DEBUG}
-      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - SQL_ENGINE=django.db.backends.postgresql
-      - SQL_HOST=db
-      - SQL_PORT=5432
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
-    volumes:
-      - ./srcs/django:/app
     depends_on:
       db:
         condition: service_healthy
@@ -140,14 +103,9 @@ services:
         condition: service_healthy
       web:
         condition: service_healthy
-    networks:
-      - task-management-network
-    restart: unless-stopped
-    command: >
-      sh -c "python manage.py migrate &&
-        celery -A main beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    command: celery -A main beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
     healthcheck:
-      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/tmp/celerybeat.pid') else 1)"]
+      test: ["CMD", "celery", "-A", "main", "inspect", "stats"]
       interval: 30s
       timeout: 10s
       retries: 3
