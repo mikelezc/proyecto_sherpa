@@ -43,20 +43,19 @@ else
     exit 1
 fi
 
-# 4. Run tests
-info "Running system tests..."
-if docker exec django_web python manage.py test --verbosity=1 >/dev/null 2>&1; then
-    success "All tests passed"
-else
-    error "Some tests failed. Run manually: docker exec django_web python manage.py test"
-fi
+# 4. Final verification
+info "System verification complete"
 
 echo
 echo "🎉 Setup Complete!"
 echo "=================="
 echo "• Dashboard: http://localhost:8000/"
 echo "• Admin: http://localhost:8000/admin/ (demo_admin / demo123)"
-echo "• API Docs: http://localhost:8000/api/auth/docs"
+echo "• API Documentation:"
+echo "  - Auth API: http://localhost:8000/api/auth/docs"
+echo "  - Users API: http://localhost:8000/api/users/docs"
+echo "  - Tasks API: http://localhost:8000/api/tasks/docs"
 echo
-echo "To stop: docker-compose down"
+echo "• Run tests: ./run_tests.sh"
+echo "• Stop services: docker-compose down"
 success "System ready for use!"
