@@ -32,7 +32,10 @@ curl http://localhost:8000/health/
 ### Application Access
 - **Dashboard**: http://localhost:8000/
 - **Admin Panel**: http://localhost:8000/admin/ (`demo_admin` / `demo123`)
-- **API Documentation**: http://localhost:8000/api/auth/docs
+- **API Documentation**:
+  - Auth API: http://localhost:8000/api/auth/docs
+  - Users API: http://localhost:8000/api/users/docs  
+  - Tasks API: http://localhost:8000/api/tasks/docs
 
 **✅ The `.env` file is automatically generated with secure credentials for development**
 
