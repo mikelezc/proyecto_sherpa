@@ -1,111 +1,111 @@
 # Architecture Documentation
 
-## Descripción General del Sistema
+## System Overview
 
-Este sistema de gestión de tareas utiliza una **arquitectura basada en contenedores** implementada con Docker Compose. El diseño se basa en contenedores especializados que trabajan juntos para proporcionar una solución escalable y mantenible, con Django como núcleo central.
+This task management system uses a **container-based architecture** implemented with Docker Compose. The design is based on specialized containers that work together to provide a scalable and maintainable solution, with Django as the central core.
 
-## Componentes Principales
+## Main Components
 
 ### 1. Django Web Application (`django_web`)
-- **Tecnología**: Django 5.2.6 + Django Ninja 0.22.0
-- **Puerto**: 8000 (expuesto directamente)
-- **Función**: API REST + Frontend Web
-- **Características Implementadas**:
-  - Sistema de autenticación completo con Django Auth
-  - API REST con Django Ninja y documentación Swagger automática
-  - Frontend web con Django Templates + Bootstrap 5
-  - Rate limiting implementado con Redis
-  - Validación robusta de datos con Pydantic (vía Django Ninja)
-  - Health checks en `/health/`
+- **Technology**: Django 5.2.6 + Django Ninja 0.22.0
+- **Port**: 8000 (directly exposed)
+- **Function**: REST API + Web Frontend
+- **Implemented Features**:
+  - Complete authentication system with Django Auth
+  - REST API with Django Ninja and automatic Swagger documentation
+  - Web frontend with Django Templates + Bootstrap 5
+  - Rate limiting implemented with Redis
+  - Robust data validation with Pydantic (via Django Ninja)
+  - Health checks at `/health/`
 
 ### 2. PostgreSQL Database (`postgres_db`)
-- **Tecnología**: PostgreSQL 15
-- **Puerto**: 5432
-- **Función**: Base de datos principal
-- **Optimizaciones Implementadas**:
-  - Full-text search con SearchVector y GinIndex
-  - Índices compuestos para consultas complejas
-  - Database constraints para integridad de datos
-  - Configuración optimizada para desarrollo
+- **Technology**: PostgreSQL 15
+- **Port**: 5432
+- **Function**: Main database
+- **Implemented Optimizations**:
+  - Full-text search with SearchVector and GinIndex
+  - Composite indexes for complex queries
+  - Database constraints for data integrity
+  - Optimized configuration for development
 
 ### 3. Redis Cache (`redis_cache`)
-- **Tecnología**: Redis 7-alpine
-- **Puerto**: 6379
-- **Funciones Activas**:
-  - Cache de sesiones Django
-  - Message broker para Celery
-  - Result backend para tareas asíncronas
-  - Storage para rate limiting
+- **Technology**: Redis 7-alpine
+- **Port**: 6379
+- **Active Functions**:
+  - Django session cache
+  - Message broker for Celery
+  - Result backend for asynchronous tasks
+  - Storage for rate limiting
 
 ### 4. Celery Worker (`celery_worker`)
-- **Función**: Procesamiento asíncrono de tareas en background
-- **Tareas Implementadas** (6 activas):
-  - `send_task_notification`: Envío de notificaciones por email
-  - `generate_daily_summary`: Generación de resúmenes diarios
-  - `check_overdue_tasks`: Verificación de tareas vencidas
-  - `cleanup_archived_tasks`: Limpieza automática de datos archivados
-  - `auto_assign_tasks`: Asignación automática de tareas
-  - `calculate_team_velocity`: Cálculo de métricas de equipos
+- **Function**: Asynchronous background task processing
+- **Implemented Tasks** (6 active):
+  - `send_task_notification`: Email notification sending
+  - `generate_daily_summary`: Daily summary generation
+  - `check_overdue_tasks`: Overdue task verification
+  - `cleanup_archived_tasks`: Automatic cleanup of archived data
+  - `auto_assign_tasks`: Automatic task assignment
+  - `calculate_team_velocity`: Team metrics calculation
 
 ### 5. Celery Beat (`celery_beat`)
-- **Función**: Scheduler para tareas periódicas
-- **Configuración**: Django Celery Beat con almacenamiento en PostgreSQL
-- **Estado**: Activo y funcionando con DatabaseScheduler
-  - Resúmenes diarios a las 9:00 AM
-  - Verificación de tareas vencidas cada hora
-  - Limpieza de datos cada domingo a medianoche
+- **Function**: Scheduler for periodic tasks
+- **Configuration**: Django Celery Beat with PostgreSQL storage
+- **Status**: Active and running with DatabaseScheduler
+  - Daily summaries at 9:00 AM
+  - Overdue task verification every hour
+  - Data cleanup every Sunday at midnight
 
-## Flujo de Datos Real
+## Real Data Flow
 
 ```
-Cliente/Browser → Django App (puerto 8000) → PostgreSQL
+Client/Browser → Django App (port 8000) → PostgreSQL
                       ↓ [Sessions/Cache]
                    Redis Cache
                       ↓ [Task Queue]
                  Celery Workers
 ```
 
-**Nota**: El sistema expone Django directamente en el puerto 8000, sin proxy reverso ni load balancer.
+**Note**: The system exposes Django directly on port 8000, without reverse proxy or load balancer.
 
-## Arquitectura de Seguridad (Implementada)
+## Security Architecture (Implemented)
 
-### Capas de Protección Activas:
-1. **Rate Limiting**: Implementado con RateLimitService usando Redis
-   - Login: 10 intentos cada 5 minutos
-   - Email verification: 10 intentos cada 30 minutos
-   - Profile updates: 5 intentos cada hora
-2. **Autenticación**: Django Authentication + JWT para API
-3. **Validación**: Validación estricta con Pydantic (Django Ninja) y Django Forms
-4. **Base de Datos**: Queries parametrizadas, protección contra SQL injection
-5. **Conteneurización**: Aislamiento de servicios con Docker
+### Active Protection Layers:
+1. **Rate Limiting**: Implemented with RateLimitService using Redis
+   - Login: 10 attempts every 5 minutes
+   - Email verification: 10 attempts every 30 minutes
+   - Profile updates: 5 attempts every hour
+2. **Authentication**: Django Authentication + JWT for API
+3. **Validation**: Strict validation with Pydantic (Django Ninja) and Django Forms
+4. **Database**: Parameterized queries, SQL injection protection
+5. **Containerization**: Service isolation with Docker
 
-## Patrones de Diseño Implementados
+## Implemented Design Patterns
 
 ### 1. Repository Pattern
-- Managers personalizados en Django para lógica de consultas específicas
-- Separación entre lógica de negocio y acceso a datos
+- Custom managers in Django for specific query logic
+- Separation between business logic and data access
 
 ### 2. Observer Pattern  
-- Django Signals para reaccionar a cambios en modelos
-- Actualización automática de search vectors cuando se modifican tareas
+- Django Signals to react to model changes
+- Automatic search vector updates when tasks are modified
 
 ### 3. Factory Pattern
-- Management commands para inicialización de datos (`seed_data.py`)
-- Creación consistente de datos de prueba
+- Management commands for data initialization (`seed_data.py`)
+- Consistent test data creation
 
 ### 4. Service Layer Pattern
 - AuthService, ProfileService, RateLimitService
-- Lógica de negocio centralizada en servicios
+- Centralized business logic in services
 
-## Monitoreo y Salud del Sistema
+## System Monitoring and Health
 
-### Health Checks Implementados:
-- **Endpoint principal**: `/health/` - Estado general del sistema
-- **Base de datos**: Verificación de conectividad PostgreSQL
-- **Cache**: Verificación de conectividad Redis
-- **Response Format**: JSON con status de cada componente
+### Implemented Health Checks:
+- **Main endpoint**: `/health/` - General system status
+- **Database**: PostgreSQL connectivity verification
+- **Cache**: Redis connectivity verification
+- **Response Format**: JSON with status of each component
 
-### Logging Actual:
-- **Formato**: Django logging estándar (no JSON estructurado)
-- **Niveles**: DEBUG, INFO, WARNING, ERROR configurables
-- **Destino**: Console output (no rotación automática)
+### Current Logging:
+- **Format**: Standard Django logging (not structured JSON)
+- **Levels**: DEBUG, INFO, WARNING, ERROR configurable
+- **Destination**: Console output (no automatic rotation)
