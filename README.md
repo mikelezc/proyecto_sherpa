@@ -53,29 +53,29 @@ curl http://localhost:8000/health/
 ## Main Features
 
 - **Complete Authentication System**
-- User registration and login
-- Profile management
-- Rate limiting for security
+	- User registration and login
+	- Profile management
+	- Rate limiting for security
 
 - **Task CRUD Management**
-- Create, read, update and delete tasks
-- Assignment to users and teams
-- Priorities, statuses and comments
-- Tagging and category system
+	- Create, read, update and delete tasks
+	- Assignment to users and teams
+	- Priorities, statuses and comments
+	- Tagging and category system
 
 - **Database Optimization**
-- Full-text search with PostgreSQL
-- Performance-optimized indexes
-- Data integrity constraints
+	- Full-text search with PostgreSQL
+	- Performance-optimized indexes
+	- Data integrity constraints
 
 - **Asynchronous Processing**
-- Celery for background tasks
-- Automatic data cleanup
+	- Celery for background tasks
+	- Automatic data cleanup
 
 - **Professional REST API**
-- Django Ninja with automatic Swagger
-- Robust data validation
-- Interactive documentation
+	- Django Ninja with automatic Swagger
+	- Robust data validation
+	- Interactive documentation
 
 ## Technologies Used
 
