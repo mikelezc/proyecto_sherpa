@@ -1,214 +1,214 @@
 # DECISIONS.md
 
-## Características Completadas y Por Qué
+## Completed Features and Why
 
-### Sistema de Autenticación
-**Por qué se implementó:**
-- Requerimiento central para cualquier sistema de gestión de tareas
-- Proporciona control de acceso seguro por usuario
-- Base fundamental para gestión de tareas personalizadas
+### Authentication System
+**Why it was implemented:**
+- Central requirement for any task management system
+- Provides secure per-user access control
+- Fundamental foundation for personalized task management
 
-**Lo que se completó:**
-- Registro e inicio de sesión con Django Authentication
-- Gestión de perfiles de usuario con funcionalidad de email
-- Rate limiting para seguridad contra ataques
-- API completa con endpoints de autenticación
+**What was completed:**
+- Registration and login with Django Authentication
+- User profile management with email functionality
+- Rate limiting for security against attacks
+- Complete API with authentication endpoints
 
-### Gestión CRUD de Tareas
-**Por qué se implementó:**
-- Funcionalidad central del negocio requerida
-- Demuestra capacidades completas de API REST
-- Muestra diseño de base de datos y relaciones
+### Task CRUD Management
+**Why it was implemented:**
+- Core business functionality required
+- Demonstrates complete REST API capabilities
+- Shows database design and relationships
 
-**Lo que se completó:**
-- Operaciones CRUD completas para tareas
-- Asignación de tareas a usuarios y equipos
-- Gestión de prioridades y estados
-- Sistema de comentarios e historial de tareas
-- Organización por equipos y sistema de etiquetas
-- Full-text search para búsqueda avanzada
+**What was completed:**
+- Complete CRUD operations for tasks
+- Task assignment to users and teams
+- Priority and status management
+- Comment system and task history
+- Team organization and tagging system
+- Full-text search for advanced searching
 
-### Optimización PostgreSQL
-**Por qué se implementó:**
-- Requerimiento de performance para sistemas en producción
-- Demuestra expertise en bases de datos
-- Habilita capacidades de búsqueda avanzadas
+### PostgreSQL Optimization
+**Why it was implemented:**
+- Performance requirement for production systems
+- Demonstrates database expertise
+- Enables advanced search capabilities
 
-**Lo que se completó:**
-- Full-text search con SearchVector y GinIndex
-- Managers personalizados para queries optimizadas
-- Database constraints e índices compuestos
-- Monitoreo de performance y optimización de queries
-- Comando de management para actualizar search vectors
+**What was completed:**
+- Full-text search with SearchVector and GinIndex
+- Custom managers for optimized queries
+- Database constraints and composite indexes
+- Performance monitoring and query optimization
+- Management command to update search vectors
 
-### Tareas Asíncronas con Celery
-**Por qué se implementó:**
-- Requerimiento técnico para procesamiento asíncrono
-- Demuestra arquitectura escalable
-- Esencial para gestión de tareas en producción
+### Asynchronous Tasks with Celery
+**Why it was implemented:**
+- Technical requirement for asynchronous processing
+- Demonstrates scalable architecture
+- Essential for production task management
 
-**Lo que se completó:**
-- 6 tareas Celery implementadas:
-  - `generate_daily_summary`: Resúmenes diarios automáticos
-  - `check_overdue_tasks`: Verificación de tareas vencidas
-  - `cleanup_archived_tasks`: Limpieza de datos archivados
-  - `auto_assign_tasks`: Asignación automática inteligente
-  - `calculate_team_velocity`: Cálculo de velocidad de equipos
-- Celery Beat scheduler para tareas periódicas
-- Configuración robusta con Redis como broker
+**What was completed:**
+- 6 implemented Celery tasks:
+  - `generate_daily_summary`: Automatic daily summaries
+  - `check_overdue_tasks`: Overdue task verification
+  - `cleanup_archived_tasks`: Archived data cleanup
+  - `auto_assign_tasks`: Intelligent automatic assignment
+  - `calculate_team_velocity`: Team velocity calculation
+- Celery Beat scheduler for periodic tasks
+- Robust configuration with Redis as broker
 
-### API REST Completa
-**Por qué se implementó:**
-- Requerimiento técnico para integración con frontend/móvil
-- Demuestra mejores prácticas de desarrollo de APIs
-- Permite escalabilidad y separación de concerns
+### Complete REST API
+**Why it was implemented:**
+- Technical requirement for frontend/mobile integration
+- Demonstrates API development best practices
+- Enables scalability and separation of concerns
 
-**Lo que se completó:**
-- Django Ninja para API moderna y rápida
-- Documentación automática con Swagger/OpenAPI
-- Validación robusta con Pydantic
-- Paginación automática en listados
-- Rate limiting y manejo de errores
-- Endpoints completos para todas las operaciones
+**What was completed:**
+- Django Ninja for modern and fast API
+- Automatic documentation with Swagger/OpenAPI
+- Robust validation with Pydantic
+- Automatic pagination in listings
+- Rate limiting and error handling
+- Complete endpoints for all operations
 
-### Frontend Web Funcional (a través de Django templates)
-**Por qué se implementó:**
-- Demostrar funcionalidad del backend
-- Proporcionar interfaz de usuario para pruebas
-- Validar la API con un cliente real
+### Functional Web Frontend (via Django templates)
+**Why it was implemented:**
+- Demonstrate backend functionality
+- Provide user interface for testing
+- Validate API with a real client
 
-**Lo que se completó:**
-- Django Templates con Bootstrap 5
-- Sistema de autenticación web completo
-- CRUD de tareas con interfaz intuitiva
-- Dashboard con estadísticas
+**What was completed:**
+- Django Templates with Bootstrap 5
+- Complete web authentication system
+- Task CRUD with intuitive interface
+- Dashboard with statistics
 
-## Part B: Extended Features - Funcionalidades Adicionales Implementadas
+## Part B: Extended Features - Additional Implemented Functionalities
 
 ### JWT Authentication System
-**Por qué se implementó:**
-- Sistema de tokens seguros para funcionalidades específicas (email verification, password reset)
-- Complementa Django sessions sin reemplazar la autenticación principal
-- Proporciona tokens seguros para operaciones sensibles
+**Why it was implemented:**
+- Secure token system for specific functionalities (email verification, password reset)
+- Complements Django sessions without replacing primary authentication
+- Provides secure tokens for sensitive operations
 
-**Lo que se completó:**
-- **Servicio JWT especializado**: Sistema en `authentication/services/token_service.py`
-- **PyJWT**: Librería PyJWT>=2.8.0 incluida en requirements.txt
-- **Configuración robusta**: Settings JWT configurados (JWT_SECRET_KEY, JWT_ALGORITHM, etc.)
-- **4 tipos de tokens específicos**:
+**What was completed:**
+- **Specialized JWT service**: System in `authentication/services/token_service.py`
+- **PyJWT**: PyJWT>=2.8.0 library included in requirements.txt
+- **Robust configuration**: JWT settings configured (JWT_SECRET_KEY, JWT_ALGORITHM, etc.)
+- **4 specific token types**:
   - Email verification tokens
-  - Password reset tokens  
-  - Auth tokens para casos especiales
-  - Access & Refresh tokens (preparado para futuro uso en API)
-- **Seguridad**: Tokens firmados con HS256, expiración controlada, rate limiting
-- **Uso complementario**: NO reemplaza Django sessions - se usa para casos específicos
+  - Password reset tokens
+  - Auth tokens for special cases
+  - Access & Refresh tokens (prepared for future API use)
+- **Security**: HS256 signed tokens, controlled expiration, rate limiting
+- **Complementary use**: Does NOT replace Django sessions - used for specific cases
 
-**Nota importante:** La API REST principal usa Django Sessions (SessionAuthentication), no JWT como autenticación primaria.
+**Important note:** The main REST API uses Django Sessions (SessionAuthentication), not JWT as primary authentication.
 
-**Ubicación en código:**
-- Servicio principal: `/authentication/services/token_service.py`
-- Configuración: `/main/settings.py` líneas 288-292
-- Uso en profile service: `/authentication/services/profile_service.py`
-- Uso en password service: `/authentication/services/password_service.py`
+**Code location:**
+- Main service: `/authentication/services/token_service.py`
+- Configuration: `/main/settings.py` lines 288-292
+- Usage in profile service: `/authentication/services/profile_service.py`
+- Usage in password service: `/authentication/services/password_service.py`
 
-### Introducción
-**Por qué se priorizaron estas funcionalidades:**
-- El tiempo del test técnico es limitado, por lo que después de completar la parte A, se priorizaron las características que consideré más relevantes para hacer un proyecto lo más cercano a cómo sería luego en producción.
+### Introduction
+**Why these functionalities were prioritized:**
+- Technical test time is limited, so after completing part A, I prioritized features that I considered most relevant to make a project as close as possible to how it would be in production.
 
 ---
 
-### Business Logic & Automation ✅ (Implementado 85% aprox)
+### Business Logic & Automation ✅ (Implemented ~85%)
 
 **Task Workflow Engine:**
-- ✅ **Status transition validation**: Validación de estados implementada en `Task.save()` con constraints de base de datos
-- ✅ **Automatic task assignment**: Tarea Celery `auto_assign_tasks` en `/tasks/tasks.py` - asigna tareas basándose en disponibilidad de usuarios
-- ✅ **SLA tracking and escalation**: Tarea `check_overdue_tasks` verifica y marca tareas vencidas automáticamente
+- ✅ **Status transition validation**: State validation implemented in `Task.save()` with database constraints
+- ✅ **Automatic task assignment**: Celery task `auto_assign_tasks` in `/tasks/tasks.py` - assigns tasks based on user availability
+- ✅ **SLA tracking and escalation**: Task `check_overdue_tasks` automatically verifies and marks overdue tasks
 
 **Smart Features:**
-- ✅ **Workload balancing**: Algoritmo implementado en `calculate_team_velocity` para equilibrar carga de trabajo por equipos
-- ✅ **Priority calculation**: Sistema de 4 niveles (low, medium, high, critical) con índices optimizados en base de datos
-- ✅ **Dependency management**: Implementado sistema padre-hijo con `parent_task` y cálculo automático de progreso basado en subtasks
+- ✅ **Workload balancing**: Algorithm implemented in `calculate_team_velocity` to balance workload per team
+- ✅ **Priority calculation**: 4-level system (low, medium, high, critical) with optimized database indexes
+- ✅ **Dependency management**: Implemented parent-child system with `parent_task` and automatic progress calculation based on subtasks
 
-**Automation Rules (5/5 implementadas):**
-- ✅ `auto_assign_tasks`: Asignación automática basada en disponibilidad
-- ✅ `check_overdue_tasks`: Escalación de tareas de alta prioridad vencidas  
-- ✅ `send_task_notification`: Recordatorios antes de fecha límite
-- ✅ Actualización automática de tareas padre cuando se completan subtasks (lógica en modelo)
-- ✅ `calculate_team_velocity`: Métricas de velocidad de equipos
-
----
-
-### Full-Text Search ✅ (Implementado 100%)
-
-**Por qué se implementó:**
-- Funcionalidad crítica para sistemas de gestión de tareas en producción
-- Optimización de búsquedas y mejora significativa de la experiencia de usuario
-
-**Implementación técnica:**
-- ✅ **PostgreSQL full-text search**: `SearchVector` + `GinIndex` en modelo Task
-- ✅ **Search across tasks, comments, tags**: Búsqueda unificada implementada en `TaskManager.search()`
-- ✅ **Optimized search queries**: Uso de `SearchRank` para relevancia de resultados
-- ✅ **Search vector field**: Campo `search_vector` con actualización automática vía signals
-
-**Ubicación en código:**
-- Modelo: `/tasks/models.py` líneas 227, 287-289
-- Manager: `/tasks/models.py` líneas 51-60
-- Comando management: `/tasks/management/commands/update_search_vectors.py`
+**Automation Rules (5/5 implemented):**
+- ✅ `auto_assign_tasks`: Automatic assignment based on availability
+- ✅ `check_overdue_tasks`: Escalation of overdue high-priority tasks
+- ✅ `send_task_notification`: Reminders before due date
+- ✅ Automatic parent task updates when subtasks are completed (model logic)
+- ✅ `calculate_team_velocity`: Team velocity metrics
 
 ---
 
-### Security Features ✅ (Implementado 80% aprox)
+### Full-Text Search ✅ (Implemented 100%)
+
+**Why it was implemented:**
+- Critical functionality for production task management systems
+- Search optimization and significant user experience improvement
+
+**Technical implementation:**
+- ✅ **PostgreSQL full-text search**: `SearchVector` + `GinIndex` in Task model
+- ✅ **Search across tasks, comments, tags**: Unified search implemented in `TaskManager.search()`
+- ✅ **Optimized search queries**: Use of `SearchRank` for result relevance
+- ✅ **Search vector field**: `search_vector` field with automatic updates via signals
+
+**Code location:**
+- Model: `/tasks/models.py` lines 227, 287-289
+- Manager: `/tasks/models.py` lines 51-60
+- Management command: `/tasks/management/commands/update_search_vectors.py`
+
+---
+
+### Security Features ✅ (Implemented ~80%)
 
 **Rate Limiting System:**
-- ✅ **API rate limiting per user**: `RateLimitService` implementado con Redis backend
-- ✅ **Granular controls**: Diferentes límites por acción (login, register, profile_update)
-- ✅ **Demo-friendly configuration**: Límites ajustados para facilitar testing
+- ✅ **API rate limiting per user**: `RateLimitService` implemented with Redis backend
+- ✅ **Granular controls**: Different limits per action (login, register, profile_update)
+- ✅ **Demo-friendly configuration**: Limits adjusted to facilitate testing
 
-**Ubicación en código:**
-- Servicio: `/authentication/services/rate_limit_service.py`
-- Integración: `/authentication/services/auth_service.py` líneas 45-61
+**Code location:**
+- Service: `/authentication/services/rate_limit_service.py`
+- Integration: `/authentication/services/auth_service.py` lines 45-61
 
 ---
 
-### Performance Optimization ✅ (Implementado 75% aprox)
+### Performance Optimization ✅ (Implemented ~75%)
 
 **Database Optimization:**
-- ✅ **Custom managers**: Managers optimizados con `select_related()` y `prefetch_related()`
-- ✅ **Strategic indexes**: 8 índices compuestos en Task model para queries frecuentes
-- ✅ **Query optimization**: Reducción de N+1 queries mediante prefetching
+- ✅ **Custom managers**: Optimized managers with `select_related()` and `prefetch_related()`
+- ✅ **Strategic indexes**: 8 composite indexes in Task model for frequent queries
+- ✅ **Query optimization**: N+1 query reduction through prefetching
 
 **Caching System:**
-- ✅ **Redis caching layer**: Redis configurado como cache backend
-- ✅ **Session storage**: Sessions almacenadas en Redis para mejor performance
+- ✅ **Redis caching layer**: Redis configured as cache backend
+- ✅ **Session storage**: Sessions stored in Redis for better performance
 
-**Ubicación en código:**
-- Managers: `/tasks/models.py` líneas 15-110
-- Índices: `/tasks/models.py` líneas 235-244
-- Configuración Redis: `/main/settings.py` líneas 150-165
+**Code location:**
+- Managers: `/tasks/models.py` lines 15-110
+- Indexes: `/tasks/models.py` lines 235-244
+- Redis configuration: `/main/settings.py` lines 150-165
 
 ---
 
-### Notification System ✅ (Implementado 60% aprox)
+### Notification System ✅ (Implemented ~60%)
 
 **Email Notifications:**
-- ✅ **Console email backend**: Configurado para desarrollo y testing
-- ✅ **Task notifications**: Sistema `send_task_notification` implementado
-- ✅ **User lifecycle emails**: Templates para verificación, password reset, etc.
+- ✅ **Console email backend**: Configured for development and testing
+- ✅ **Task notifications**: `send_task_notification` system implemented
+- ✅ **User lifecycle emails**: Templates for verification, password reset, etc.
 
-**Templates implementados:**
-- Verificación de email, cambio de contraseña, bienvenida, inactividad
-- Ubicación: `/authentication/web/templates/authentication/`
+**Implemented templates:**
+- Email verification, password change, welcome, inactivity
+- Location: `/authentication/web/templates/authentication/`
 
 ---
 
-### Funcionalidades NO Implementadas (por limitaciones de tiempo)
+### Non-Implemented Features (due to time constraints)
 
-**❌ No priorizadas:**
-- **Kafka Event Streaming**: Requiere infraestructura adicional compleja
-- **Flask Analytics Microservice**: Fuera del scope de Django
-- **Time Tracking**: No crítico para funcionalidad base del sistema
-- **RBAC avanzado**: Permisos básicos suficientes para demostración
+**❌ Not prioritized:**
+- **Kafka Event Streaming**: Requires complex additional infrastructure
+- **Flask Analytics Microservice**: Outside Django scope
+- **Time Tracking**: Not critical for base system functionality
+- **Advanced RBAC**: Basic permissions sufficient for demonstration
 
-## Resumen Técnico
+## Technical Summary
 
-Este proyecto demuestra una arquitectura Django moderna y escalable con todas las funcionalidades implementadas y completamente operativas. Cada decisión técnica fue tomada priorizando la funcionalidad, rendimiento y facilidad de mantenimiento.
+This project demonstrates a modern and scalable Django architecture with all features implemented and fully operational. Each technical decision was made prioritizing functionality, performance, and maintainability.
