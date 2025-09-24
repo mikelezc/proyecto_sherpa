@@ -101,14 +101,15 @@ class Command(BaseCommand):
         
         users = []
         
-        # Create a demo admin user
+        # Create a demo admin user (SUPERUSER with full admin access)
         admin_user, created = CustomUser.objects.get_or_create(
             username='demo_admin',
             defaults={
                 'email': 'admin@taskmanagement.demo',
                 'first_name': 'Admin',
                 'last_name': 'User',
-                'is_staff': True
+                'is_staff': True,
+                'is_superuser': True
             }
         )
         if created:
