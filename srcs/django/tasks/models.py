@@ -3,6 +3,13 @@ Task Management Models
 
 This module contains the core models for the task management system,
 following the requirements from the technical test.
+
+Architecture Overview:
+- 8 main models covering all aspects of task management
+- Custom managers and querysets imported from managers.py
+- PostgreSQL full-text search capabilities with fallback
+- Comprehensive audit trail and data integrity constraints
+- Enterprise-ready features (soft delete, metadata, multi-tenancy support)
 """
 
 from django.db import models
@@ -13,110 +20,10 @@ from django.contrib.postgres.search import SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
 import uuid
 
+# Import custom managers
+from .managers import TaskManager, TaskHistoryManager, CommentManager
+
 User = get_user_model()
-
-
-class TaskQuerySet(models.QuerySet):
-    """Custom QuerySet for Task model with optimization methods"""
-    
-    def active(self):
-        """Get non-archived tasks"""
-        return self.filter(is_archived=False)
-    
-    def archived(self):
-        """Get archived tasks"""
-        return self.filter(is_archived=True)
-    
-    def with_optimized_relations(self):
-        """Optimized query with select_related and prefetch_related"""
-        return self.select_related(
-            'created_by', 'team', 'parent_task', 'template'
-        ).prefetch_related(
-            'tags', 
-            'assigned_to',
-            'comments__author',
-            'history__user',
-            'subtasks'
-        )
-    
-    def search(self, query):
-        """
-        Smart search that tries full-text first, falls back to basic
-        """
-        if not query:
-            return self
-        
-        try:
-            # Try PostgreSQL full-text search
-            from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
-            from django.db.models import Q
-            
-            search_query = SearchQuery(query, config='english')
-            return self.annotate(
-                search=SearchVector('title', 'description', config='english'),
-                rank=SearchRank('search', search_query)
-            ).filter(
-                search=search_query
-            ).order_by('-rank', '-created_at')
-        except Exception:
-            # Fallback to basic search if PostgreSQL extensions are not available
-            from django.db.models import Q
-            return self.filter(
-                Q(title__icontains=query) | 
-                Q(description__icontains=query)
-            )
-
-
-class TaskManager(models.Manager):
-    """Custom manager for Task model"""
-    
-    def get_queryset(self):
-        """Use custom QuerySet"""
-        return TaskQuerySet(self.model, using=self._db)
-    
-    def active(self):
-        """Get non-archived tasks"""
-        return self.get_queryset().active()
-    
-    def archived(self):
-        """Get archived tasks"""
-        return self.get_queryset().archived()
-    
-    def with_optimized_relations(self):
-        """Get tasks with optimized relations"""
-        return self.get_queryset().with_optimized_relations()
-    
-    def search(self, query):
-        """
-        Smart search that tries full-text first, falls back to basic
-        """
-        return self.get_queryset().search(query)
-
-
-class TaskHistoryManager(models.Manager):
-    """Custom manager for TaskHistory model"""
-    
-    def get_queryset(self):
-        """Optimize with select_related by default"""
-        return super().get_queryset().select_related('task', 'user')
-    
-    def recent(self, days=30):
-        """Get recent history entries"""
-        from datetime import timedelta
-        since_date = timezone.now() - timedelta(days=days)
-        return self.filter(timestamp__gte=since_date)
-
-
-class CommentManager(models.Manager):
-    """Custom manager for Comment model"""
-    
-    def get_queryset(self):
-        """Optimize with select_related by default"""
-        return super().get_queryset().select_related('task', 'author')
-    
-    def for_task(self, task):
-        """Get comments for a specific task"""
-        return self.filter(task=task).order_by('created_at')
 
 
 class Tag(models.Model):

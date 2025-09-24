@@ -546,7 +546,7 @@ class DatabaseIntegrationTest(TransactionTestCase):
         ]
         
         # Test search functionality (implementation depends on your search setup)
-        from tasks.models import TaskQuerySet
+        from tasks.managers import TaskQuerySet
         
         # These tests verify the search infrastructure is in place
         # Actual search testing depends on your SearchVector implementation
