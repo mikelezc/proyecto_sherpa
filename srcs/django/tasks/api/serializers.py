@@ -10,7 +10,8 @@ from .schemas import (
     TaskAssignmentSchema,
     CommentSchema,
     TaskListSchema,
-    TaskDetailSchema
+    TaskDetailSchema,
+    TaskHistorySchema
 )
 
 
@@ -101,4 +102,15 @@ def serialize_task_detail(task):
         updated_at=task.updated_at,
         is_archived=task.is_archived,
         is_overdue=task.is_past_due
+    )
+
+
+def serialize_history(history_item):
+    """Serialize task history item to API schema"""
+    return TaskHistorySchema(
+        id=history_item.id,
+        action=history_item.action,
+        changes=history_item.changes,
+        timestamp=history_item.timestamp,
+        user=serialize_user_minimal(history_item.user)
     )
