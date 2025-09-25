@@ -13,7 +13,7 @@ from decimal import Decimal
 import time
 from tasks.models import Task, Comment, Tag, Team
 from authentication.tasks import cleanup_inactive_users
-from tasks.celery_tasks import send_task_notification, generate_daily_summary, check_overdue_tasks
+from tasks.infrastructure.celery_tasks import send_task_notification, generate_daily_summary, check_overdue_tasks
 
 User = get_user_model()
 

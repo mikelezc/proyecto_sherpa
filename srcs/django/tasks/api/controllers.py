@@ -10,7 +10,7 @@ from ninja import Router
 
 from ..services import TaskService, TaskQueryService
 from ..services.task_filters import TaskFilter
-from ..serializers import (
+from ..infrastructure.serializers import (
     serialize_assignment,
     serialize_comment,
     serialize_task_list,

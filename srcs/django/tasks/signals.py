@@ -5,8 +5,8 @@ Django signals for task management automation
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from .models import Task, TaskHistory, TaskAssignment
-from .celery_tasks import send_task_notification
-from .business import check_and_update_overdue_status
+from .infrastructure.celery_tasks import send_task_notification
+from .core.business import check_and_update_overdue_status
 
 
 @receiver(post_save, sender=Task)

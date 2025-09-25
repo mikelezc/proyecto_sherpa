@@ -11,7 +11,7 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from ..models import Task, Tag, TaskAssignment, Comment
-from ..business import (
+from ..core.business import (
     validate_task_due_date,
     validate_parent_task, 
     validate_metadata,

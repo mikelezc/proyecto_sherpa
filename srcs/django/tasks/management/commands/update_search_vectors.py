@@ -14,7 +14,7 @@ Simplified to use consolidated search.py functionality
 """
 
 from django.core.management.base import BaseCommand
-from tasks.search import update_all_search_vectors, rebuild_search_index
+from tasks.core.search import update_all_search_vectors, rebuild_search_index
 
 
 class Command(BaseCommand):

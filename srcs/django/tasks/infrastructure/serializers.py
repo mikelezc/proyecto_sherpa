@@ -5,7 +5,7 @@ Serialization functions for converting model instances to API schemas.
 Shared between API and WEB interfaces for consistent data representation.
 """
 
-from .api.schemas import (
+from ..api.schemas import (
     UserMinimalSchema,
     TagSchema, 
     TeamSchema,

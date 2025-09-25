@@ -24,31 +24,31 @@ class TaskPropertiesMixin:
     @property
     def is_past_due(self):
         """Check if task is past due date"""
-        from .task_helpers import TaskModelUtils
+        from .core.task_helpers import TaskModelUtils
         return TaskModelUtils.is_task_overdue(self)
     
     @property
     def progress_percentage(self):
         """Calculate progress based on subtasks"""
-        from .task_helpers import TaskModelUtils
+        from .core.task_helpers import TaskModelUtils
         return TaskModelUtils.calculate_progress_percentage(self)
     
     @property
     def total_logged_hours(self):
         """Get total hours logged for this task"""
-        from .task_helpers import TaskModelUtils
+        from .core.task_helpers import TaskModelUtils
         return TaskModelUtils.get_task_duration_hours(self)
     
     @property
     def remaining_hours(self):
         """Get remaining estimated hours"""
-        from .task_helpers import TaskModelUtils
+        from .core.task_helpers import TaskModelUtils
         return TaskModelUtils.get_task_remaining_hours(self)
     
     @property
     def is_over_estimate(self):
         """Check if task has exceeded estimated hours"""
-        from .task_helpers import TaskModelUtils
+        from .core.task_helpers import TaskModelUtils
         return TaskModelUtils.is_task_over_estimate(self)
 
 
@@ -57,14 +57,14 @@ class TaskValidationMixin:
     
     def clean(self):
         """Custom validation using task helpers"""
-        from .task_helpers import TaskValidationUtils
+        from .core.task_helpers import TaskValidationUtils
         TaskValidationUtils.validate_task_hierarchy(self)
         TaskValidationUtils.validate_due_date(self)
         TaskValidationUtils.validate_hours(self)
     
     def save(self, *args, **kwargs):
         """Save with metadata validation only"""
-        from .task_helpers import TaskMetadataUtils
+        from .core.task_helpers import TaskMetadataUtils
         
         # Ensure metadata has default structure
         TaskMetadataUtils.ensure_default_metadata(self)
