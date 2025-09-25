@@ -88,6 +88,10 @@ class TaskTemplate(models.Model):
 class Task(TaskPropertiesMixin, TaskValidationMixin, TimestampMixin, ArchivableMixin):
     """Main Task model - Clean field definitions only"""
     
+    # Compatibility attributes for backward compatibility (class-level attributes)
+    STATUS_CHOICES = TASK_STATUS_CHOICES
+    PRIORITY_CHOICES = TASK_PRIORITY_CHOICES
+    
     # Core fields
     title = models.CharField(max_length=MAX_TASK_TITLE_LENGTH)
     description = models.TextField(blank=True)
@@ -99,7 +103,13 @@ class Task(TaskPropertiesMixin, TaskValidationMixin, TimestampMixin, ArchivableM
     
     # Relationships
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
-    assigned_to = models.ManyToManyField(User, through='TaskAssignment', related_name='assigned_tasks', blank=True)
+    assigned_to = models.ManyToManyField(
+        User, 
+        through='TaskAssignment', 
+        through_fields=('task', 'user'),
+        related_name='assigned_tasks', 
+        blank=True
+    )
     tags = models.ManyToManyField('Tag', blank=True)
     parent_task = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='subtasks')
     team = models.ForeignKey('Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')

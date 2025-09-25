@@ -6,6 +6,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .models import Task, Tag, Team
+from .constants import TASK_STATUS_CHOICES, TASK_PRIORITY_CHOICES
 
 User = get_user_model()
 
@@ -50,8 +51,8 @@ class TaskForm(forms.ModelForm):
 class TaskFilterForm(forms.Form):
     """Form for filtering tasks in the list view"""
     
-    STATUS_CHOICES = [('', 'All Statuses')] + Task.STATUS_CHOICES
-    PRIORITY_CHOICES = [('', 'All Priorities')] + Task.PRIORITY_CHOICES
+    STATUS_CHOICES = [('', 'All Statuses')] + TASK_STATUS_CHOICES
+    PRIORITY_CHOICES = [('', 'All Priorities')] + TASK_PRIORITY_CHOICES
     
     search = forms.CharField(
         required=False,

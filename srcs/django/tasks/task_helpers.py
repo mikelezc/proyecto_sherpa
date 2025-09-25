@@ -110,7 +110,7 @@ class TaskValidationUtils:
     @staticmethod
     def validate_due_date(task):
         """Validate task due date"""
-        if task.due_date and task.due_date <= task.created_at:
+        if task.due_date and task.created_at and task.due_date <= task.created_at:
             raise ValueError("Due date must be after creation date")
         return True
     
