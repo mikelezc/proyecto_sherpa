@@ -146,3 +146,46 @@ def serialize_comment(comment):
         updated_at=comment.updated_at,
         is_edited=comment.is_edited
     )
+
+
+def serialize_task_list(task):
+    """Helper to serialize task for list view (moved from controllers)"""
+    from .api.schemas import TaskListSchema
+    return TaskListSchema(
+        id=task.id,
+        title=task.title,
+        status=task.status,
+        priority=task.priority,
+        due_date=task.due_date,
+        estimated_hours=task.estimated_hours,
+        created_by=serialize_user_minimal(task.created_by),
+        assigned_to=[serialize_user_minimal(user) for user in task.assigned_to.all()],
+        tags=[serialize_tag(tag) for tag in task.tags.all()],
+        created_at=task.created_at,
+        is_overdue=task.is_past_due
+    )
+
+
+def serialize_task_detail(task):
+    """Helper to serialize task for detail view (moved from controllers)"""
+    from .api.schemas import TaskDetailSchema
+    return TaskDetailSchema(
+        id=task.id,
+        title=task.title,
+        description=task.description,
+        status=task.status,
+        priority=task.priority,
+        due_date=task.due_date,
+        estimated_hours=task.estimated_hours,
+        actual_hours=task.actual_hours,
+        created_by=serialize_user_minimal(task.created_by),
+        assigned_to=[serialize_user_minimal(user) for user in task.assigned_to.all()],
+        tags=[serialize_tag(tag) for tag in task.tags.all()],
+        team=serialize_team(task.team) if task.team else None,
+        parent_task_id=task.parent_task.id if task.parent_task else None,
+        metadata=task.metadata,
+        created_at=task.created_at,
+        updated_at=task.updated_at,
+        is_archived=task.is_archived,
+        is_overdue=task.is_past_due
+    )
