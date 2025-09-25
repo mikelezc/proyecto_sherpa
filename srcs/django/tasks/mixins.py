@@ -1,8 +1,17 @@
 """
 Task Model Mixins and Configurations
 
-Provides mixins for common model functionality and database configurations
-to keep models.py focused only on field definitions and relationships.
+This module provides reusable mixins that extend Django models with common functionality,
+keeping the main models.py clean and focused. Each mixin handles a specific responsibility:
+
+- TaskPropertiesMixin: Computed properties (progress, due status, hours tracking)
+- TaskValidationMixin: Custom validation logic and save behavior
+- TaskDatabaseConfig: Database optimization (indexes, constraints)
+- CommentBehaviorMixin: Comment-specific behavior (edit tracking)
+- TimestampMixin: Automatic created/updated timestamps (reusable)
+- ArchivableMixin: Soft delete functionality (reusable)
+
+This separation follows Clean Code principles and makes models more maintainable.
 """
 
 from django.db import models

@@ -1,5 +1,15 @@
 """
 Management command to update search vectors for all existing tasks
+
+This command maintains PostgreSQL full-text search functionality by updating
+the search_vector field for existing tasks. It enables efficient text search
+across task titles and descriptions using PostgreSQL's built-in search capabilities.
+
+Usage:
+- Basic update: python manage.py update_search_vectors
+- Custom batch size: python manage.py update_search_vectors --batch-size=200
+- Full rebuild: python manage.py update_search_vectors --rebuild
+
 Simplified to use consolidated search.py functionality
 """
 
