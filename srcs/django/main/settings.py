@@ -37,7 +37,6 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    # Third party apps
     "rest_framework",
     "corsheaders",
     "django_celery_beat",
@@ -45,7 +44,6 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    # Local apps
     "main",  # Main app for management commands
     "authentication",
     "tasks",  # New task management app
@@ -128,9 +126,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
 
 # Media files
 MEDIA_URL = "/media/"
@@ -172,15 +167,15 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 300.0,  # Every 5 minutes for demo
     },
     "check-overdue-tasks": {
-        "task": "tasks.tasks.check_overdue_tasks",
+        "task": "tasks.celery_tasks.check_overdue_tasks",
         "schedule": 3600.0,  # Every hour
     },
     "generate-daily-summary": {
-        "task": "tasks.tasks.generate_daily_summary",
+        "task": "tasks.celery_tasks.generate_daily_summary",
         "schedule": 86400.0,  # Every day
     },
     "cleanup-archived-tasks": {
-        "task": "tasks.tasks.cleanup_archived_tasks",
+        "task": "tasks.celery_tasks.cleanup_archived_tasks",
         "schedule": 604800.0,  # Every week (7 days * 24 hours * 60 minutes * 60 seconds)
     },
 }
@@ -197,7 +192,6 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_FILTER_BACKENDS": [
-        "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
@@ -293,12 +287,3 @@ JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=int(os.environ.get("JWT_REFRESH_TOKE
 
 # Site configuration
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
-
-# Email configuration (using console backend for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@localhost")
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")

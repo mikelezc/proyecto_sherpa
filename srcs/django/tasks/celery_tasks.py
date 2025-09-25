@@ -1,6 +1,5 @@
 """
 Celery tasks for the task management system
-(Required by the technical test)
 """
 
 from celery import shared_task
@@ -216,7 +215,6 @@ def auto_assign_tasks():
         
         for task in unassigned_tasks:
             # Simple algorithm: assign to user with least active tasks
-            # You can implement more sophisticated logic here
             
             if task.team:
                 # Assign within team
@@ -290,9 +288,7 @@ def calculate_team_velocity():
                     if total_actual_hours > 0 else 0
                 )
             }
-            
-            # Store in team metadata or create a separate model
-            # For now, we'll just log it
+
             logger.info(f"Team {team.name} velocity: {velocity_data}")
         
         return f"Calculated velocity for {teams.count()} teams"

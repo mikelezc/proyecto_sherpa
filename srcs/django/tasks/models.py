@@ -1,24 +1,15 @@
 """
 Task Management Models
 
-This module contains the core models for the task management system,
-following the requirements from the technical test.
-
 Architecture Overview:
 - 8 main models covering all aspects of task management
-- Custom managers and querysets imported from managers.py
-- PostgreSQL full-text search capabilities with fallback
-- Comprehensive audit trail and data integrity constraints
-- Enterprise-ready features (soft delete, metadata, multi-tenancy support)
 """
 
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.contrib.postgres.search import SearchVectorField
 from django.contrib.postgres.indexes import GinIndex
-import uuid
 
 # Import custom managers
 from .managers import TaskManager, TaskHistoryManager, CommentManager
@@ -85,9 +76,11 @@ class Task(models.Model):
     # Choices
     STATUS_CHOICES = [
         ('todo', 'To Do'),
+        ('pending', 'Pending'),
         ('in_progress', 'In Progress'),
         ('review', 'In Review'),
         ('done', 'Done'),
+        ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
     ]
     
@@ -100,7 +93,7 @@ class Task(models.Model):
     
     # Core fields (required by technical test)
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='todo')
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
     due_date = models.DateTimeField()
@@ -120,7 +113,7 @@ class Task(models.Model):
     parent_task = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='subtasks')
     
     # Metadata (required by technical test)
-    metadata = models.JSONField(default=dict)
+    metadata = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_archived = models.BooleanField(default=False)
@@ -173,71 +166,44 @@ class Task(models.Model):
         return self.title
     
     def clean(self):
-        """Validate task data"""
-        if self.due_date and self.due_date < timezone.now():
-            if self.status == 'todo':
-                raise ValidationError("Due date cannot be in the past for new tasks")
-        
-        if self.parent_task == self:
-            raise ValidationError("A task cannot be its own parent")
+        """Custom validation using business logic"""
+        from .business import validate_task_due_date, validate_parent_task
+        validate_task_due_date(self)
+        validate_parent_task(self)
     
     def save(self, *args, **kwargs):
-        # Temporarily skip full_clean for API testing
-        # self.full_clean()
+        """Save with minimal business logic"""
+        from .business import validate_metadata, update_task_search_vector
+        
+        # Ensure metadata has default value
+        validate_metadata(self)
+        
+        # Run validation
+        self.full_clean()
+        
+        # Save the model
         super().save(*args, **kwargs)
         
         # Update search vector after saving
-        self.update_search_vector()
-    
-    def update_search_vector(self):
-        """Update the search vector for full-text search"""
-        from django.contrib.postgres.search import SearchVector
-        from django.db import connection
-        
-        # Update search vector using PostgreSQL's full-text search
-        with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                UPDATE tasks_task 
-                SET search_vector = to_tsvector('english', 
-                    COALESCE(title, '') || ' ' || COALESCE(description, '')
-                ) 
-                WHERE id = %s
-                """,
-                [self.pk]
-            )
+        update_task_search_vector(self.pk)
     
     @classmethod
     def search_tasks(cls, query):
-        """
-        Perform full-text search on tasks using PostgreSQL's search capabilities
-        """
-        from django.contrib.postgres.search import SearchQuery, SearchRank
-        
-        if not query:
-            return cls.objects.all()
-        
-        search_query = SearchQuery(query, config='english')
-        return cls.objects.filter(
-            search_vector=search_query
-        ).annotate(
-            rank=SearchRank('search_vector', search_query)
-        ).order_by('-rank', '-created_at')
+        """Perform full-text search on tasks"""
+        from .search import search_tasks
+        return search_tasks(cls, query)
     
     @property
     def is_past_due(self):
         """Check if task is past due date"""
-        return self.due_date < timezone.now() and self.status not in ['done', 'cancelled']
+        from .business import is_task_overdue
+        return is_task_overdue(self)
     
     @property
     def progress_percentage(self):
-        """Calculate progress based on subtasks if any"""
-        subtasks = self.subtasks.all()
-        if not subtasks:
-            return 100 if self.status == 'done' else 0
-        
-        completed_subtasks = subtasks.filter(status='done').count()
-        return (completed_subtasks / subtasks.count()) * 100
+        """Calculate progress based on subtasks"""
+        from .business import calculate_task_progress
+        return calculate_task_progress(self)
 
 
 class TaskAssignment(models.Model):
@@ -267,9 +233,6 @@ class Comment(models.Model):
     
     # Custom manager
     objects = CommentManager()
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
     
     class Meta:
         ordering = ['created_at']
@@ -308,9 +271,6 @@ class TaskHistory(models.Model):
     
     # Custom manager
     objects = TaskHistoryManager()
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
     
     class Meta:
         ordering = ['-timestamp']

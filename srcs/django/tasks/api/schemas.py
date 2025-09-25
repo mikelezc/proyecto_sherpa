@@ -109,8 +109,8 @@ class TaskListSchema(Schema):
 class PaginatedTasksSchema(Schema):
     """Paginated task list response"""
     count: int
-    next: Optional[str]
-    previous: Optional[str]
+    has_next: bool
+    has_previous: bool
     results: List[TaskListSchema]
 
 
@@ -177,14 +177,14 @@ class TaskAssignResponseSchema(Schema):
 class PaginatedCommentsSchema(Schema):
     """Paginated comments response"""
     count: int
-    next: Optional[str]
-    previous: Optional[str]
+    has_next: bool
+    has_previous: bool
     results: List[CommentSchema]
 
 
 class PaginatedHistorySchema(Schema):
     """Paginated history response"""
     count: int
-    next: Optional[str]
-    previous: Optional[str]
+    has_next: bool
+    has_previous: bool
     results: List[TaskHistorySchema]

@@ -209,7 +209,7 @@ class CeleryTaskTest(TestCase):
     def test_celery_tasks_importable(self):
         """Test that all Celery tasks can be imported"""
         try:
-            from tasks.tasks import (
+            from tasks.celery_tasks import (
                 send_task_notification,
                 generate_daily_summary,
                 check_overdue_tasks,
@@ -240,7 +240,7 @@ class CeleryTaskTest(TestCase):
         )
         
         # Test that we can create the notification data
-        from tasks.tasks import send_task_notification
+        from tasks.celery_tasks import send_task_notification
         
         # In a real scenario, this would be called with .delay()
         # For testing, we just verify the function exists and is callable

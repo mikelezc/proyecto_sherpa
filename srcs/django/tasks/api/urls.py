@@ -1,7 +1,6 @@
 from django.urls import path
 from ninja import NinjaAPI
-from .controllers.task_controller import router as task_router
-from .controllers.task_operations_controller import router as task_operations_router
+from .controllers import router
 
 # Task Management API Configuration
 api = NinjaAPI(
@@ -12,10 +11,8 @@ api = NinjaAPI(
     docs_url="/docs",
 )
 
-# Add task router
-api.add_router("/", task_router)
-# Add task operations router 
-api.add_router("/", task_operations_router)
+# Add consolidated task router
+api.add_router("/", router)
 
 # URL patterns
 urlpatterns = [
