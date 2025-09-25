@@ -1,9 +1,7 @@
 """
 Task Helpers and Utilities
 
-Helper functions for Task models that don't belong in business logic
-but also shouldn't be directly in model methods. Provides reusable
-utilities for calculations, validations, and data processing.
+Provides reusable utilities for calculations, validations, and data processing.
 """
 
 from django.utils import timezone

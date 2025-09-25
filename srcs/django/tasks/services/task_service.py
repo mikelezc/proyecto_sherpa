@@ -1,25 +1,22 @@
 """
-Task API Services
+Task Service - Core task business operations
 
-
-Contains complex business operations, validations, and data processing.
-Separates business logic from HTTP concerns in controllers.
+Contains task creation, update, and management operations.
+Shared between API and WEB interfaces.
 """
 
 from typing import List
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.db import transaction
-from django.http import Http404
 
-from tasks.models import Task, Tag, TaskAssignment, Comment, TaskHistory
-from tasks.business import (
+from ..models import Task, Tag, TaskAssignment, Comment
+from ..business import (
     validate_task_due_date,
     validate_parent_task, 
     validate_metadata,
     update_task_search_vector
 )
-from tasks.task_helpers import TaskSearchUtils
 
 User = get_user_model()
 
@@ -40,9 +37,9 @@ class TaskService:
                 due_date=data.due_date,
                 estimated_hours=data.estimated_hours or Decimal('0'),
                 created_by=user,
-                team_id=data.team_id,
-                parent_task_id=data.parent_task_id,
-                metadata=data.metadata or {}
+                team_id=getattr(data, 'team_id', None),
+                parent_task_id=getattr(data, 'parent_task_id', None),
+                metadata=getattr(data, 'metadata', {}) or {}
             )
             
             # Apply business validations
@@ -51,11 +48,11 @@ class TaskService:
             validate_metadata(task)
             
             # Handle assignments
-            if data.assigned_to_ids:
+            if hasattr(data, 'assigned_to_ids') and data.assigned_to_ids:
                 TaskService._create_assignments(task, data.assigned_to_ids, user)
             
             # Handle tags
-            if data.tag_ids:
+            if hasattr(data, 'tag_ids') and data.tag_ids:
                 TaskService._set_tags(task, data.tag_ids)
             
             # Update search vector
@@ -70,11 +67,12 @@ class TaskService:
             # Update basic fields
             for field in ['title', 'description', 'status', 'priority', 'due_date', 
                          'estimated_hours', 'actual_hours']:
-                value = getattr(data, field)
-                if value is not None:
-                    setattr(task, field, value)
+                if hasattr(data, field):
+                    value = getattr(data, field)
+                    if value is not None:
+                        setattr(task, field, value)
             
-            if data.metadata is not None:
+            if hasattr(data, 'metadata') and data.metadata is not None:
                 task.metadata = data.metadata
             
             # Apply business validations
@@ -85,11 +83,11 @@ class TaskService:
             task.save()
             
             # Update assignments if provided
-            if data.assigned_to_ids is not None:
+            if hasattr(data, 'assigned_to_ids') and data.assigned_to_ids is not None:
                 TaskService._update_assignments(task, data.assigned_to_ids, user)
             
             # Update tags if provided
-            if data.tag_ids is not None:
+            if hasattr(data, 'tag_ids') and data.tag_ids is not None:
                 TaskService._set_tags(task, data.tag_ids)
             
             # Update search vector
@@ -103,9 +101,10 @@ class TaskService:
         with transaction.atomic():
             # Update only provided fields
             for field in ['status', 'priority', 'actual_hours']:
-                value = getattr(data, field)
-                if value is not None:
-                    setattr(task, field, value)
+                if hasattr(data, field):
+                    value = getattr(data, field)
+                    if value is not None:
+                        setattr(task, field, value)
             
             # Apply business validations
             validate_task_due_date(task)
@@ -197,40 +196,3 @@ class TaskService:
             task.tags.set(tags)
         else:
             task.tags.clear()
-
-    @staticmethod
-    def _update_search_vector(task: Task) -> None:
-        """Helper to update task search vector using model utilities"""
-        # Use both approaches for now - business logic and utilities
-        update_task_search_vector(task.id)
-
-
-class TaskQueryService:
-    """Service class for task querying operations"""
-    
-    @staticmethod
-    def get_task_with_relations(task_id: int) -> Task:
-        """Get a task with all related data or raise Http404"""
-        try:
-            return Task.objects.select_related(
-                'created_by', 'team', 'parent_task'
-            ).prefetch_related(
-                'assigned_to', 'tags'
-            ).get(id=task_id)
-        except Task.DoesNotExist:
-            raise Http404("Task not found")
-    
-    @staticmethod
-    def get_task_assignments(task: Task):
-        """Get all assignments for a task with related data"""
-        return TaskAssignment.objects.filter(task=task).select_related('user', 'assigned_by')
-    
-    @staticmethod
-    def get_task_comments(task: Task):
-        """Get comments for a task ordered by creation date"""
-        return Comment.objects.filter(task=task).select_related('author').order_by('-created_at')
-    
-    @staticmethod
-    def get_task_history(task: Task):
-        """Get history for a task ordered by timestamp"""
-        return TaskHistory.objects.filter(task=task).select_related('user').order_by('-timestamp')

@@ -1,17 +1,18 @@
 """
-Task API Filters
+Task Filters - Unified filtering logic
 
-Query filtering and search functionality for tasks.
-Centralizes all filtering logic and provides reusable query builders.
+Advanced query filtering and search functionality for tasks.
+Shared between API and WEB interfaces to eliminate code duplication.
 """
 
 from typing import Optional
-from django.db.models import QuerySet, Q
-from tasks.models import Task
+from django.db.models import QuerySet, Q, Case, When, Value, IntegerField
+
+from ..models import Task
 
 
 class TaskFilter:
-    """Filter builder for task queries"""
+    """Advanced filter builder for task queries with method chaining"""
     
     def __init__(self, queryset: Optional[QuerySet] = None):
         self.queryset = queryset or self._get_base_queryset()
@@ -78,15 +79,11 @@ class TaskFilter:
     def search(self, search_term: str) -> 'TaskFilter':
         """Search tasks by title and description"""
         if search_term:
-            # Try to use the model's search method if available
-            try:
-                self.queryset = Task.search_tasks(search_term)
-            except AttributeError:
-                # Fallback to basic text search
-                self.queryset = self.queryset.filter(
-                    models.Q(title__icontains=search_term) |
-                    models.Q(description__icontains=search_term)
-                )
+            # Use simple text search (compatible with all databases)
+            self.queryset = self.queryset.filter(
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term)
+            )
         return self
     
     def order_by_created(self, descending: bool = True) -> 'TaskFilter':
@@ -102,14 +99,12 @@ class TaskFilter:
         return self
     
     def order_by_priority(self, descending: bool = True) -> 'TaskFilter':
-        """Order tasks by priority (using priority field order)"""
-        # Assuming priority has specific ordering (e.g., critical, high, medium, low)
+        """Order tasks by priority level"""
         priority_order = ['critical', 'high', 'medium', 'low']
         if descending:
             priority_order = priority_order[::-1]
         
         # Create CASE WHEN ordering
-        from django.db.models import Case, When, Value, IntegerField
         order_cases = [
             When(priority=priority, then=Value(i)) 
             for i, priority in enumerate(priority_order)
@@ -125,51 +120,54 @@ class TaskFilter:
     
     @classmethod
     def build_from_params(cls, **params) -> QuerySet:
-        """Build a filtered queryset from dictionary parameters"""
+        """Build a filtered queryset from dictionary parameters - UNIFIED METHOD"""
         filter_builder = cls()
         
+        # Handle different parameter formats (API vs WEB)
+        # API format: direct parameters
+        # WEB format: from request.GET or form data
+        
         # Apply filters based on parameters
-        if 'status' in params:
+        if 'status' in params and params['status']:
             filter_builder = filter_builder.by_status(params['status'])
         
-        if 'priority' in params:
+        if 'priority' in params and params['priority']:
             filter_builder = filter_builder.by_priority(params['priority'])
         
-        if 'assigned_to' in params:
+        if 'assigned_to' in params and params['assigned_to']:
             filter_builder = filter_builder.assigned_to_user(params['assigned_to'])
         
-        if 'assigned_to_me' in params and 'user' in params:
+        if params.get('assigned_to_me') and 'user' in params:
             filter_builder = filter_builder.assigned_to_me(
                 params['user'], 
                 params['assigned_to_me']
             )
         
-        if 'created_by' in params:
+        if 'created_by' in params and params['created_by']:
             filter_builder = filter_builder.created_by_user(params['created_by'])
         
-        if 'team_id' in params:
+        if 'team_id' in params and params['team_id']:
             filter_builder = filter_builder.by_team(params['team_id'])
         
-        if 'tag' in params:
+        if 'tag' in params and params['tag']:
             filter_builder = filter_builder.with_tag(params['tag'])
         
         if 'is_overdue' in params:
             filter_builder = filter_builder.is_overdue(params['is_overdue'])
         
-        if 'search' in params:
+        if 'search' in params and params['search']:
             filter_builder = filter_builder.search(params['search'])
         
         # Apply ordering
-        if 'order_by' in params:
-            order_by = params['order_by']
-            descending = params.get('desc', False)
-            
-            if order_by == 'created_at':
-                filter_builder = filter_builder.order_by_created(descending)
-            elif order_by == 'due_date':
-                filter_builder = filter_builder.order_by_due_date(descending)
-            elif order_by == 'priority':
-                filter_builder = filter_builder.order_by_priority(descending)
+        order_by = params.get('order_by', 'created_at')
+        descending = params.get('desc', True)
+        
+        if order_by == 'created_at':
+            filter_builder = filter_builder.order_by_created(descending)
+        elif order_by == 'due_date':
+            filter_builder = filter_builder.order_by_due_date(descending)
+        elif order_by == 'priority':
+            filter_builder = filter_builder.order_by_priority(descending)
         else:
             # Default ordering
             filter_builder = filter_builder.order_by_created(descending=True)
@@ -180,7 +178,7 @@ class TaskFilter:
 class TaskFilterParams:
     """Helper class to parse and validate filter parameters"""
     
-    VALID_STATUSES = ['todo', 'in_progress', 'review', 'done', 'cancelled']
+    VALID_STATUSES = ['todo', 'pending', 'in_progress', 'review', 'done', 'completed', 'cancelled']
     VALID_PRIORITIES = ['low', 'medium', 'high', 'critical']
     VALID_ORDER_BY = ['created_at', 'due_date', 'priority']
     
@@ -193,7 +191,7 @@ class TaskFilterParams:
             return value
         if isinstance(value, str):
             return value.lower() in ('true', '1', 'yes', 'on')
-        return None
+        return bool(value)  # Fallback for other truthy values
     
     @classmethod
     def validate_status(cls, status: str) -> Optional[str]:

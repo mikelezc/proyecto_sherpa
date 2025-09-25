@@ -9,21 +9,6 @@ from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db import connection
 
 
-def search_tasks(task_model_class, query):
-    """
-    Perform full-text search on tasks (moved from Task.search_tasks)
-    """
-    if not query:
-        return task_model_class.objects.all()
-    
-    search_query = SearchQuery(query, config='english')
-    return task_model_class.objects.filter(
-        search_vector=search_query
-    ).annotate(
-        rank=SearchRank('search_vector', search_query)
-    ).order_by('-rank', '-created_at')
-
-
 def update_all_search_vectors(batch_size=100):
     """
     Update search vectors for all existing tasks in batches

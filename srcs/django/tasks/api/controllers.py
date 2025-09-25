@@ -8,9 +8,9 @@ from typing import Optional
 from django.core.paginator import Paginator
 from ninja import Router
 
-from .services import TaskService, TaskQueryService
-from .filters import TaskFilter
-from .serializers import (
+from ..services import TaskService, TaskQueryService
+from ..services.task_filters import TaskFilter
+from ..serializers import (
     serialize_assignment,
     serialize_comment,
     serialize_task_list,
