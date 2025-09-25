@@ -10,7 +10,7 @@ from django.http import Http404
 from ninja import Router
 from tasks.models import Task, Tag, TaskAssignment, Comment, TaskHistory
 from decimal import Decimal
-from tasks.business import (
+from .serializers import (
     serialize_user_minimal, 
     serialize_assignment,
     serialize_comment,

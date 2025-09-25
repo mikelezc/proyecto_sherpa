@@ -1,13 +1,9 @@
 """
 Task Business Logic
 
-Consolidated business logic, validations, utilities, and serializers.
-Single place for all task-related operations, calculations, and data transformations.
+Pure business logic, validations, and utilities for task operations.
+Contains domain-specific calculations, validation rules, and business processes.
 """
-
-from django.utils import timezone
-from django.db import connection
-from django.core.exceptions import ValidationError
 
 from django.utils import timezone
 from django.db import connection
@@ -15,22 +11,26 @@ from django.core.exceptions import ValidationError
 
 
 def validate_task_due_date(task):
+    """Validate that due date is not in the past for new tasks"""
     if task.due_date and task.due_date < timezone.now():
         if task.status in ['todo', 'pending']:
             raise ValidationError("Due date cannot be in the past for new tasks")
 
 
 def validate_parent_task(task):
+    """Validate that a task is not its own parent"""
     if task.parent_task == task:
         raise ValidationError("A task cannot be its own parent")
 
 
 def validate_metadata(task):
+    """Ensure metadata field is properly initialized"""
     if task.metadata is None:
         task.metadata = {}
 
 
 def update_task_search_vector(task_id):
+    """Update PostgreSQL full-text search vector for a task"""
     try:
         with connection.cursor() as cursor:
             cursor.execute(
@@ -49,6 +49,7 @@ def update_task_search_vector(task_id):
 
 
 def calculate_task_progress(task):
+    """Calculate task completion progress based on subtasks"""
     subtasks = task.subtasks.all()
     if not subtasks:
         return 100 if task.status in ['done', 'completed'] else 0
@@ -58,6 +59,7 @@ def calculate_task_progress(task):
 
 
 def is_task_overdue(task):
+    """Check if a task is overdue based on due date and status"""
     return (
         task.due_date < timezone.now() and 
         task.status not in ['done', 'completed', 'cancelled']
@@ -65,6 +67,7 @@ def is_task_overdue(task):
 
 
 def check_and_update_overdue_status(task):
+    """Update task's overdue status based on current date and status"""
     if task.due_date and task.due_date < timezone.now():
         if task.status not in ['done', 'cancelled']:
             task.is_overdue = True
@@ -73,6 +76,7 @@ def check_and_update_overdue_status(task):
 
 
 def get_task_changes(old_task, new_task):
+    """Compare two task instances and return changes dictionary"""
     changes = {}
     
     if old_task.status != new_task.status:
@@ -87,105 +91,3 @@ def get_task_changes(old_task, new_task):
         changes['description_changed'] = True
         
     return changes
-
-
-# ============================
-# SERIALIZATION HELPERS
-# ============================
-# Moved from duplicated controller files to eliminate redundancy
-
-def serialize_user_minimal(user):
-    """Helper to serialize user to minimal schema (moved from controllers)"""
-    from .api.schemas import UserMinimalSchema
-    return UserMinimalSchema(
-        id=user.id,
-        username=user.username,
-        email=user.email
-    )
-
-
-def serialize_tag(tag):
-    """Helper to serialize tag (moved from controllers)"""
-    from .api.schemas import TagSchema
-    return TagSchema(
-        id=tag.id,
-        name=tag.name,
-        color=tag.color
-    )
-
-
-def serialize_team(team):
-    """Helper to serialize team (moved from controllers)"""
-    from .api.schemas import TeamSchema
-    return TeamSchema(
-        id=team.id,
-        name=team.name
-    )
-
-
-def serialize_assignment(assignment):
-    """Helper to serialize task assignment (moved from controllers)"""
-    from .api.schemas import TaskAssignmentSchema
-    return TaskAssignmentSchema(
-        id=assignment.id,
-        user=serialize_user_minimal(assignment.user),
-        assigned_at=assignment.assigned_at,
-        assigned_by=serialize_user_minimal(assignment.assigned_by),
-        is_primary=assignment.is_primary
-    )
-
-
-def serialize_comment(comment):
-    """Helper to serialize comment (moved from controllers)"""
-    from .api.schemas import CommentSchema
-    return CommentSchema(
-        id=comment.id,
-        content=comment.content,
-        author=serialize_user_minimal(comment.author),
-        created_at=comment.created_at,
-        updated_at=comment.updated_at,
-        is_edited=comment.is_edited
-    )
-
-
-def serialize_task_list(task):
-    """Helper to serialize task for list view (moved from controllers)"""
-    from .api.schemas import TaskListSchema
-    return TaskListSchema(
-        id=task.id,
-        title=task.title,
-        status=task.status,
-        priority=task.priority,
-        due_date=task.due_date,
-        estimated_hours=task.estimated_hours,
-        created_by=serialize_user_minimal(task.created_by),
-        assigned_to=[serialize_user_minimal(user) for user in task.assigned_to.all()],
-        tags=[serialize_tag(tag) for tag in task.tags.all()],
-        created_at=task.created_at,
-        is_overdue=task.is_past_due
-    )
-
-
-def serialize_task_detail(task):
-    """Helper to serialize task for detail view (moved from controllers)"""
-    from .api.schemas import TaskDetailSchema
-    return TaskDetailSchema(
-        id=task.id,
-        title=task.title,
-        description=task.description,
-        status=task.status,
-        priority=task.priority,
-        due_date=task.due_date,
-        estimated_hours=task.estimated_hours,
-        actual_hours=task.actual_hours,
-        created_by=serialize_user_minimal(task.created_by),
-        assigned_to=[serialize_user_minimal(user) for user in task.assigned_to.all()],
-        tags=[serialize_tag(tag) for tag in task.tags.all()],
-        team=serialize_team(task.team) if task.team else None,
-        parent_task_id=task.parent_task.id if task.parent_task else None,
-        metadata=task.metadata,
-        created_at=task.created_at,
-        updated_at=task.updated_at,
-        is_archived=task.is_archived,
-        is_overdue=task.is_past_due
-    )

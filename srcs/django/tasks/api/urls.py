@@ -16,41 +16,35 @@ api.add_router("/", router)
 
 # URL patterns
 urlpatterns = [
-    path("", api.urls),  # Changed from "ninja/" to "" to match /api/tasks/ directly
+    path("", api.urls),
 ]
 
 """
-Task Management API Endpoints (following subject requirements):
+Task Management API Endpoints:
 
-DJANGO NINJA API:
-* GET /api/tasks/                    -> List tasks with filtering, search, pagination
-* POST /api/tasks/                   -> Create new task
-* GET /api/tasks/{id}/               -> Get specific task
-* PUT /api/tasks/{id}/               -> Update specific task (full update)
-* PATCH /api/tasks/{id}/             -> Update specific task (partial update)
-* DELETE /api/tasks/{id}/            -> Delete specific task
-* POST /api/tasks/{id}/assign/       -> Assign task to user
-* POST /api/tasks/{id}/comments/     -> Add comment to task
-* GET /api/tasks/{id}/comments/      -> Get task comments
-* GET /api/tasks/{id}/history/       -> Get task history
+DJANGO NINJA API ROUTES:
+* GET /api/tasks/                           -> List tasks with filtering, search, pagination
+* POST /api/tasks/                          -> Create new task
+* GET /api/tasks/tasks/{task_id}/           -> Get specific task details
+* PUT /api/tasks/{task_id}/                 -> Update specific task (full update)
+* PATCH /api/tasks/{task_id}/               -> Update specific task (partial update)
+* DELETE /api/tasks/{task_id}/              -> Delete specific task (soft delete)
 
-Documentation:
+TASK ASSIGNMENTS:
+* POST /api/tasks/{task_id}/assign/         -> Assign users to task
+* DELETE /api/tasks/{task_id}/assign/{user_id}/ -> Unassign user from task
+* GET /api/tasks/{task_id}/assignments/     -> Get task assignments
+
+TASK COMMENTS:
+* POST /api/tasks/{task_id}/comments/       -> Add comment to task
+* GET /api/tasks/{task_id}/comments/        -> Get task comments (with pagination)
+
+TASK HISTORY:
+* GET /api/tasks/{task_id}/history/         -> Get task history (with pagination)
+
+DOCUMENTATION:
 * http://localhost:8000/api/tasks/docs         -> Swagger/OpenAPI Documentation
 * http://localhost:8000/api/tasks/openapi.json -> OpenAPI Specification
-
-TASK CRUD:
-* GET    /api/tasks/ninja/               -> List tasks (with filtering, search, pagination)
-* POST   /api/tasks/ninja/               -> Create new task
-* GET    /api/tasks/ninja/{id}/          -> Get task details
-* PUT    /api/tasks/ninja/{id}/          -> Update task (full update)
-* PATCH  /api/tasks/ninja/{id}/          -> Update task (partial update)
-* DELETE /api/tasks/ninja/{id}/          -> Delete task (soft delete)
-
-TASK OPERATIONS:
-* POST   /api/tasks/ninja/{id}/assign/   -> Assign users to task
-* POST   /api/tasks/ninja/{id}/comments/ -> Add comment to task
-* GET    /api/tasks/ninja/{id}/comments/ -> List task comments (with pagination)
-* GET    /api/tasks/ninja/{id}/history/  -> List task history (with pagination)
 
 FILTERING PARAMETERS:
 * search: Search in title and description
