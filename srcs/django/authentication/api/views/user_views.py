@@ -11,15 +11,17 @@ from django.views import View
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
+from authentication.decorators import api_login_required, api_staff_required
 import json
 
 User = get_user_model()
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator([csrf_exempt, api_staff_required], name="dispatch")
 class UserListAPIView(View):
     """
     API endpoint for user listing with pagination and search.
+    AUTENTICATON REQUIRED: Only authenticated users can access.
     
     Methods:
         GET: List users with pagination
@@ -30,12 +32,12 @@ class UserListAPIView(View):
             Returns:
                 200: Paginated user list
                 401: Unauthorized
+                403: Forbidden (non-admin users)
     """
     
     def get(self, request, *args, **kwargs):
         try:
-            # Check authentication (in real app you'd use JWT middleware)
-            # For now, we'll just return data for testing
+            # User already validated by @api_staff_required (authenticated and admin)
             
             # Get query parameters
             page = int(request.GET.get('page', 1))
@@ -99,16 +101,18 @@ class UserListAPIView(View):
             )
         except Exception as e:
             return JsonResponse(
-                {"status": "error", "message": "Error interno del servidor"}, 
+                {"status": "error", "message": "Server internal error"}, 
                 status=500
             )
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator([csrf_exempt, api_login_required], name="dispatch")
 class UserDetailAPIView(View):
     """
     API endpoint for user detail operations.
-    
+    AUTENTICATION REQUIRED: Only authenticated users can view details.
+    AUTHORIZATION: User can only view their own data, admins can view all.
+
     Methods:
         GET: Get user details
         PUT: Update user details
@@ -116,6 +120,15 @@ class UserDetailAPIView(View):
     
     def get(self, request, user_id, *args, **kwargs):
         try:
+            # User already authenticated by @api_login_required
+            
+            # Only allow user to view own data or admins to view any
+            if request.user.id != user_id and not request.user.is_staff:
+                return JsonResponse(
+                    {"status": "error", "message": "Access denied. You can only view your own profile."}, 
+                    status=403
+                )
+            
             user = User.objects.get(id=user_id, is_active=True)
             
             user_data = {
@@ -140,17 +153,26 @@ class UserDetailAPIView(View):
             
         except User.DoesNotExist:
             return JsonResponse(
-                {"status": "error", "message": "Usuario no encontrado"}, 
+                {"status": "error", "message": "User not found"}, 
                 status=404
             )
         except Exception as e:
             return JsonResponse(
-                {"status": "error", "message": "Error interno del servidor"}, 
+                {"status": "error", "message": "Server internal error"}, 
                 status=500
             )
     
     def put(self, request, user_id, *args, **kwargs):
         try:
+            # User is already authenticated by @api_login_required
+
+            # Allow user to edit own data or admins to edit any
+            if request.user.id != user_id and not request.user.is_staff:
+                return JsonResponse(
+                    {"status": "error", "message": "Access denied. You can only edit your own profile."}, 
+                    status=403
+                )
+            
             # Get data
             if hasattr(request, "data"):
                 data = request.data
@@ -164,7 +186,7 @@ class UserDetailAPIView(View):
                 # Check if username is already taken
                 if User.objects.filter(username=data['username']).exclude(id=user.id).exists():
                     return JsonResponse(
-                        {"status": "error", "message": "El nombre de usuario ya está en uso"}, 
+                        {"status": "error", "message": "Username already taken"}, 
                         status=400
                     )
                 user.username = data['username']
@@ -173,7 +195,7 @@ class UserDetailAPIView(View):
                 # Check if email is already taken
                 if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
                     return JsonResponse(
-                        {"status": "error", "message": "El email ya está en uso"}, 
+                        {"status": "error", "message": "Email already in use"}, 
                         status=400
                     )
                 user.email = data['email']
@@ -191,7 +213,7 @@ class UserDetailAPIView(View):
             
             return JsonResponse({
                 "status": "success",
-                "message": "Usuario actualizado correctamente",
+                "message": "User updated successfully",
                 "data": {
                     "id": user.id,
                     "username": user.username,
@@ -203,7 +225,7 @@ class UserDetailAPIView(View):
             
         except User.DoesNotExist:
             return JsonResponse(
-                {"status": "error", "message": "Usuario no encontrado"}, 
+                {"status": "error", "message": "User not found"}, 
                 status=404
             )
         except json.JSONDecodeError:
@@ -213,15 +235,16 @@ class UserDetailAPIView(View):
             )
         except Exception as e:
             return JsonResponse(
-                {"status": "error", "message": "Error interno del servidor"}, 
+                {"status": "error", "message": "Server internal error"}, 
                 status=500
             )
 
 
-@method_decorator(csrf_exempt, name="dispatch")
+@method_decorator([csrf_exempt, api_login_required], name="dispatch")
 class UserMeAPIView(View):
     """
     API endpoint for current user profile.
+    REQUIRES AUTHENTICATION: Only authenticated users can access their profile.
     
     Methods:
         GET: Get current user profile
@@ -229,20 +252,8 @@ class UserMeAPIView(View):
     
     def get(self, request, *args, **kwargs):
         try:
-            # In a real app, you'd get user from JWT token
-            # For testing, we'll use session authentication or return test user
-            
-            if request.user.is_authenticated:
-                user = request.user
-            else:
-                # For testing purposes, return test user
-                try:
-                    user = User.objects.get(username='testuser')
-                except User.DoesNotExist:
-                    return JsonResponse(
-                        {"status": "error", "message": "Usuario no autenticado"}, 
-                        status=401
-                    )
+            # User is already authenticated by @api_login_required, use the authenticated user directly
+            user = request.user
             
             user_data = {
                 "id": user.id,
@@ -266,6 +277,6 @@ class UserMeAPIView(View):
             
         except Exception as e:
             return JsonResponse(
-                {"status": "error", "message": "Error interno del servidor"}, 
+                {"status": "error", "message": "Server internal error"}, 
                 status=500
             )

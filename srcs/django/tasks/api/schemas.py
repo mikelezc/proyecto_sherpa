@@ -5,8 +5,14 @@ Data validation and serialization schemas for task operations
 
 from ninja import Schema
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
+from django.utils import timezone
+
+
+def default_due_date():
+    """Return a default due date 7 days from now"""
+    return timezone.now() + timedelta(days=7)
 
 
 class TaskBaseSchema(Schema):

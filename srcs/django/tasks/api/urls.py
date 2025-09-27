@@ -1,14 +1,17 @@
 from django.urls import path
 from ninja import NinjaAPI
+from ninja.security import HttpBearer, django_auth
 from .controllers import router
 
+# Use built-in django_auth - will handle CSRF through middleware exclusion
 # Task Management API Configuration
 api = NinjaAPI(
-    title="Task Management API",
+    title="Task Management API", 
     version="1.0.0",
     description="API para gestión de tareas - CRUD completo + Operaciones",
     urls_namespace="tasks_api",
     docs_url="/docs",
+    auth=django_auth,  # Django session authentication
 )
 
 # Add consolidated task router

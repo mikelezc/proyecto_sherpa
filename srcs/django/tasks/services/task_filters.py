@@ -48,8 +48,8 @@ class TaskFilter:
     
     def assigned_to_me(self, user, assigned_to_me: bool) -> 'TaskFilter':
         """Filter tasks assigned to the requesting user"""
-        if assigned_to_me and user:
-            self.queryset = self.queryset.filter(assigned_to=user)
+        if assigned_to_me and user and user.is_authenticated:
+            self.queryset = self.queryset.filter(assigned_to=user.id)
         return self
     
     def created_by_user(self, user_id: int) -> 'TaskFilter':

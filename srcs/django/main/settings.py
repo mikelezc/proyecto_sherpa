@@ -55,7 +55,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "main.middleware.APICsrfExemptMiddleware",  # Custom CSRF middleware for APIs
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -147,6 +147,19 @@ CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+]
+
+# CSRF settings for APIs
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+# Exempt API endpoints from CSRF
+CSRF_EXEMPT_URLS = [
+    r'api/tasks/',    # Tasks API - remove leading slash
+    r'api/auth/',     # Authentication API  
+    r'api/users/',    # Users API
 ]
 
 # Celery Configuration

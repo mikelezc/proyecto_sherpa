@@ -103,11 +103,16 @@ class TaskValidationUtils:
     @staticmethod
     def validate_task_hierarchy(task):
         """Validate task parent-child relationships"""
-        if not task.parent_task:
+        # Check if parent_task_id is None or 0 (no parent)
+        if not task.parent_task_id:
             return True
             
         # Check for circular dependencies
-        current = task.parent_task
+        try:
+            current = task.parent_task
+        except task.__class__.DoesNotExist:
+            raise ValueError(f"Parent task with ID {task.parent_task_id} does not exist")
+            
         visited = {task.id}
         
         while current:

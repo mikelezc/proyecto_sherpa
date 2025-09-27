@@ -27,18 +27,38 @@ class TaskService:
     @staticmethod
     def create_task(user, data) -> Task:
         """Create a new task with assignments and tags"""
+        from django.utils import timezone
+        from datetime import timedelta
+        
         with transaction.atomic():
+            # Handle parent_task_id: convert 0 to None
+            parent_task_id = getattr(data, 'parent_task_id', None)
+            if parent_task_id == 0:
+                parent_task_id = None
+                
+            # Handle team_id: convert 0 to None  
+            team_id = getattr(data, 'team_id', None)
+            if team_id == 0:
+                team_id = None
+            
+            # Ensure due_date is in the future
+            due_date = data.due_date
+            current_time = timezone.now()
+            if due_date <= current_time:
+                # If due_date is in the past, set it to 1 week from now
+                due_date = current_time + timedelta(days=7)
+            
             # Create the task
             task = Task.objects.create(
                 title=data.title,
                 description=data.description,
                 status=data.status,
                 priority=data.priority,
-                due_date=data.due_date,
+                due_date=due_date,
                 estimated_hours=data.estimated_hours or Decimal('0'),
                 created_by=user,
-                team_id=getattr(data, 'team_id', None),
-                parent_task_id=getattr(data, 'parent_task_id', None),
+                team_id=team_id,
+                parent_task_id=parent_task_id,
                 metadata=getattr(data, 'metadata', {}) or {}
             )
             
