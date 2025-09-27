@@ -131,7 +131,7 @@ Tasks Overview:
 
 @shared_task
 def check_overdue_tasks():
-    """Mark tasks as overdue and notify assignees"""
+    """Mark tasks that are overdue and notify assignees"""
     try:
         from tasks.models import Task, TaskHistory
         
@@ -175,7 +175,7 @@ def check_overdue_tasks():
 
 @shared_task
 def cleanup_archived_tasks():
-    """Delete archived tasks older than 30 days"""
+    """Delete archived tasks older than 30 days to no overload the database"""
     try:
         from tasks.models import Task
         
@@ -198,9 +198,15 @@ def cleanup_archived_tasks():
         return f"Error: {e}"
 
 
+########################################################################################
+
+# TODO: Future feature - Auto-assignment of tasks
+# Currently not in use but ready to be activated when needed
+# To enable: Add to CELERY_BEAT_SCHEDULE in settings.py
+"""
 @shared_task
 def auto_assign_tasks():
-    """Auto-assign tasks based on workload and availability"""
+    \"\"\"Auto-assign tasks based on workload and availability\"\"\"
     try:
         from tasks.models import Task, TaskAssignment
         
@@ -248,11 +254,16 @@ def auto_assign_tasks():
     except Exception as e:
         logger.error(f"Error auto-assigning tasks: {e}")
         return f"Error: {e}"
+"""
 
 
+# TODO: Future feature - Team velocity metrics
+# Currently not in use but ready to be activated when needed  
+# To enable: Add to CELERY_BEAT_SCHEDULE in settings.py
+"""
 @shared_task  
 def calculate_team_velocity():
-    """Calculate team velocity metrics"""
+    \"\"\"Calculate team velocity metrics\"\"\"
     try:
         from tasks.models import Task, Team
         
@@ -296,3 +307,4 @@ def calculate_team_velocity():
     except Exception as e:
         logger.error(f"Error calculating team velocity: {e}")
         return f"Error: {e}"
+"""
