@@ -48,14 +48,18 @@ show_menu() {
     echo "5. ✅ Run Unit Tests               - Execute Django test suite"
     echo ""
     
-    echo -e "${GREEN}📊 PROJECT STATUS:${NC}"
-    echo "6. 🐳 Check Docker Status          - Container health check"
-    echo "7. 📈 Show Celery Status           - Worker and beat status"
-    echo "8. 🗂️  Show Project Structure       - Directory tree"
+    echo -e "${GREEN}� API TESTS:${NC}"
+    echo "6. 📡 Run API Tests                - Test Django Ninja endpoints"
+    echo ""
+    
+    echo -e "${GREEN}�📊 PROJECT STATUS:${NC}"
+    echo "7. 🐳 Check Docker Status          - Container health check"
+    echo "8. 📈 Show Celery Status           - Worker and beat status"
+    echo "9. 🗂️  Show Project Structure       - Directory tree"
     echo ""
     
     echo -e "${GREEN}🔍 UTILITIES:${NC}"
-    echo "9. 📝 Show All Available Scripts   - List all test scripts"
+    echo "10. 📝 Show All Available Scripts   - List all test scripts"
     echo "0. ❌ Exit"
     echo ""
 }
@@ -88,6 +92,12 @@ quick_setup() {
 run_unit_tests() {
     echo -e "${BLUE}✅ Running Unit Tests...${NC}\n"
     cd "$PROJECT_ROOT" && ./tests/unit/run_tests.sh
+}
+
+# Function to run API tests
+run_api_tests() {
+    echo -e "${BLUE}📡 Running API Tests...${NC}\n"
+    cd "$PROJECT_ROOT" && ./tests/api/test_tasks_api.sh
 }
 
 # Function to check Docker status
@@ -135,6 +145,11 @@ list_scripts() {
         [ -f "$script" ] && echo "   $(basename "$script")"
     done
     
+    echo -e "\n${YELLOW}📁 API Tests (tests/api/):${NC}"
+    for script in "$SCRIPT_DIR/api/"*.sh; do
+        [ -f "$script" ] && echo "   $(basename "$script")"
+    done
+    
     echo -e "\n${YELLOW}📁 Setup Scripts (project root):${NC}"
     echo "   quick_setup.sh"
     
@@ -144,7 +159,7 @@ list_scripts() {
 # Main menu loop
 while true; do
     show_menu
-    echo -e "${YELLOW}Choose an option (0-9): ${NC}"
+    echo -e "${YELLOW}Choose an option (0-10): ${NC}"
     read -r choice
     
     case $choice in
@@ -164,15 +179,18 @@ while true; do
             run_unit_tests
             ;;
         6)
-            check_docker
+            run_api_tests
             ;;
         7)
-            show_celery_status
+            check_docker
             ;;
         8)
-            show_structure
+            show_celery_status
             ;;
         9)
+            show_structure
+            ;;
+        10)
             list_scripts
             ;;
         0)
@@ -180,7 +198,7 @@ while true; do
             exit 0
             ;;
         *)
-            echo -e "${RED}❌ Invalid option. Please choose 0-9.${NC}"
+            echo -e "${RED}❌ Invalid option. Please choose 0-10.${NC}"
             ;;
     esac
     
