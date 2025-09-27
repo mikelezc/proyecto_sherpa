@@ -160,22 +160,22 @@ CELERY_TIMEZONE = TIME_ZONE
 # Celery Beat Configuration
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
-# Periodic tasks
+# Periodic tasks (crontab of tasks)
 CELERY_BEAT_SCHEDULE = {
     "cleanup-inactive-users": {
         "task": "authentication.tasks.cleanup_inactive_users",
         "schedule": 300.0,  # Every 5 minutes for demo
     },
     "check-overdue-tasks": {
-        "task": "tasks.celery_tasks.check_overdue_tasks",
+        "task": "tasks.infrastructure.celery_tasks.check_overdue_tasks",
         "schedule": 3600.0,  # Every hour
     },
     "generate-daily-summary": {
-        "task": "tasks.celery_tasks.generate_daily_summary",
+        "task": "tasks.infrastructure.celery_tasks.generate_daily_summary",
         "schedule": 86400.0,  # Every day
     },
     "cleanup-archived-tasks": {
-        "task": "tasks.celery_tasks.cleanup_archived_tasks",
+        "task": "tasks.infrastructure.celery_tasks.cleanup_archived_tasks",
         "schedule": 604800.0,  # Every week (7 days * 24 hours * 60 minutes * 60 seconds)
     },
 }
