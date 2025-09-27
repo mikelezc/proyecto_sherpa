@@ -29,6 +29,26 @@ docker-compose up -d
 curl http://localhost:8000/health/
 ```
 
+## 🧪 Testing & Demonstrations
+
+### Interactive Testing Hub
+```bash
+./test.sh
+```
+This launches an interactive menu with all available tests and demos.
+
+### Direct Access
+```bash
+# Complete Celery system demonstration
+./tests/demos/demo_celery_simple.sh
+
+# View email notifications generated
+./tests/demos/show_emails.sh
+
+# Run unit tests
+./tests/unit/run_tests.sh
+```
+
 ### Application Access
 - **Dashboard**: http://localhost:8000/
 - **Admin Panel**: http://localhost:8000/admin/ (`demo_admin` / `demo123`)
@@ -44,6 +64,7 @@ curl http://localhost:8000/health/
 - **[Architecture](docs/ARCHITECTURE.md)** - System architecture  
 - **[Decisions](docs/DECISIONS.md)** - Technical decisions and implementation
 - **[API Documentation](docs/API_DOCUMENTATION.md)** - Complete API guide
+- **[Tests & Demos](tests/README.md)** - Complete testing and demonstration guide
 
 - **Functional API Endpoints**:
   - Auth API: http://localhost:8000/api/auth/docs
