@@ -11,13 +11,11 @@ UTILITY CLASSES:
 - TaskModelUtils: Calculations (progress, hours, deadlines)
 - TaskValidationUtils: Business rules validation  
 - TaskMetadataUtils: Metadata management operations
-- TaskSearchUtils: Search-related utilities (currently unused)
 
 PURPOSE: Keep models clean by extracting complex business logic into
 reusable, testable utility functions that are consumed via mixins.
 """
 
-from django.db import models
 from ..constants import TASK_STATUS_PROGRESS, COMPLETED_STATUSES, DEFAULT_TASK_METADATA
 from django.utils import timezone
 
@@ -50,30 +48,6 @@ class TaskModelUtils:
             return 0
             
         return int((completed_subtasks / total_subtasks) * 100)
-
-
-class TaskSearchUtils:
-    """Utilities for task search operations"""
-    
-    @staticmethod
-    def build_search_vector_content(task):
-        """Build content string for search vector"""
-        content_parts = [
-            task.title,
-            task.description or '',
-            ' '.join(tag.name for tag in task.tags.all()),
-        ]
-        
-        # Add team name if exists
-        if task.team:
-            content_parts.append(task.team.name)
-            
-        # Add assignee usernames
-        assignee_names = task.assigned_to.values_list('username', flat=True)
-        if assignee_names:
-            content_parts.extend(assignee_names)
-            
-        return ' '.join(filter(None, content_parts))
 
 
 class TaskValidationUtils:
@@ -140,23 +114,3 @@ class TaskMetadataUtils:
                     task.metadata[key] = default_value.copy()
                 else:
                     task.metadata[key] = default_value
-                
-    @staticmethod
-    def add_metadata_label(task, label):
-        """Add a label to task metadata"""
-        TaskMetadataUtils.ensure_default_metadata(task)
-        if label not in task.metadata['labels']:
-            task.metadata['labels'].append(label)
-            
-    @staticmethod
-    def remove_metadata_label(task, label):
-        """Remove a label from task metadata"""
-        TaskMetadataUtils.ensure_default_metadata(task)
-        if label in task.metadata['labels']:
-            task.metadata['labels'].remove(label)
-            
-    @staticmethod
-    def set_external_reference(task, ref_type, ref_value):
-        """Set an external reference in task metadata"""
-        TaskMetadataUtils.ensure_default_metadata(task)
-        task.metadata['external_refs'][ref_type] = ref_value

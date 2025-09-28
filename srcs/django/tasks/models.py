@@ -7,7 +7,6 @@ Clean model definitions focused only on fields and relationships.
 
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from django.contrib.postgres.search import SearchVectorField
 from .managers import TaskManager, TaskHistoryManager, CommentManager
 from .mixins import *

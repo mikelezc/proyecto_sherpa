@@ -1,8 +1,9 @@
 """
 Task Model Mixins and Configurations
 
-This module provides reusable mixins that extend Django models with common functionality,
-keeping the main models.py clean and focused. Each mixin handles a specific responsibility:
+Mixins are auxiliary classes that encapsulate specific behaviors or properties
+to be shared across multiple models. This helps keep models.py file clean
+and focused on the core model definitions and no duplicated code.
 
 - TaskPropertiesMixin: Computed properties (progress, due status, hours tracking)
 - TaskValidationMixin: Custom validation logic and save behavior

@@ -8,7 +8,7 @@ from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector
 
 
 class TaskQuerySet(models.QuerySet):
-    """Custom QuerySet for Task model with optimization methods"""
+    """Custom QuerySet for Task model with optimization methods (utilized for testing)"""
     
     def active(self):
         """Get non-archived tasks"""
