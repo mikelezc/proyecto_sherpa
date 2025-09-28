@@ -45,7 +45,6 @@ class CommentInline(admin.TabularInline):
 
 
 # ========== MAIN CONFIGURATION: TaskAdmin ==========
-# This is the most complex and important configuration in the system
 
 @admin.register(Task)  # Main task model (most complex)
 class TaskAdmin(admin.ModelAdmin):
