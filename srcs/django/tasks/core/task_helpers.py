@@ -50,27 +50,6 @@ class TaskModelUtils:
             return 0
             
         return int((completed_subtasks / total_subtasks) * 100)
-    
-    @staticmethod
-    def get_task_duration_hours(task):
-        """Get total logged hours for a task"""
-        return task.time_logs.aggregate(
-            total_hours=models.Sum('hours')
-        )['total_hours'] or 0
-    
-    @staticmethod
-    def get_task_remaining_hours(task):
-        """Get remaining estimated hours for a task"""
-        logged_hours = TaskModelUtils.get_task_duration_hours(task)
-        return max(0, float(task.estimated_hours) - float(logged_hours))
-    
-    @staticmethod
-    def is_task_over_estimate(task):
-        """Check if task has exceeded estimated hours"""
-        if not task.estimated_hours:
-            return False
-        logged_hours = TaskModelUtils.get_task_duration_hours(task)
-        return logged_hours > float(task.estimated_hours)
 
 
 class TaskSearchUtils:

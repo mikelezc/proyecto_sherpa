@@ -1,5 +1,8 @@
 """
-Django signals for task management automation
+Django signals for task management automation 
+and sending notifications with Celery when tasks are created or updated 
+(with assigned users via TaskAssignment)
+
 """
 
 from django.db.models.signals import post_save, pre_save

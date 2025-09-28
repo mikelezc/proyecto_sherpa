@@ -1,66 +1,45 @@
 """
-Django admin configuration for task management
+Django admin configuration for task management system
 
-This file configures administrative interfaces for all task models.
-Django automatically imports this file and registers all models decorated with @admin.register()
-Accessible at: http://localhost:8080/admin/ with user demo_admin/demo123 (SUPERUSER)
+This module configures administrative interfaces for all task models.
 """
 
 from django.contrib import admin
-from .models import Task, Comment, Tag, Team, TaskHistory, TaskAssignment, TimeLog, TaskTemplate
+from .models import Task, Comment, Tag, Team, TaskHistory, TaskAssignment
 
 
 # ========== SIMPLE CONFIGURATIONS ==========
 # These are basic configurations for models that only need lists and filters
 
-@admin.register(Tag)  # Automatically registers Tag in admin
+@admin.register(Tag)  # Tags for categorizing tasks
 class TagAdmin(admin.ModelAdmin):
-    # Columns displayed in the main list
     list_display = ['name', 'color', 'created_at']
-    # Fields available for search (search box appears)
     search_fields = ['name']
-    # Sidebar filters to filter by date
     list_filter = ['created_at']
 
 
-@admin.register(Team)  # Automatically registers Team in admin
+@admin.register(Team)  # Teams that can be assigned to tasks
 class TeamAdmin(admin.ModelAdmin):
     list_display = ['name', 'created_by', 'created_at']
-    search_fields = ['name', 'description']  # Search by name and description
+    search_fields = ['name', 'description']
     list_filter = ['created_at']
     # Special widget for visually selecting multiple members
     filter_horizontal = ['members']
-
-
-@admin.register(TaskTemplate)  # Automatically registers TaskTemplate in admin
-class TaskTemplateAdmin(admin.ModelAdmin):
-    list_display = ['name', 'priority', 'estimated_hours', 'created_by', 'is_active']
-    search_fields = ['name', 'title_template']
-    list_filter = ['priority', 'is_active', 'created_at']  # Multiple filters
-    # Horizontal widget for tags (easier to use than multiple select)
-    filter_horizontal = ['tags']
 
 
 # ========== INLINES (Sub-forms) ==========
 # These allow editing related models directly from the main Task page
 
 class TaskAssignmentInline(admin.TabularInline):
-    """Allows managing assignments directly from Task page"""
+    """Allows assigning users to tasks directly from Task page"""
     model = TaskAssignment
-    extra = 0  # Don't create empty rows by default
-    readonly_fields = ['assigned_at']  # Non-editable field
+    extra = 0
+    readonly_fields = ['assigned_at']
 
 
 class CommentInline(admin.TabularInline):
-    """Allows adding/editing comments directly from Task page"""
+    """Allows adding comments directly from Task page"""
     model = Comment
-    extra = 0
-    readonly_fields = ['created_at', 'updated_at']  # System fields not editable
-
-
-class TimeLogInline(admin.TabularInline):
-    """Allows logging work time directly from Task page"""
-    model = TimeLog
     extra = 0
     readonly_fields = ['created_at']
 
@@ -68,126 +47,155 @@ class TimeLogInline(admin.TabularInline):
 # ========== MAIN CONFIGURATION: TaskAdmin ==========
 # This is the most complex and important configuration in the system
 
-@admin.register(Task)  # Automatically registers Task in admin
+@admin.register(Task)  # Main task model (most complex)
 class TaskAdmin(admin.ModelAdmin):
-    # ===== LIST VIEW (what you see in /admin/tasks/task/) =====
-    list_display = [
-        'title', 'status', 'priority', 'created_by', 'due_date', 
-        'is_overdue', 'estimated_hours', 'actual_hours', 'created_at'
-    ]  # Columns that appear in the main table
+    """
+    Advanced configuration for Task administration with:
+    - List display with optimized queries
+    - Advanced filtering and search  
+    - Inline editing of assignments and comments
+    - Bulk actions for common operations
+    """
     
-    # Sidebar filters (right sidebar)
+    # What to display in the list view
+    list_display = [
+        'title', 'status', 'priority', 'due_date', 'created_by',
+        'is_overdue', 'estimated_hours', 'created_at'
+    ]
+    
+    # What fields can be searched
+    search_fields = ['title', 'description', 'created_by__username']
+    
+    # Sidebar filters
     list_filter = [
-        'status', 'priority', 'is_overdue', 'is_archived', 
+        'status', 'priority', 'is_overdue', 'is_archived',
         'created_at', 'due_date', 'team'
     ]
     
-    # Search fields (top search box)
-    # created_by__username allows searching by creator's name
-    search_fields = ['title', 'description', 'created_by__username']
+    # Fields that can be edited directly in list view  
+    list_editable = ['status', 'priority']
     
-    # Fields that cannot be edited (appear grayed out)
-    readonly_fields = ['created_at', 'updated_at', 'is_overdue']
+    # Default ordering (most recent first)
+    ordering = ['-created_at']
     
-    # Horizontal widget for tags (more user-friendly)
-    filter_horizontal = ['tags']
+    # How many per page
+    list_per_page = 50
     
-    # ===== INTEGRATED SUB-FORMS =====
-    # These appear on the same page when editing a Task
-    inlines = [TaskAssignmentInline, CommentInline, TimeLogInline]
+    # Inline forms (edit related models on same page)
+    inlines = [TaskAssignmentInline, CommentInline]
     
-    # ===== FORM ORGANIZATION =====
-    # Divides the form into organized collapsible sections
+    # Optimize database queries (reduces queries from N+1 to 2)
+    list_select_related = ['created_by', 'team']
+    list_prefetch_related = ['assigned_to', 'tags']
+    
+    # Group fields in the edit form
     fieldsets = (
-        ('Basic Information', {  # Always visible section
+        ('Basic Information', {
             'fields': ('title', 'description', 'status', 'priority')
         }),
-        ('Timeline', {  # Temporal information
-            'fields': ('due_date', 'estimated_hours', 'actual_hours')
+        ('Timeline', {
+            'fields': ('due_date', 'estimated_hours', 'actual_hours'),
+            'classes': ('collapse',)
         }),
-        ('Organization', {  # Organization and hierarchy
-            'fields': ('team', 'tags', 'parent_task', 'template')
+        ('Relationships', {
+            'fields': ('team', 'parent_task', 'tags'),
+            'classes': ('collapse',)
         }),
-        ('Metadata', {  # Additional information (collapsed by default)
+        ('Metadata', {
             'fields': ('metadata', 'is_archived'),
-            'classes': ('collapse',)  # Appears collapsed
-        }),
-        ('System Fields', {  # System fields (collapsed by default)
-            'fields': ('created_by', 'created_at', 'updated_at', 'is_overdue'),
-            'classes': ('collapse',),  # Appears collapsed
-        }),
+            'classes': ('collapse',)
+        })
     )
+    
+    # Multiple selection widget for many-to-many fields
+    filter_horizontal = ['tags']
+    
+    # Read-only fields (calculated or auto-set)
+    readonly_fields = ['created_at', 'updated_at', 'is_overdue', 'search_vector']
+    
+    # Custom bulk actions
+    actions = ['mark_as_todo', 'mark_as_completed', 'archive_tasks']
+    
+    def mark_as_todo(self, request, queryset):
+        """Bulk action to mark selected tasks as todo"""
+        count = queryset.update(status='todo')
+        self.message_user(request, f"{count} tasks marked as Todo")
+    mark_as_todo.short_description = "Mark selected tasks as Todo"
+    
+    def mark_as_completed(self, request, queryset):
+        """Bulk action to mark selected tasks as completed"""
+        count = queryset.update(status='done')
+        self.message_user(request, f"{count} tasks marked as Completed")
+    mark_as_completed.short_description = "Mark selected tasks as Completed"
+    
+    def archive_tasks(self, request, queryset):
+        """Bulk action to archive selected tasks"""
+        count = queryset.update(is_archived=True)
+        self.message_user(request, f"{count} tasks archived")
+    archive_tasks.short_description = "Archive selected tasks"
 
-    # ===== PERFORMANCE OPTIMIZATION =====
-    # Avoids N+1 query problem by loading relations at once
-    def get_queryset(self, request):
-        return super().get_queryset(request).select_related(
-            'created_by', 'team', 'parent_task'  # Load these relations in single query
-        )
 
+# ========== SECONDARY CONFIGURATIONS ==========
 
-# ========== SECONDARY ADMINISTRATIONS ==========
-# These are for managing related models separately
-
-@admin.register(TaskAssignment)  # Independent assignment management
-class TaskAssignmentAdmin(admin.ModelAdmin):
-    list_display = ['task', 'user', 'assigned_by', 'is_primary', 'assigned_at']
-    list_filter = ['is_primary', 'assigned_at']
-    # Cross search: searches in task title and usernames
-    search_fields = ['task__title', 'user__username', 'assigned_by__username']
-    readonly_fields = ['assigned_at']  # Date is assigned automatically
-
-
-@admin.register(Comment)  # Comment moderation
+@admin.register(Comment)  # Comments on tasks
 class CommentAdmin(admin.ModelAdmin):
     list_display = ['task', 'author', 'created_at', 'is_edited']
-    list_filter = ['is_edited', 'created_at']  # Filter edited comments
-    search_fields = ['task__title', 'author__username', 'content']  # Search in content
+    search_fields = ['content', 'author__username', 'task__title']
+    list_filter = ['is_edited', 'created_at']
     readonly_fields = ['created_at', 'updated_at']
 
 
-# ========== AUDITING AND COMPLIANCE ==========
 # TaskHistory is CRITICAL for traceability and auditing
 
 @admin.register(TaskHistory)  # Change history (READ ONLY)
 class TaskHistoryAdmin(admin.ModelAdmin):
+    """
+    READ-ONLY admin for task history - DO NOT allow editing
+    This maintains audit trail integrity
+    """
     list_display = ['task', 'user', 'action', 'timestamp']
-    list_filter = ['action', 'timestamp']  # Filter by action type
-    search_fields = ['task__title', 'user__username']
-    readonly_fields = ['timestamp']
-
-    # ===== SECURITY RESTRICTIONS =====
-    # History must NOT be modifiable to maintain integrity
+    search_fields = ['task__title', 'user__username', 'action']
+    list_filter = ['action', 'timestamp']
+    readonly_fields = ['task', 'user', 'action', 'changes', 'timestamp']
+    
+    # Prevent any modifications to maintain audit integrity
     def has_add_permission(self, request):
-        # History entries should only be created automatically
-        return False  # ❌ Cannot create entries manually
-
+        return False
+    
     def has_change_permission(self, request, obj=None):
-        # History entries should not be editable
-        return False  # ❌ Cannot edit existing entries
+        return False
+    
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
-@admin.register(TimeLog)  # Work hours tracking
-class TimeLogAdmin(admin.ModelAdmin):
-    list_display = ['task', 'user', 'hours', 'date_logged', 'created_at']
-    list_filter = ['date_logged', 'created_at']  # Filter by dates
-    search_fields = ['task__title', 'user__username', 'description']
-    readonly_fields = ['created_at']
+@admin.register(TaskAssignment)  # Task-User assignments
+class TaskAssignmentAdmin(admin.ModelAdmin):
+    list_display = ['task', 'user', 'assigned_by', 'assigned_at', 'is_primary']
+    search_fields = ['task__title', 'user__username', 'assigned_by__username']
+    list_filter = ['is_primary', 'assigned_at']
+    readonly_fields = ['assigned_at']
 
 
-# ========== HOW EVERYTHING WORKS ==========
+# ========== ADMIN SITE CUSTOMIZATION ==========
+# Customize the admin site header and title
+
+admin.site.site_header = "Task Management Administration"
+admin.site.site_title = "Task Management Admin"
+admin.site.index_title = "Welcome to Task Management System"
+
+
 """
-Django automatically:
-1. Imports this file when it starts (because tasks is in INSTALLED_APPS)
-2. Processes all @admin.register() and registers the models
-3. Applies all configurations (fieldsets, inlines, permissions, etc.)
-4. Makes everything available at http://localhost:8080/admin/
+QUICK REFERENCE:
 
-Access:
-- URL: http://localhost:8080/admin/
-- User: demo_admin 
-- Password: demo123
-- (Created automatically by seeder in seed_data.py as SUPERUSER)
+Django automatically imports this file and registers all models decorated with @admin.register()
+Accessible at: http://localhost:8000/admin/ with superuser credentials
 
-Result: 8 fully manageable models with professional interfaces
+KEY FEATURES:
+- Optimized queries (select_related, prefetch_related)
+- Bulk actions for common operations  
+- Inline editing of related models
+- Advanced filtering and search
+- Read-only audit trail (TaskHistory)
+- Customizable field grouping
 """

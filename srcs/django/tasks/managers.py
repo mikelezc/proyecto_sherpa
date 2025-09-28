@@ -45,7 +45,7 @@ class TaskQuerySet(models.QuerySet):
     def with_optimized_relations(self):
         """Optimized query with select_related and prefetch_related"""
         return self.select_related(
-            'created_by', 'team', 'parent_task', 'template'
+            'created_by', 'team', 'parent_task'
         ).prefetch_related(
             'tags', 
             'assigned_to',

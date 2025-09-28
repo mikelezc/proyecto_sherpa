@@ -11,7 +11,6 @@ keeping the main models.py clean and focused. Each mixin handles a specific resp
 - TimestampMixin: Automatic created/updated timestamps (reusable)
 - ArchivableMixin: Soft delete functionality (reusable)
 
-This separation follows Clean Code principles and makes models more maintainable.
 """
 
 from django.db import models
@@ -34,22 +33,23 @@ class TaskPropertiesMixin:
         return TaskModelUtils.calculate_progress_percentage(self)
     
     @property
-    def total_logged_hours(self):
-        """Get total hours logged for this task"""
-        from .core.task_helpers import TaskModelUtils
-        return TaskModelUtils.get_task_duration_hours(self)
+    def hours_worked(self):
+        """Get actual hours worked on this task (from Task.actual_hours field)"""
+        return self.actual_hours or 0
     
     @property
-    def remaining_hours(self):
-        """Get remaining estimated hours"""
-        from .core.task_helpers import TaskModelUtils
-        return TaskModelUtils.get_task_remaining_hours(self)
+    def hours_remaining(self):
+        """Get remaining estimated hours based on actual hours worked"""
+        if not self.estimated_hours:
+            return 0
+        return max(0, float(self.estimated_hours) - float(self.hours_worked))
     
     @property
-    def is_over_estimate(self):
-        """Check if task has exceeded estimated hours"""
-        from .core.task_helpers import TaskModelUtils
-        return TaskModelUtils.is_task_over_estimate(self)
+    def is_over_budget(self):
+        """Check if task has exceeded estimated hours budget"""
+        if not self.estimated_hours:
+            return False
+        return self.hours_worked > float(self.estimated_hours)
 
 
 class TaskValidationMixin:

@@ -127,7 +127,8 @@ class SystemFunctionalityTest(TestCase):
         
         response = self.client.get('/admin/')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Django administration')
+        # Verify our customized admin title is displayed
+        self.assertContains(response, 'Task Management Administration')
 
     def test_static_files_served(self):
         """Test that static files are being served"""

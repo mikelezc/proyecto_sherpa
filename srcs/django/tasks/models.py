@@ -2,41 +2,16 @@
 Task Management Models
 
 Clean model definitions focused only on fields and relationships.
-All logic, properties, and configurations are in separate modules.
+
 """
 
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.contrib.postgres.search import SearchVectorField
-
-# Import managers, constants, and mixins
 from .managers import TaskManager, TaskHistoryManager, CommentManager
-from .mixins import (
-    TaskPropertiesMixin, 
-    TaskValidationMixin,
-    TaskDatabaseConfig,
-    CommentBehaviorMixin,
-    TimestampMixin,
-    ArchivableMixin
-)
-from .constants import (
-    TASK_STATUS_CHOICES,
-    TASK_PRIORITY_CHOICES, 
-    TEMPLATE_PRIORITY_CHOICES,
-    TASK_HISTORY_ACTION_CHOICES,
-    DEFAULT_TAG_COLOR,
-    MAX_TASK_TITLE_LENGTH,
-    MAX_TAG_NAME_LENGTH,
-    MAX_TEAM_NAME_LENGTH,
-    MAX_TEMPLATE_NAME_LENGTH,
-    MAX_PRIORITY_LENGTH,
-    MAX_STATUS_LENGTH,
-    MAX_ACTION_LENGTH,
-    MAX_COLOR_LENGTH,
-    HOURS_MAX_DIGITS,
-    HOURS_DECIMAL_PLACES
-)
+from .mixins import *
+from .constants import *
 
 User = get_user_model()
 
@@ -64,22 +39,6 @@ class Team(models.Model):
     
     class Meta:
         ordering = ['name']
-    
-    def __str__(self):
-        return self.name
-
-
-class TaskTemplate(models.Model):
-    """Templates for creating recurring tasks"""
-    name = models.CharField(max_length=MAX_TEMPLATE_NAME_LENGTH)
-    title_template = models.CharField(max_length=MAX_TASK_TITLE_LENGTH)
-    description_template = models.TextField()
-    estimated_hours = models.DecimalField(max_digits=HOURS_MAX_DIGITS, decimal_places=HOURS_DECIMAL_PLACES, default=0)
-    priority = models.CharField(max_length=MAX_PRIORITY_LENGTH, choices=TEMPLATE_PRIORITY_CHOICES, default='medium')
-    tags = models.ManyToManyField(Tag, blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=True)
     
     def __str__(self):
         return self.name
@@ -113,7 +72,6 @@ class Task(TaskPropertiesMixin, TaskValidationMixin, TimestampMixin, ArchivableM
     tags = models.ManyToManyField('Tag', blank=True)
     parent_task = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='subtasks')
     team = models.ForeignKey('Team', on_delete=models.SET_NULL, null=True, blank=True, related_name='tasks')
-    template = models.ForeignKey('TaskTemplate', on_delete=models.SET_NULL, null=True, blank=True)
     
     # Metadata and search
     metadata = models.JSONField(default=dict, blank=True)
@@ -185,19 +143,3 @@ class TaskHistory(models.Model):
     
     def __str__(self):
         return f"{self.action} by {self.user.username} on {self.task.title}"
-
-
-class TimeLog(models.Model):
-    """Time tracking for tasks"""
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='time_logs')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    hours = models.DecimalField(max_digits=HOURS_MAX_DIGITS, decimal_places=HOURS_DECIMAL_PLACES)
-    description = models.TextField(blank=True)
-    date_logged = models.DateField(default=timezone.now)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        ordering = ['-date_logged', '-created_at']
-    
-    def __str__(self):
-        return f"{self.hours}h on {self.task.title} by {self.user.username}"
