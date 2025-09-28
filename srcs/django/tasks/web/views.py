@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from ..services import TaskWebService, TaskQueryService, TaskService
+from ..services import TaskWebService, TaskQueryService
 from ..forms import TaskForm, TaskFilterForm
 
 

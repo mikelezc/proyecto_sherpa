@@ -1,7 +1,6 @@
 """
 Django admin configuration for task management system
-
-This module configures administrative interfaces for all task models.
+(To customize admin interface for task models)
 """
 
 from django.contrib import admin
@@ -182,19 +181,3 @@ class TaskAssignmentAdmin(admin.ModelAdmin):
 admin.site.site_header = "Task Management Administration"
 admin.site.site_title = "Task Management Admin"
 admin.site.index_title = "Welcome to Task Management System"
-
-
-"""
-QUICK REFERENCE:
-
-Django automatically imports this file and registers all models decorated with @admin.register()
-Accessible at: http://localhost:8000/admin/ with superuser credentials
-
-KEY FEATURES:
-- Optimized queries (select_related, prefetch_related)
-- Bulk actions for common operations  
-- Inline editing of related models
-- Advanced filtering and search
-- Read-only audit trail (TaskHistory)
-- Customizable field grouping
-"""

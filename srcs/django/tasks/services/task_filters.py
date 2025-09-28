@@ -2,7 +2,7 @@
 Task Filters - Unified filtering logic
 
 Advanced query filtering and search functionality for tasks.
-Shared between API and WEB interfaces to eliminate code duplication.
+Shared between API and WEB interfaces (to eliminate code duplication).
 """
 
 from typing import Optional
