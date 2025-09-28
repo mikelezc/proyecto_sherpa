@@ -8,7 +8,7 @@ from .controllers import router
 api = NinjaAPI(
     title="Task Management API", 
     version="1.0.0",
-    description="API para gestión de tareas - CRUD completo + Operaciones",
+    description="API for managing tasks, assignments, comments, and history",
     urls_namespace="tasks_api",
     docs_url="/docs",
     auth=django_auth,  # Django session authentication
