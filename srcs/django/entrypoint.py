@@ -106,6 +106,16 @@ def setup_django():
             logger.warning("⚠️ Failed to load seed data (might be normal if data already exists)")
         else:
             logger.info("✅ Seed data loaded successfully!")
+            # Update search vectors for seeded tasks
+            if not run_django_command(['manage.py', 'update_search_vectors']):
+                logger.warning("⚠️ Failed to update search vectors")
+    
+    # Setup periodic task descriptions for Django Admin
+    logger.info("📋 Setting up periodic task descriptions...")
+    if not run_django_command(['manage.py', 'setup_periodic_task_descriptions']):
+        logger.warning("⚠️ Failed to setup periodic task descriptions")
+    else:
+        logger.info("✅ Periodic task descriptions configured!")
     
     logger.info("✅ Django setup completed!")
     return True

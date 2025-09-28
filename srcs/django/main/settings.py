@@ -191,6 +191,10 @@ CELERY_BEAT_SCHEDULE = {
         "task": "tasks.infrastructure.celery_tasks.cleanup_archived_tasks",
         "schedule": 604800.0,  # Every week (7 days * 24 hours * 60 minutes * 60 seconds)
     },
+    "weekly-search-maintenance": {
+        "task": "tasks.infrastructure.celery_tasks.weekly_search_maintenance",
+        "schedule": 604800.0,  # Every week (7 days * 24 hours * 60 minutes * 60 seconds)
+    },
 }
 
 # REST Framework configuration

@@ -14,7 +14,7 @@ def update_all_search_vectors(batch_size=100):
     Update search vectors for all existing tasks in batches
     Moved from management command for reusability
     """
-    from .models import Task
+    from ..models import Task
     
     total_tasks = Task.objects.count()
     if total_tasks == 0:
@@ -47,7 +47,7 @@ def rebuild_search_index():
     """
     Force rebuild of entire search index
     """
-    from .models import Task
+    from ..models import Task
     
     try:
         with connection.cursor() as cursor:

@@ -79,11 +79,8 @@ class TaskFilter:
     def search(self, search_term: str) -> 'TaskFilter':
         """Search tasks by title and description"""
         if search_term:
-            # Use simple text search (compatible with all databases)
-            self.queryset = self.queryset.filter(
-                Q(title__icontains=search_term) |
-                Q(description__icontains=search_term)
-            )
+            # Use manager's optimized search method
+            self.queryset = self.queryset.search_fulltext(search_term)
         return self
     
     def order_by_created(self, descending: bool = True) -> 'TaskFilter':

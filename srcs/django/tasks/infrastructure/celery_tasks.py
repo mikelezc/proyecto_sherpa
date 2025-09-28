@@ -1,5 +1,8 @@
 """
 Celery tasks for the task management system
+
+- Event-driven tasks: Triggered by user actions or API calls
+- Periodic tasks: Scheduled to run automatically (cron-like)
 """
 
 from celery import shared_task
@@ -13,9 +16,18 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+# ============================================================================
+# EVENT-DRIVEN TASKS (Triggered by user actions, API calls, signals)
+# ============================================================================
+
 @shared_task
 def send_task_notification(task_id, notification_type):
-    """Send email notifications for task events"""
+    """
+    Send email notifications for task events
+    
+    TRIGGER: Called when tasks are assigned/updated/become overdue
+    USAGE: send_task_notification.delay(task_id, 'assigned')
+    """
     try:
         from tasks.models import Task
         
@@ -67,9 +79,18 @@ def send_task_notification(task_id, notification_type):
         return f"Error: {e}"
 
 
+# ============================================================================
+# PERIODIC TASKS (Scheduled to run automatically)
+# ============================================================================
+
 @shared_task
 def generate_daily_summary():
-    """Generate daily task summary for all users"""
+    """
+    Generate daily task summary for all users
+    
+    SCHEDULE: Daily at configured time
+    PURPOSE: Send users their daily task overview via email
+    """
     try:
         from tasks.models import Task
         
@@ -131,7 +152,12 @@ Tasks Overview:
 
 @shared_task
 def check_overdue_tasks():
-    """Mark tasks that are overdue and notify assignees"""
+    """
+    Mark tasks that are overdue and notify assignees
+    
+    SCHEDULE: Every 15 minutes during business hours
+    PURPOSE: Automatically detect and mark overdue tasks + send notifications
+    """
     try:
         from tasks.models import Task, TaskHistory
         
@@ -175,7 +201,12 @@ def check_overdue_tasks():
 
 @shared_task
 def cleanup_archived_tasks():
-    """Delete archived tasks older than 30 days to no overload the database"""
+    """
+    Delete archived tasks older than 30 days
+    
+    SCHEDULE: Weekly
+    PURPOSE: Prevent database bloat by removing old archived tasks
+    """
     try:
         from tasks.models import Task
         
@@ -195,4 +226,28 @@ def cleanup_archived_tasks():
         
     except Exception as e:
         logger.error(f"Error cleaning up archived tasks: {e}")
-        return f"Error: {e}" 
+        return f"Error: {e}"
+
+
+@shared_task
+def weekly_search_maintenance():
+    """
+    Weekly maintenance of search vectors
+    
+    SCHEDULE: Weekly
+    PURPOSE: Update search vectors for better search performance - only if needed
+    """
+    try:
+        from tasks.core.search import update_all_search_vectors
+        
+        # Only update search vectors that are empty/null
+        result = update_all_search_vectors()
+        
+        if result.get('updated', 0) > 0:
+            logger.info(f"Search maintenance: {result['message']}")
+        
+        return result.get('message', 'No maintenance needed')
+        
+    except Exception as e:
+        logger.error(f"Error in search maintenance: {e}")
+        return f"Error: {e}"

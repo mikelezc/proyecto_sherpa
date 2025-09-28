@@ -1,10 +1,9 @@
 """
 Task Helper Utilities - Business Logic Layer
 
-This module provides centralized utility classes for task-related operations,
+Provides centralized utility classes for task-related operations,
 implementing core business logic that serves the model layer through mixins.
 
-ARCHITECTURE PATTERN:
 task_helpers.py → mixins.py → models.py → rest of application
 
 UTILITY CLASSES:
@@ -12,8 +11,6 @@ UTILITY CLASSES:
 - TaskValidationUtils: Business rules validation  
 - TaskMetadataUtils: Metadata management operations
 
-PURPOSE: Keep models clean by extracting complex business logic into
-reusable, testable utility functions that are consumed via mixins.
 """
 
 from ..constants import TASK_STATUS_PROGRESS, COMPLETED_STATUSES, DEFAULT_TASK_METADATA
