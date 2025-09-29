@@ -3,8 +3,8 @@ Django>=4.2.4	 				# Main web framework
 psycopg2-binary>=2.9.6			# PostgreSQL database adapter
 
 # Django REST Framework and related packages
-djangorestframework>=3.14.0		# API framework (used in tests and some configurations, needed for DRF settings)
-django-filter>=23.3				# Filtering for Django (used in REST framework settings for DjangoFilterBackend)
+djangorestframework>=3.14.0		# API framework (used in tests)
+django-filter>=23.3				# Filtering for Django (used in REST framework for query parameter filtering)
 django-cors-headers>=4.3.0		# CORS headers for Django (Cross-Origin Resource Sharing, used in middleware and settings)
 
 # Celery and task queue
