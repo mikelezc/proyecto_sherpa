@@ -1,8 +1,9 @@
 """
-Task Filters - Unified filtering logic
+Task Query Builder - Unified query building and filtering logic
 
 Advanced query filtering and search functionality for tasks.
-Shared between API and WEB interfaces (to eliminate code duplication).
+Centralized query construction with method chaining support.
+Shared between API and WEB interfaces (eliminates code duplication).
 """
 
 from typing import Optional
@@ -11,7 +12,7 @@ from django.db.models import QuerySet, Q, Case, When, Value, IntegerField
 from ..models import Task
 
 
-class TaskFilter:
+class TaskQueryBuilder:
     """Advanced filter builder for task queries with method chaining"""
     
     def __init__(self, queryset: Optional[QuerySet] = None):
@@ -28,74 +29,74 @@ class TaskFilter:
             'assigned_to', 'tags'
         )
     
-    def by_status(self, status: str) -> 'TaskFilter':
+    def by_status(self, status: str) -> 'TaskQueryBuilder':
         """Filter tasks by status"""
         if status:
             self.queryset = self.queryset.filter(status=status)
         return self
     
-    def by_priority(self, priority: str) -> 'TaskFilter':
+    def by_priority(self, priority: str) -> 'TaskQueryBuilder':
         """Filter tasks by priority"""
         if priority:
             self.queryset = self.queryset.filter(priority=priority)
         return self
     
-    def assigned_to_user(self, user_id: int) -> 'TaskFilter':
+    def assigned_to_user(self, user_id: int) -> 'TaskQueryBuilder':
         """Filter tasks assigned to specific user"""
         if user_id:
             self.queryset = self.queryset.filter(assigned_to=user_id)
         return self
     
-    def assigned_to_me(self, user, assigned_to_me: bool) -> 'TaskFilter':
+    def assigned_to_me(self, user, assigned_to_me: bool) -> 'TaskQueryBuilder':
         """Filter tasks assigned to the requesting user"""
         if assigned_to_me and user and user.is_authenticated:
             self.queryset = self.queryset.filter(assigned_to=user.id)
         return self
     
-    def created_by_user(self, user_id: int) -> 'TaskFilter':
+    def created_by_user(self, user_id: int) -> 'TaskQueryBuilder':
         """Filter tasks created by specific user"""
         if user_id:
             self.queryset = self.queryset.filter(created_by=user_id)
         return self
     
-    def by_team(self, team_id: int) -> 'TaskFilter':
+    def by_team(self, team_id: int) -> 'TaskQueryBuilder':
         """Filter tasks by team"""
         if team_id:
             self.queryset = self.queryset.filter(team_id=team_id)
         return self
     
-    def with_tag(self, tag_name: str) -> 'TaskFilter':
+    def with_tag(self, tag_name: str) -> 'TaskQueryBuilder':
         """Filter tasks with specific tag"""
         if tag_name:
             self.queryset = self.queryset.filter(tags__name__icontains=tag_name)
         return self
     
-    def is_overdue(self, overdue: bool) -> 'TaskFilter':
+    def is_overdue(self, overdue: bool) -> 'TaskQueryBuilder':
         """Filter overdue tasks"""
         if overdue is not None:
             self.queryset = self.queryset.filter(is_past_due=overdue)
         return self
     
-    def search(self, search_term: str) -> 'TaskFilter':
+    def search(self, search_term: str) -> 'TaskQueryBuilder':
         """Search tasks by title and description"""
         if search_term:
             # Use manager's optimized search method
             self.queryset = self.queryset.search_fulltext(search_term)
         return self
     
-    def order_by_created(self, descending: bool = True) -> 'TaskFilter':
+    def order_by_created(self, descending: bool = True) -> 'TaskQueryBuilder':
         """Order tasks by creation date"""
         order_field = '-created_at' if descending else 'created_at'
         self.queryset = self.queryset.order_by(order_field)
         return self
     
-    def order_by_due_date(self, descending: bool = False) -> 'TaskFilter':
+    def order_by_due_date(self, descending: bool = False) -> 'TaskQueryBuilder':
         """Order tasks by due date"""
         order_field = '-due_date' if descending else 'due_date'
         self.queryset = self.queryset.order_by(order_field)
         return self
     
-    def order_by_priority(self, descending: bool = True) -> 'TaskFilter':
+    def order_by_priority(self, descending: bool = True) -> 'TaskQueryBuilder':
         """Order tasks by priority level"""
         priority_order = ['critical', 'high', 'medium', 'low']
         if descending:
@@ -170,9 +171,43 @@ class TaskFilter:
             filter_builder = filter_builder.order_by_created(descending=True)
         
         return filter_builder.get_queryset()
+    
+    # Additional query methods for direct task retrieval
+    @staticmethod
+    def get_task_with_relations(task_id: int):
+        """Get a task with all related data or raise Http404"""
+        from django.http import Http404
+        from ..models import Task
+        
+        try:
+            return Task.objects.select_related(
+                'created_by', 'team', 'parent_task'
+            ).prefetch_related(
+                'assigned_to', 'tags'
+            ).get(id=task_id)
+        except Task.DoesNotExist:
+            raise Http404("Task not found")
+    
+    @staticmethod
+    def get_task_assignments(task):
+        """Get all assignments for a task with related data"""
+        from ..models import TaskAssignment
+        return TaskAssignment.objects.filter(task=task).select_related('user', 'assigned_by')
+    
+    @staticmethod
+    def get_task_comments(task):
+        """Get comments for a task ordered by creation date"""
+        from ..models import Comment
+        return Comment.objects.filter(task=task).select_related('author').order_by('-created_at')
+    
+    @staticmethod
+    def get_task_history(task):
+        """Get history for a task ordered by timestamp"""
+        from ..models import TaskHistory
+        return TaskHistory.objects.filter(task=task).select_related('user').order_by('-timestamp')
 
 
-class TaskFilterParams:
+class TaskQueryBuilderParams:
     """Helper class to parse and validate filter parameters"""
     
     VALID_STATUSES = ['todo', 'pending', 'in_progress', 'review', 'done', 'completed', 'cancelled']

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from ..services import TaskWebService, TaskQueryService
+from ..services import TaskFormAdapter, TaskQueryBuilder
 from ..forms import TaskForm, TaskFilterForm
 
 
@@ -11,7 +11,7 @@ def task_list(request):
     filter_params = filter_form.get_filter_params() if filter_form.is_valid() else {}
     page = request.GET.get('page', 1)
     
-    result = TaskWebService.get_filtered_tasks_for_user(
+    result = TaskFormAdapter.get_filtered_tasks_for_user(
         user=request.user,
         filter_params=filter_params,
         page=page,
@@ -29,9 +29,9 @@ def task_list(request):
 
 @login_required
 def dashboard(request):
-    stats = TaskWebService.get_dashboard_stats(request.user)
+    stats = TaskFormAdapter.get_dashboard_stats(request.user)
     
-    recent_tasks_result = TaskWebService.get_filtered_tasks_for_user(
+    recent_tasks_result = TaskFormAdapter.get_filtered_tasks_for_user(
         user=request.user,
         filter_params={'order_by': 'created_at', 'desc': True},
         page=1,
@@ -51,7 +51,7 @@ def task_create(request):
         form = TaskForm(request.POST)
         if form.is_valid():
             try:
-                task = TaskWebService.create_task_from_form(form, request.user)
+                task = TaskFormAdapter.create_task_from_form(form, request.user)
                 messages.success(request, f'Task "{task.title}" created successfully!')
                 return redirect('tasks_web:task_detail', task_id=task.id)
             except Exception as e:
@@ -69,7 +69,7 @@ def task_create(request):
 @login_required
 def task_detail(request, task_id):
     try:
-        result = TaskWebService.get_task_detail_for_web(task_id, request.user)
+        result = TaskFormAdapter.get_task_detail_for_web(task_id, request.user)
         task = result['task']
     except Exception:
         messages.error(request, 'Task not found')
@@ -87,7 +87,7 @@ def task_detail(request, task_id):
 @login_required
 def task_edit(request, task_id):
     try:
-        task = TaskQueryService.get_task_with_relations(task_id)
+        task = TaskQueryBuilder.get_task_with_relations(task_id)
     except Exception:
         messages.error(request, 'Task not found')
         return redirect('tasks_web:task_list')
@@ -101,7 +101,7 @@ def task_edit(request, task_id):
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
             try:
-                updated_task = TaskWebService.update_task_from_form(task, form, request.user)
+                updated_task = TaskFormAdapter.update_task_from_form(task, form, request.user)
                 messages.success(request, f'Task "{updated_task.title}" updated successfully!')
                 return redirect('tasks_web:task_detail', task_id=updated_task.id)
             except Exception as e:
@@ -122,7 +122,7 @@ def my_tasks(request):
     filter_params = {'assigned_to_me': True}
     page = request.GET.get('page', 1)
     
-    result = TaskWebService.get_filtered_tasks_for_user(
+    result = TaskFormAdapter.get_filtered_tasks_for_user(
         user=request.user,
         filter_params=filter_params,
         page=page,

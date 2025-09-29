@@ -2,14 +2,8 @@
 Management command to set up descriptions for periodic tasks
 
 This command automatically configures human-readable descriptions 
-for all periodic tasks, making Django Admin more informative and 
-professional for system administrators.
+for all periodic tasks in Django Admin UI.
 
-Usage:
-- Basic setup: python manage.py setup_periodic_task_descriptions
-- Force update: python manage.py setup_periodic_task_descriptions --force
-
-Automatically called during project setup.
 """
 
 from django.core.management.base import BaseCommand

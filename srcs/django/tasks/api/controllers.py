@@ -8,8 +8,7 @@ from typing import Optional
 from django.core.paginator import Paginator
 from ninja import Router
 
-from ..services import TaskService, TaskQueryService
-from ..services.task_filters import TaskFilter
+from ..services import TaskCrudOperations, TaskQueryBuilder
 from ..infrastructure.serializers import (
     serialize_assignment,
     serialize_comment,
@@ -94,7 +93,7 @@ def list_tasks(request, page: int = 1, status: Optional[str] = None, priority: O
         'search': search
     }
     
-    queryset = TaskFilter.build_from_params(**filter_params)
+    queryset = TaskQueryBuilder.build_from_params(**filter_params)
     
     # Pagination
     pagination = paginate_queryset(queryset, page)
@@ -120,7 +119,7 @@ def create_task(request, data: TaskCreateSchema):
     REQUIRES: title, description, due_date
     OPTIONAL: assigned_to_ids, tag_ids, parent_task_id, team_id, metadata
     """
-    task = TaskService.create_task(request.user, data)
+    task = TaskCrudOperations.create_task(request.user, data)
     return serialize_task_detail(task)
 
 
@@ -135,7 +134,7 @@ def get_task_by_id(request, task_id: int):
     - Tags, team, parent task relations
     - Calculated fields (is_overdue, etc.)
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
     return serialize_task_detail(task)
 
 
@@ -151,8 +150,8 @@ def update_task(request, task_id: int, data: TaskUpdateSchema):
     
     UPDATABLE: title, description, status, priority, dates, assignments, tags
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
-    updated_task = TaskService.update_task(task, request.user, data)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
+    updated_task = TaskCrudOperations.update_task(task, request.user, data)
     return serialize_task_detail(updated_task)
 
 
@@ -168,8 +167,8 @@ def partial_update_task(request, task_id: int, data: TaskPatchSchema):
     
     FIELDS: status, priority, actual_hours
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
-    updated_task = TaskService.partial_update_task(task, data)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
+    updated_task = TaskCrudOperations.partial_update_task(task, data)
     return serialize_task_detail(updated_task)
 
 
@@ -185,8 +184,8 @@ def delete_task(request, task_id: int):
     
     NOTE: Physical deletion not available via API
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
-    TaskService.archive_task(task)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
+    TaskCrudOperations.archive_task(task)
     return TaskDeleteResponseSchema(success=True, message="Task archived successfully")
 
 
@@ -207,8 +206,8 @@ def assign_task(request, task_id: int, data: TaskAssignSchema):
     BODY: {"user_ids": [1,2,3], "is_primary": false}
     """
     try:
-        task = TaskQueryService.get_task_with_relations(task_id)
-        assignments = TaskService.assign_users_to_task(
+        task = TaskQueryBuilder.get_task_with_relations(task_id)
+        assignments = TaskCrudOperations.assign_users_to_task(
             task, data.user_ids, request.user, data.is_primary or False
         )
         
@@ -232,7 +231,7 @@ def unassign_task(request, task_id: int, user_id: int):
     - Preserves assignment history
     - Returns success/error status
     """
-    success = TaskService.unassign_user_from_task(task_id, user_id)
+    success = TaskCrudOperations.unassign_user_from_task(task_id, user_id)
     
     if success:
         return {"success": True, "message": "User unassigned successfully"}
@@ -250,8 +249,8 @@ def get_task_assignments(request, task_id: int):
     - Assignment timestamps and assignor info
     - Primary assignee designation
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
-    assignments = TaskQueryService.get_task_assignments(task)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
+    assignments = TaskQueryBuilder.get_task_assignments(task)
     return [serialize_assignment(assignment) for assignment in assignments]
 
 
@@ -267,8 +266,8 @@ def create_comment(request, task_id: int, data: CommentCreateSchema):
     
     BODY: {"content": "Comment text here"}
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
-    comment = TaskService.create_comment(task, request.user, data.content)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
+    comment = TaskCrudOperations.create_comment(task, request.user, data.content)
     return serialize_comment(comment)
 
 
@@ -284,8 +283,8 @@ def get_task_comments(request, task_id: int, page: int = 1):
     
     PARAMS: page (default: 1)
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
-    comments = TaskQueryService.get_task_comments(task)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
+    comments = TaskQueryBuilder.get_task_comments(task)
     
     pagination = paginate_queryset(comments, page)
     
@@ -309,8 +308,8 @@ def get_task_history(request, task_id: int, page: int = 1):
     
     PARAMS: page (default: 1)
     """
-    task = TaskQueryService.get_task_with_relations(task_id)
-    history = TaskQueryService.get_task_history(task)
+    task = TaskQueryBuilder.get_task_with_relations(task_id)
+    history = TaskQueryBuilder.get_task_history(task)
     
     pagination = paginate_queryset(history, page)
     

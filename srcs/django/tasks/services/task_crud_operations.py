@@ -1,7 +1,8 @@
 """
-Task Service - Core task business operations
+Task CRUD Operations - Core task business operations
 
-Contains task creation, update, and management operations.
+Contains task creation, update, delete, and management operations.
+Provides clean separation between data operations and query logic.
 Shared between API and WEB interfaces.
 """
 
@@ -21,7 +22,7 @@ from ..core.business import (
 User = get_user_model()
 
 
-class TaskService:
+class TaskCrudOperations:
     """Service class for task-related business operations"""
     
     @staticmethod
@@ -69,11 +70,11 @@ class TaskService:
             
             # Handle assignments
             if hasattr(data, 'assigned_to_ids') and data.assigned_to_ids:
-                TaskService._create_assignments(task, data.assigned_to_ids, user)
+                TaskCrudOperations._create_assignments(task, data.assigned_to_ids, user)
             
             # Handle tags
             if hasattr(data, 'tag_ids') and data.tag_ids:
-                TaskService._set_tags(task, data.tag_ids)
+                TaskCrudOperations._set_tags(task, data.tag_ids)
             
             # Update search vector
             update_task_search_vector(task.id)
@@ -104,11 +105,11 @@ class TaskService:
             
             # Update assignments if provided
             if hasattr(data, 'assigned_to_ids') and data.assigned_to_ids is not None:
-                TaskService._update_assignments(task, data.assigned_to_ids, user)
+                TaskCrudOperations._update_assignments(task, data.assigned_to_ids, user)
             
             # Update tags if provided
             if hasattr(data, 'tag_ids') and data.tag_ids is not None:
-                TaskService._set_tags(task, data.tag_ids)
+                TaskCrudOperations._set_tags(task, data.tag_ids)
             
             # Update search vector
             update_task_search_vector(task.id)
@@ -206,7 +207,7 @@ class TaskService:
         TaskAssignment.objects.filter(task=task).delete()
         
         # Create new assignments
-        TaskService._create_assignments(task, user_ids, assigned_by)
+        TaskCrudOperations._create_assignments(task, user_ids, assigned_by)
     
     @staticmethod
     def _set_tags(task: Task, tag_ids: List[int]) -> None:
