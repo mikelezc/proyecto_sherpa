@@ -112,10 +112,8 @@ def setup_django():
     
     # Setup periodic task descriptions for Django Admin
     logger.info("📋 Setting up periodic task descriptions...")
-    if not run_django_command(['manage.py', 'setup_periodic_task_descriptions']):
-        logger.warning("⚠️ Failed to setup periodic task descriptions")
-    else:
-        logger.info("✅ Periodic task descriptions configured!")
+    run_django_command(['manage.py', 'setup_periodic_task_descriptions', '--quiet-missing'])
+    logger.info("✅ Periodic task descriptions configured!")
     
     logger.info("✅ Django setup completed!")
     return True

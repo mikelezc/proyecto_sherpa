@@ -53,9 +53,15 @@ class Command(BaseCommand):
             action='store_true',
             help='Force update descriptions even if already set',
         )
+        parser.add_argument(
+            '--quiet-missing',
+            action='store_true',
+            help='Do not show warnings for missing tasks (used during initial setup)',
+        )
 
     def handle(self, *args, **options):
         force_update = options['force']
+        quiet_missing = options['quiet_missing']
         
         self.stdout.write(
             self.style.SUCCESS('Setting up periodic task descriptions...')
@@ -63,6 +69,7 @@ class Command(BaseCommand):
         
         updated_count = 0
         skipped_count = 0
+        missing_count = 0
         
         try:
             for task_name, task_info in self.TASK_DESCRIPTIONS.items():
@@ -84,9 +91,11 @@ class Command(BaseCommand):
                     updated_count += 1
                     
                 except PeriodicTask.DoesNotExist:
-                    self.stdout.write(
-                        self.style.WARNING(f'⚠️  Task not found: {task_name}')
-                    )
+                    missing_count += 1
+                    if not quiet_missing:
+                        self.stdout.write(
+                            self.style.WARNING(f'⚠️  Task not found: {task_name}')
+                        )
                     
         except Exception as e:
             self.stdout.write(
@@ -100,5 +109,7 @@ class Command(BaseCommand):
         )
         self.stdout.write(f'   📝 Updated: {updated_count} tasks')
         self.stdout.write(f'   ⏩ Skipped: {skipped_count} tasks')
+        if missing_count > 0 and not quiet_missing:
+            self.stdout.write(f'   ⚠️  Missing: {missing_count} tasks (will be configured when Celery Beat starts)')
         self.stdout.write('')
         self.stdout.write('💡 You can now see detailed descriptions in Django Admin > Periodic Tasks')
