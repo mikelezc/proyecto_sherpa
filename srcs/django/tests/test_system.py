@@ -47,20 +47,6 @@ class SystemFunctionalityTest(TestCase):
         response = self.client.get('/tasks/')
         self.assertEqual(response.status_code, 302)  # Redirect to login
 
-    # Frontend CRUD tests disabled - this is an API backend project  
-    # def test_task_creation_and_management(self):
-    #     """Test task CRUD operations"""
-    #     # These tests are disabled because this is primarily an API backend
-    #     # Task CRUD functionality is tested in the API and model tests
-    #     pass
-
-    # Frontend tests disabled - this is an API backend project
-    # def test_frontend_pages_load(self):
-    #     """Test that frontend pages load correctly"""
-    #     # These tests are disabled because this is primarily an API backend
-    #     # Frontend functionality is handled by the separate frontend service
-    #     pass
-
     def test_task_assignment_functionality(self):
         """Test task assignment through model layer"""
         # Create a task

@@ -1,8 +1,5 @@
 """
 Task Management Models
-
-Clean model definitions focused only on fields and relationships.
-
 """
 
 from django.db import models
@@ -88,12 +85,12 @@ class Task(TaskPropertiesMixin, TaskValidationMixin, TimestampMixin, ArchivableM
 
 
 class TaskAssignment(models.Model):
-    """Through model for task assignments (required by technical test)"""
+    """Through model for task assignments"""
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     assigned_at = models.DateTimeField(auto_now_add=True)
     assigned_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='task_assignments_made')
-    is_primary = models.BooleanField(default=False)  # Primary assignee
+    is_primary = models.BooleanField(default=False)
     
     class Meta:
         unique_together = ['task', 'user']
@@ -104,7 +101,7 @@ class TaskAssignment(models.Model):
 
 
 class Comment(CommentBehaviorMixin, TimestampMixin):
-    """Comments on tasks - Clean field definitions only"""
+    """Comments on tasks"""
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
@@ -124,7 +121,7 @@ class Comment(CommentBehaviorMixin, TimestampMixin):
 
 
 class TaskHistory(models.Model):
-    """Audit log for task changes - Clean field definitions only"""
+    """Audit log for task changes"""
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='history')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     action = models.CharField(max_length=MAX_ACTION_LENGTH, choices=TASK_HISTORY_ACTION_CHOICES)

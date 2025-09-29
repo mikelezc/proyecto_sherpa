@@ -1,5 +1,5 @@
 """
-Django admin configuration for task management system
+Django admin configuration for task management UI system
 (To customize admin interface for task models)
 """
 

@@ -1,21 +1,21 @@
 #!/bin/bash
 
 # ============================================================================
-# DEMOSTRACIÓN: SISTEMA DE LIMPIEZA DE USUARIOS INACTIVOS
+# DEMONSTRATION: INACTIVE USER CLEANUP SYSTEM
 # ============================================================================
-# Este script demuestra el sofisticado sistema de gestión de usuarios inactivos
-# que cumple con GDPR y maneja ciclos completos de vida de usuario
+# This script demonstrates the sophisticated inactive user management system
+# that complies with GDPR and handles complete user lifecycle
 #
-# SISTEMA IMPLEMENTADO:
-# - Detección automática de cuentas sin verificar
-# - Alertas por inactividad prolongada
-# - Eliminación segura con anonimización de datos
-# - Configuración adaptable desarrollo/producción
+# IMPLEMENTED SYSTEM:
+# - Automatic detection of unverified accounts
+# - Alerts for prolonged inactivity
+# - Secure deletion with data anonymization
+# - Adaptable development/production configuration
 # ============================================================================
 
 source "$(dirname "$0")/demo_common.sh"
 
-# Colores para output
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -25,39 +25,39 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
 
-# Banner principal
+# Main banner
 clear
 echo -e "${BOLD}${BLUE}"
 cat << "EOF"
 ╔══════════════════════════════════════════════════════════════════╗
-║                   🔄 SISTEMA DE CLEANUP USUARIOS                 ║
-║              Gestión Automática del Ciclo de Vida               ║
+║                  🔄 USER CLEANUP SYSTEM                         ║
+║              Automatic Lifecycle Management                     ║
 ║                      GDPR Compliant System                      ║
 ╚══════════════════════════════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
 
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}📋 DESCRIPCIÓN DEL SISTEMA${NC}"
+echo -e "${BOLD}📋 SYSTEM DESCRIPTION${NC}"
 echo
-echo -e "${YELLOW}▶ Configuración Actual:${NC}"
-echo -e "  • Verificación email: 10 segundos (desarrollo)"
-echo -e "  • Aviso inactividad: 40 segundos (desarrollo)"
-echo -e "  • Eliminación: 60 segundos (desarrollo)"
-echo -e "  • Ejecución automática: cada 5 minutos"
+echo -e "${YELLOW}▶ Current Configuration:${NC}"
+echo -e "  • Email verification: 10 seconds (development)"
+echo -e "  • Inactivity warning: 40 seconds (development)"
+echo -e "  • Deletion: 60 seconds (development)"
+echo -e "  • Automatic execution: every 5 minutes"
 echo
-echo -e "${YELLOW}▶ Funcionalidades:${NC}"
-echo -e "  • Eliminación automática de cuentas sin verificar"
-echo -e "  • Sistema de avisos por inactividad"
-echo -e "  • Anonimización segura de datos"
-echo -e "  • Exclusión de usuarios activos en sesión"
-echo -e "  • Logs detallados y auditoría completa"
+echo -e "${YELLOW}▶ Features:${NC}"
+echo -e "  • Automatic deletion of unverified accounts"
+echo -e "  • Inactivity warning system"
+echo -e "  • Secure data anonymization"
+echo -e "  • Exclusion of active session users"
+echo -e "  • Detailed logs and complete auditing"
 
 press_continue
 
-# Demostración 1: Estado actual del cleanup
+# Demonstration 1: Current cleanup status
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}🔍 DEMO 1: VERIFICAR ESTADO ACTUAL DEL CLEANUP${NC}"
+echo -e "${BOLD}🔍 DEMO 1: VERIFY CURRENT CLEANUP STATUS${NC}"
 echo
 echo -e "${YELLOW}Revisando logs recientes de cleanup...${NC}"
 
@@ -66,61 +66,61 @@ docker logs celery_worker --tail 100 | grep -A 10 -B 5 "CLEANUP TASK\|cleanup_in
 
 press_continue
 
-# Demostración 2: Configuración del sistema
+# Demonstration 2: System configuration
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}⚙️ DEMO 2: CONFIGURACIÓN DEL SISTEMA${NC}"
+echo -e "${BOLD}⚙️ DEMO 2: SYSTEM CONFIGURATION${NC}"
 echo
 echo -e "${YELLOW}Mostrando configuración de timeouts y programación...${NC}"
 
 echo -e "\n${PURPLE}🕐 Configuración de timeouts (settings.py):${NC}"
 docker exec django_web python manage.py shell -c "
 from django.conf import settings
-print('EMAIL_VERIFICATION_TIMEOUT:', getattr(settings, 'EMAIL_VERIFICATION_TIMEOUT', 'No configurado'))
-print('INACTIVITY_WARNING_DAYS:', getattr(settings, 'INACTIVITY_WARNING_DAYS', 'No configurado'))
-print('INACTIVITY_THRESHOLD_DAYS:', getattr(settings, 'INACTIVITY_THRESHOLD_DAYS', 'No configurado'))
-print('TIME_MULTIPLIER:', getattr(settings, 'TIME_MULTIPLIER', 'No configurado'))
+print('EMAIL_VERIFICATION_TIMEOUT:', getattr(settings, 'EMAIL_VERIFICATION_TIMEOUT', 'Not configured'))
+print('INACTIVITY_WARNING_DAYS:', getattr(settings, 'INACTIVITY_WARNING_DAYS', 'Not configured'))
+print('INACTIVITY_THRESHOLD_DAYS:', getattr(settings, 'INACTIVITY_THRESHOLD_DAYS', 'Not configured'))
+print('TIME_MULTIPLIER:', getattr(settings, 'TIME_MULTIPLIER', 'Not configured'))
 "
 
-echo -e "\n${PURPLE}⏰ Programación de tareas periódicas:${NC}"
+echo -e "\n${PURPLE}⏰ Periodic task scheduling:${NC}"
 docker exec django_web python manage.py shell -c "
 from django.conf import settings
 schedule = settings.CELERY_BEAT_SCHEDULE.get('cleanup-inactive-users', {})
-print('Task:', schedule.get('task', 'No configurado'))
-print('Schedule:', schedule.get('schedule', 'No configurado'), 'segundos')
-print('Equivale a:', schedule.get('schedule', 0) / 60, 'minutos')
+print('Task:', schedule.get('task', 'Not configured'))
+print('Schedule:', schedule.get('schedule', 'Not configured'), 'seconds')
+print('Equivalent to:', schedule.get('schedule', 0) / 60, 'minutes')
 "
 
 press_continue
 
-# Demostración 3: Usuarios candidatos para cleanup
+# Demonstration 3: Users candidates for cleanup
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}👥 DEMO 3: ANÁLISIS DE USUARIOS CANDIDATOS${NC}"
+echo -e "${BOLD}👥 DEMO 3: USER CANDIDATE ANALYSIS${NC}"
 echo
-echo -e "${YELLOW}Analizando usuarios que podrían ser afectados por cleanup...${NC}"
+echo -e "${YELLOW}Analyzing users that could be affected by cleanup...${NC}"
 
-echo -e "\n${PURPLE}📈 Estadísticas de usuarios en el sistema:${NC}"
+echo -e "\n${PURPLE}📈 User statistics in the system:${NC}"
 docker exec django_web python manage.py shell -c "
 from authentication.models import CustomUser as User
 from django.utils import timezone
 from datetime import timedelta
 
 total_users = User.objects.count()
-print(f'Total usuarios: {total_users}')
+print(f'Total users: {total_users}')
 
 unverified = User.objects.filter(is_email_verified=False).count()
 print(f'Sin verificar email: {unverified}')
 
-# Usuarios recientes (últimos 2 minutos)
+# Recent users (last 2 minutes)
 recent_threshold = timezone.now() - timedelta(minutes=2)
 recent_activity = User.objects.filter(last_activity__gte=recent_threshold).count()
 print(f'Activos recientemente: {recent_activity}')
 
-# Usuarios sin actividad reciente
+# Users without recent activity
 old_activity = User.objects.filter(last_activity__lt=recent_threshold).count() if User.objects.filter(last_activity__isnull=False).exists() else 0
 print(f'Sin actividad reciente: {old_activity}')
 "
 
-echo -e "\n${PURPLE}🔍 Detalles de usuarios no verificados (candidatos a eliminación):${NC}"
+echo -e "\n${PURPLE}🔍 Details of unverified users (candidates for deletion):${NC}"
 docker exec django_web python manage.py shell -c "
 from authentication.models import CustomUser as User
 from django.utils import timezone
@@ -128,25 +128,25 @@ from django.utils import timezone
 unverified_users = User.objects.filter(is_email_verified=False)[:5]
 for user in unverified_users:
     age = (timezone.now() - user.date_joined).total_seconds()
-    print(f'👤 {user.username} - Creado hace {age:.1f}s - Email: {user.email}')
+    print(f'👤 {user.username} - Created {age:.1f}s ago - Email: {user.email}')
 "
 
 press_continue
 
-# Demostración 4: Crear usuario de prueba para cleanup
+# Demonstration 4: Create test user for cleanup
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}🧪 DEMO 4: CREAR USUARIO DE PRUEBA${NC}"
+echo -e "${BOLD}🧪 DEMO 4: CREATE TEST USER${NC}"
 echo
-echo -e "${YELLOW}Creando un usuario específico para demostrar el cleanup...${NC}"
+echo -e "${YELLOW}Creating a specific user to demonstrate the cleanup...${NC}"
 
 TEST_USERNAME="cleanup_demo_$(date +%s)"
-echo -e "\n${PURPLE}➕ Creando usuario: ${TEST_USERNAME}${NC}"
+echo -e "\n${PURPLE}➕ Creating user: ${TEST_USERNAME}${NC}"
 
 docker exec django_web python manage.py shell -c "
 from authentication.models import CustomUser as User
 from django.utils import timezone
 
-# Crear usuario de prueba sin verificar
+# Create unverified test user
 user = User.objects.create_user(
     username='${TEST_USERNAME}',
     email='${TEST_USERNAME}@cleanup-test.demo',
@@ -155,46 +155,46 @@ user = User.objects.create_user(
 user.is_email_verified = False
 user.save()
 
-print(f'✅ Usuario creado: {user.username}')
+                print(f'✅ User created: {user.username}')
 print(f'📧 Email: {user.email}')
 print(f'🕐 Creado: {user.date_joined}')
 print(f'✉️ Verificado: {user.is_email_verified}')
 "
 
-echo -e "\n${GREEN}✅ Usuario de prueba creado exitosamente${NC}"
+echo -e "\n${GREEN}✅ Test user created successfully${NC}"
 
 press_continue
 
-# Demostración 5: Ejecutar cleanup manualmente
+# Demonstration 5: Run cleanup manually
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}🚀 DEMO 5: EJECUTAR CLEANUP MANUALMENTE${NC}"
+echo -e "${BOLD}🚀 DEMO 5: RUN CLEANUP MANUALLY${NC}"
 echo
-echo -e "${YELLOW}Ejecutando la tarea de cleanup para ver el proceso en tiempo real...${NC}"
+echo -e "${YELLOW}Running the cleanup task to see the process in real time...${NC}"
 
-echo -e "\n${PURPLE}🔄 Ejecutando cleanup_inactive_users...${NC}"
+echo -e "\n${PURPLE}🔄 Running cleanup_inactive_users...${NC}"
 docker exec django_web python manage.py shell -c "
 from authentication.tasks import cleanup_inactive_users
-print('Iniciando tarea de cleanup...')
+print('Starting cleanup task...')
 result = cleanup_inactive_users()
-print('Tarea completada')
+print('Task completed')
 "
 
 press_continue
 
-# Demostración 6: Verificar logs detallados
+# Demonstration 6: Verify detailed logs
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}📋 DEMO 6: LOGS DETALLADOS DEL PROCESO${NC}"
+echo -e "${BOLD}📋 DEMO 6: DETAILED PROCESS LOGS${NC}"
 echo
-echo -e "${YELLOW}Revisando los logs generados por la ejecución manual...${NC}"
+echo -e "${YELLOW}Reviewing logs generated by manual execution...${NC}"
 
 echo -e "\n${PURPLE}📊 Logs más recientes de cleanup:${NC}"
 docker logs celery_worker --tail 50 | grep -A 15 -B 5 "STARTING CLEANUP TASK" | tail -30
 
 press_continue
 
-# Demostración 7: Sistema de notificaciones
+# Demonstration 7: Notification system
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}📧 DEMO 7: SISTEMA DE NOTIFICACIONES${NC}"
+echo -e "${BOLD}📧 DEMO 7: NOTIFICATION SYSTEM${NC}"
 echo
 echo -e "${YELLOW}Verificando si se han enviado notificaciones de inactividad...${NC}"
 
@@ -209,65 +209,65 @@ fi
 
 press_continue
 
-# Demostración 8: Configuración para diferentes entornos
+# Demonstration 8: Configuration for different environments
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BOLD}🌍 DEMO 8: CONFIGURACIÓN MULTI-ENTORNO${NC}"
 echo
-echo -e "${YELLOW}Mostrando como el sistema se adapta a diferentes entornos...${NC}"
+echo -e "${YELLOW}Showing how the system adapts to different environments...${NC}"
 
-echo -e "\n${PURPLE}⚙️ Configuración actual vs Producción:${NC}"
+echo -e "\n${PURPLE}⚙️ Current configuration vs Production:${NC}"
 docker exec django_web python manage.py shell -c "
 from django.conf import settings
 import os
 
 print('=== CONFIGURACIÓN ACTUAL ===')
 print(f'ENVIRONMENT: {os.getenv(\"ENVIRONMENT\", \"development\")}')
-print(f'TIME_MULTIPLIER: {getattr(settings, \"TIME_MULTIPLIER\", \"No configurado\")}')
-print(f'EMAIL_VERIFICATION_TIMEOUT: {getattr(settings, \"EMAIL_VERIFICATION_TIMEOUT\", \"No configurado\")}')
+print(f'TIME_MULTIPLIER: {getattr(settings, \"TIME_MULTIPLIER\", \"Not configured\")}')
+print(f'EMAIL_VERIFICATION_TIMEOUT: {getattr(settings, \"EMAIL_VERIFICATION_TIMEOUT\", \"Not configured\")}')
 
 print()
-print('=== EQUIVALENCIAS PRODUCCIÓN ===')
+print('=== PRODUCTION EQUIVALENCES ===')
 multiplier = getattr(settings, 'TIME_MULTIPLIER', 1)
 if multiplier != 1:
     email_timeout = getattr(settings, 'EMAIL_VERIFICATION_TIMEOUT', 0)
     warning_days = getattr(settings, 'INACTIVITY_WARNING_DAYS', 0)  
     threshold_days = getattr(settings, 'INACTIVITY_THRESHOLD_DAYS', 0)
     
-    print(f'Verificación email: {email_timeout}s -> {email_timeout/multiplier}s ({email_timeout/multiplier/86400:.0f} días)')
-    print(f'Aviso inactividad: {warning_days*multiplier}s -> {warning_days}s ({warning_days} días)')
-    print(f'Eliminación: {threshold_days*multiplier}s -> {threshold_days}s ({threshold_days} días)')
+    print(f'Email verification: {email_timeout}s -> {email_timeout/multiplier}s ({email_timeout/multiplier/86400:.0f} days)')
+    print(f'Inactivity warning: {warning_days*multiplier}s -> {warning_days}s ({warning_days} days)')
+    print(f'Deletion: {threshold_days*multiplier}s -> {threshold_days}s ({threshold_days} days)')
 "
 
 press_continue
 
 # Resumen final
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}📝 RESUMEN DEL SISTEMA DE CLEANUP${NC}"
+echo -e "${BOLD}📝 CLEANUP SYSTEM SUMMARY${NC}"
 echo
-echo -e "${GREEN}✅ Sistema completamente funcional y automatizado${NC}"
+echo -e "${GREEN}✅ System completely functional and automated${NC}"
 echo
 echo -e "${YELLOW}🔧 Características principales:${NC}"
-echo -e "  • ${BOLD}Automatización completa:${NC} Ejecución cada 5 minutos"
+echo -e "  • ${BOLD}Complete automation:${NC} Execution every 5 minutes"
 echo -e "  • ${BOLD}GDPR Compliant:${NC} Anonimización segura de datos"
 echo -e "  • ${BOLD}Multi-entorno:${NC} Configuración adaptable dev/prod"
-echo -e "  • ${BOLD}Exclusión inteligente:${NC} Respeta usuarios con sesiones activas"
-echo -e "  • ${BOLD}Sistema de avisos:${NC} Notificaciones antes de eliminación"
-echo -e "  • ${BOLD}Logs detallados:${NC} Auditoría completa de acciones"
+echo -e "  • ${BOLD}Smart exclusion:${NC} Respects users with active sessions"
+echo -e "  • ${BOLD}Warning system:${NC} Notifications before deletion"
+echo -e "  • ${BOLD}Detailed logs:${NC} Complete audit of actions"
 
 echo
 echo -e "${CYAN}📊 Métricas de rendimiento:${NC}"
-echo -e "  • Tiempo de ejecución: ~7ms por ciclo"
-echo -e "  • Usuarios procesados: Todos los registros"
+echo -e "  • Execution time: ~7ms per cycle"
+echo -e "  • Processed users: All records"
 echo -e "  • Sesiones activas excluidas automáticamente"
 echo -e "  • Notificaciones por email integradas"
 
 echo
-echo -e "${PURPLE}🚀 El sistema está listo para producción con:${NC}"
-echo -e "  • Timeouts de 7/53/60 días en lugar de segundos"
+echo -e "${PURPLE}🚀 The system is ready for production with:${NC}"
+echo -e "  • Timeouts of 7/53/60 days instead of seconds"
 echo -e "  • Integración con servicios de email reales"
 echo -e "  • Monitoreo y alertas avanzadas"
 echo -e "  • Cumplimiento total de regulaciones GDPR"
 
 echo
-echo -e "${BOLD}${GREEN}🎉 ¡DEMOSTRACIÓN COMPLETADA CON ÉXITO! 🎉${NC}"
+echo -e "${BOLD}${GREEN}🎉 DEMONSTRATION COMPLETED SUCCESSFULLY! 🎉${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

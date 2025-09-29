@@ -5,13 +5,6 @@ Mixins are auxiliary classes that encapsulate specific behaviors or properties
 to be shared across multiple models. This helps keep models.py file clean
 and focused on the core model definitions and no duplicated code.
 
-- TaskPropertiesMixin: Computed properties (progress, due status, hours tracking)
-- TaskValidationMixin: Custom validation logic and save behavior
-- TaskDatabaseConfig: Database optimization (indexes, constraints)
-- CommentBehaviorMixin: Comment-specific behavior (edit tracking)
-- TimestampMixin: Automatic created/updated timestamps (reusable)
-- ArchivableMixin: Soft delete functionality (reusable)
-
 """
 
 from django.db import models

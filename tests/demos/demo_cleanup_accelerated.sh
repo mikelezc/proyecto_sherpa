@@ -1,15 +1,15 @@
 #!/bin/bash
 
 # ============================================================================
-# DEMOSTRACIÓN ACELERADA: CICLO COMPLETO DE CLEANUP
+# ACCELERATED DEMONSTRATION: COMPLETE CLEANUP CYCLE
 # ============================================================================
-# Este script demuestra el ciclo completo de cleanup con tiempos acelerados
-# para mostrar a los examinadores todo el proceso en minutos en lugar de días
+# This script demonstrates the complete cleanup cycle with accelerated timing
+# to show examiners the entire process in minutes instead of days
 # ============================================================================
 
 source "$(dirname "$0")/demo_common.sh"
 
-# Colores
+# Colors
 BOLD='\033[1m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -24,23 +24,23 @@ clear
 echo -e "${BOLD}${CYAN}"
 cat << "EOF"
 ╔══════════════════════════════════════════════════════════════════╗
-║              🚀 DEMO ACELERADA - CICLO CLEANUP                  ║
-║            Desde Creación hasta Eliminación (3 min)            ║
+║           🚀 ACCELERATED DEMO - CLEANUP CYCLE                   ║
+║            From Creation to Deletion (3 min)                   ║
 ╚══════════════════════════════════════════════════════════════════╝
 EOF
 echo -e "${NC}"
 
-echo -e "${YELLOW}Esta demostración muestra el ciclo completo:${NC}"
-echo -e "  1️⃣ Crear usuario sin verificar"
-echo -e "  2️⃣ Esperar timeout de verificación (15s)"
-echo -e "  3️⃣ Ver eliminación automática"
-echo -e "  4️⃣ Crear usuario y simular inactividad"
-echo -e "  5️⃣ Ver avisos y eliminación por inactividad"
+echo -e "${YELLOW}This demonstration shows the complete cycle:${NC}"
+echo -e "  1️⃣ Create unverified user"
+echo -e "  2️⃣ Wait for verification timeout (15s)"
+echo -e "  3️⃣ See automatic deletion"
+echo -e "  4️⃣ Create user and simulate inactivity"
+echo -e "  5️⃣ See warnings and deletion due to inactivity"
 
 press_continue
 
-# Paso 1: Crear usuario de prueba
-echo -e "${CYAN}━━━ PASO 1: CREAR USUARIO SIN VERIFICAR ━━━${NC}"
+# Step 1: Create test user
+echo -e "${CYAN}━━━ STEP 1: CREATE UNVERIFIED USER ━━━${NC}"
 TEST_USER="accel_test_$(date +%s)"
 
 docker exec django_web python manage.py shell -c "
@@ -55,13 +55,13 @@ user = User.objects.create_user(
 user.is_email_verified = False
 user.save()
 
-print(f'✅ Usuario creado: {user.username}')
+print(f'✅ User created: {user.username}')
 print(f'🕐 Timestamp: {timezone.now()}')
 "
 
-echo -e "${GREEN}Usuario creado, esperando cleanup automático...${NC}"
+echo -e "${GREEN}User created, waiting for automatic cleanup...${NC}"
 
-# Función para verificar si el usuario existe
+# Function to check if user exists
 check_user_exists() {
     docker exec django_web python manage.py shell -c "
 from authentication.models import CustomUser as User
@@ -73,32 +73,32 @@ except User.DoesNotExist:
 " 2>/dev/null | tail -1
 }
 
-# Paso 2: Monitor de cleanup en tiempo real
-echo -e "${CYAN}━━━ PASO 2: MONITOREO EN TIEMPO REAL ━━━${NC}"
-echo -e "${YELLOW}Esperando próxima ejecución de cleanup (máximo 5 minutos)...${NC}"
+# Step 2: Real-time cleanup monitoring
+echo -e "${CYAN}━━━ STEP 2: REAL-TIME MONITORING ━━━${NC}"
+echo -e "${YELLOW}Waiting for next cleanup execution (maximum 5 minutes)...${NC}"
 
-# Esperar hasta 6 minutos para ver el cleanup
+# Wait up to 6 minutes to see the cleanup
 for i in {1..36}; do
     status=$(check_user_exists)
     current_time=$(date "+%H:%M:%S")
     
     if [ "$status" = "DELETED" ]; then
-        echo -e "${RED}🗑️  Usuario eliminado automáticamente a las ${current_time}${NC}"
+        echo -e "${RED}🗑️  User automatically deleted at ${current_time}${NC}"
         break
     else
-        echo -e "${BLUE}⏰ ${current_time} - Usuario aún existe (${status})${NC}"
+        echo -e "${BLUE}⏰ ${current_time} - User still exists (${status})${NC}"
     fi
     
     sleep 10
 done
 
-# Paso 3: Verificar logs de la eliminación
-echo -e "${CYAN}━━━ PASO 3: VERIFICAR LOGS DE ELIMINACIÓN ━━━${NC}"
-echo -e "${PURPLE}Logs de cleanup más recientes:${NC}"
+# Step 3: Verify deletion logs
+echo -e "${CYAN}━━━ STEP 3: VERIFY DELETION LOGS ━━━${NC}"
+echo -e "${PURPLE}Most recent cleanup logs:${NC}"
 docker logs celery_worker --tail 30 | grep -A 10 -B 5 "CLEANUP TASK"
 
-# Paso 4: Crear usuario para demo de inactividad
-echo -e "${CYAN}━━━ PASO 4: DEMO DE INACTIVIDAD ━━━${NC}"
+# Step 4: Create user for inactivity demo
+echo -e "${CYAN}━━━ STEP 4: INACTIVITY DEMO ━━━${NC}"
 INACTIVE_USER="inactive_test_$(date +%s)"
 
 docker exec django_web python manage.py shell -c "
@@ -106,7 +106,7 @@ from authentication.models import CustomUser as User
 from django.utils import timezone
 from datetime import timedelta
 
-# Crear usuario verificado pero inactivo
+# Create verified but inactive user
 user = User.objects.create_user(
     username='${INACTIVE_USER}',
     email='${INACTIVE_USER}@inactive-test.demo',  
@@ -114,20 +114,20 @@ user = User.objects.create_user(
 )
 user.is_email_verified = True
 
-# Simular inactividad: poner last_activity antigua
-old_time = timezone.now() - timedelta(seconds=70)  # Más del threshold
+# Simulate inactivity: set old last_activity
+old_time = timezone.now() - timedelta(seconds=70)  # More than threshold
 user.last_activity = old_time
 user.save()
 
-print(f'✅ Usuario inactivo creado: {user.username}')
-print(f'📧 Email verificado: {user.is_email_verified}')
-print(f'🕐 Última actividad: {user.last_activity}')
-print(f'⏰ Ahora: {timezone.now()}')
+print(f'✅ Inactive user created: {user.username}')
+print(f'📧 Email verified: {user.is_email_verified}')
+print(f'🕐 Last activity: {user.last_activity}')
+print(f'⏰ Now: {timezone.now()}')
 "
 
-echo -e "${YELLOW}Esperando cleanup de usuario inactivo...${NC}"
+echo -e "${YELLOW}Waiting for inactive user cleanup...${NC}"
 
-# Función para verificar usuario inactivo
+# Function to check inactive user
 check_inactive_user() {
     docker exec django_web python manage.py shell -c "
 from authentication.models import CustomUser as User
@@ -139,47 +139,47 @@ except User.DoesNotExist:
 " 2>/dev/null | tail -1
 }
 
-# Monitor para usuario inactivo
+# Monitor for inactive user
 for i in {1..36}; do
     status=$(check_inactive_user)
     current_time=$(date "+%H:%M:%S")
     
     if [ "$status" = "DELETED" ]; then
-        echo -e "${RED}🗑️  Usuario inactivo eliminado a las ${current_time}${NC}"
+        echo -e "${RED}🗑️  Inactive user deleted at ${current_time}${NC}"
         break
     else
-        echo -e "${BLUE}⏰ ${current_time} - Usuario inactivo aún existe${NC}"
+        echo -e "${BLUE}⏰ ${current_time} - Inactive user still exists${NC}"
     fi
     
     sleep 10
 done
 
-# Paso 5: Resumen final
+# Step 5: Final summary
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BOLD}${GREEN}✅ DEMOSTRACIÓN ACELERADA COMPLETADA${NC}"
+echo -e "${BOLD}${GREEN}✅ ACCELERATED DEMONSTRATION COMPLETED${NC}"
 echo
-echo -e "${YELLOW}Resultados observados:${NC}"
+echo -e "${YELLOW}Observed results:${NC}"
 
-# Verificar si ambos usuarios fueron eliminados
+# Check if both users were deleted
 final_check1=$(check_user_exists)
 final_check2=$(check_inactive_user)
 
 if [ "$final_check1" = "DELETED" ]; then
-    echo -e "  ✅ Usuario sin verificar: ${GREEN}Eliminado correctamente${NC}"
+    echo -e "  ✅ Unverified user: ${GREEN}Correctly deleted${NC}"
 else
-    echo -e "  ⚠️  Usuario sin verificar: ${YELLOW}Aún existe (puede necesitar más tiempo)${NC}"
+    echo -e "  ⚠️  Unverified user: ${YELLOW}Still exists (may need more time)${NC}"
 fi
 
 if [ "$final_check2" = "DELETED" ]; then
-    echo -e "  ✅ Usuario inactivo: ${GREEN}Eliminado correctamente${NC}"
+    echo -e "  ✅ Inactive user: ${GREEN}Correctly deleted${NC}"
 else
-    echo -e "  ⚠️  Usuario inactivo: ${YELLOW}Aún existe (puede necesitar más tiempo)${NC}"
+    echo -e "  ⚠️  Inactive user: ${YELLOW}Still exists (may need more time)${NC}"
 fi
 
 echo
-echo -e "${PURPLE}📋 Logs finales de cleanup:${NC}"
+echo -e "${PURPLE}📋 Final cleanup logs:${NC}"
 docker logs celery_worker --tail 20 | grep -A 5 -B 2 "Processing complete"
 
 echo
-echo -e "${CYAN}🎉 Sistema de cleanup funcionando correctamente en modo automático${NC}"
+echo -e "${CYAN}🎉 Cleanup system working correctly in automatic mode${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"

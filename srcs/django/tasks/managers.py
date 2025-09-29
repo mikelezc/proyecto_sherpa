@@ -6,14 +6,6 @@ Frontend/API → Views/Controllers → Models → Managers → QuerySets → Dat
 
 Managers are the interface between Django models and the database.
 --> They are the entry point for ALL database queries.
-
-DATA FLOW:
-1. Controller: Task.objects.for_dashboard(user) 
-2. Manager: Executes business logic and optimizations
-3. QuerySet: Builds optimized SQL query
-4. Database: Executes the query
-5. Results: Returns optimized Task objects
-
 """
 
 from django.db import models
@@ -160,16 +152,14 @@ class TaskManager(models.Manager):
     
     def for_dashboard(self, user=None):
         """
-        DASHBOARD TASKS VIEW - Optimized and Relevant
+        Dashboard view - Optimized and Relevant
         1. Only active (non-archived) tasks
-        2. Prefetch related data to avoid N+1 queries
+        2. Prefetch related data to avoid N+1 queries (to minimize database queries)
 		3. If user provided, filter tasks relevant to that user:
            - Tasks created by the user
 		   - Tasks assigned to the user
 		   - Tasks in teams the user belongs to
 		4. Ordered by most recent creation date
-        5. Returns a QuerySet ready for display in dashboards
-        PURPOSE: Efficiently load tasks for dashboard views with minimal queries
         """
         queryset = self.active().with_optimized_relations()
         

@@ -4,19 +4,19 @@
 # Function to wait for user interaction
 press_continue() {
     echo
-    echo -e "\033[1;36m💡 Presiona ENTER para continuar con la siguiente demo...\033[0m"
+    echo -e "\033[1;36m💡 Press ENTER to continue to the next demo...\033[0m"
     read -r
 }
 
 # Function to check if Docker containers are running
 check_containers() {
-    echo "🐳 Verificando contenedores Docker..."
+    echo "🐳 Checking Docker containers..."
     if ! docker ps | grep -q "django_web\|celery_worker\|redis"; then
-        echo "❌ Error: Los contenedores Docker no están ejecutándose."
-        echo "💡 Ejecuta 'docker-compose up -d' desde el directorio raíz del proyecto."
+        echo "❌ Error: Docker containers are not running."
+        echo "💡 Run 'docker-compose up -d' from the project root directory."
         exit 1
     fi
-    echo "✅ Contenedores Docker ejecutándose correctamente."
+    echo "✅ Docker containers running correctly."
 }
 
 # Function to show header
