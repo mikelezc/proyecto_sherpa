@@ -26,10 +26,26 @@ def send_task_notification(task_id, notification_type):
     Send email notifications for task events
     
     TRIGGER: Called when tasks are assigned/updated/become overdue
-    USAGE: send_task_notification.delay(task_id, 'assigned')
+    USAGE: 
+        send_task_notification.delay(task_id, 'assigned')
+        send_task_notification.delay(task_id, 'status_changed')
+        send_task_notification.delay(task_id, 'due_date_changed')
+        send_task_notification.delay(task_id, 'overdue')
+    
+    TYPES:
+        - 'assigned': New task assignment
+        - 'status_changed': Important status changes (review, completed, cancelled, in_progress)
+        - 'due_date_changed': Due date modifications
+        - 'due_soon': Upcoming due date warning
+        - 'overdue': Past due date alert
     """
     try:
         from tasks.models import Task
+        
+        # Check if task exists before proceeding
+        if not Task.objects.filter(id=task_id).exists():
+            logger.error(f"Task with ID {task_id} does not exist")
+            return f"Error: Task {task_id} does not exist"
         
         task = Task.objects.get(id=task_id)
         
@@ -71,6 +87,41 @@ def send_task_notification(task_id, notification_type):
                     fail_silently=True,
                 )
             logger.info(f"Overdue notifications sent for task {task_id}")
+            
+        elif notification_type == 'status_changed':
+            # Notify about important status changes
+            assigned_users = task.assigned_to.all()
+            status_messages = {
+                'review': f'Task "{task.title}" is ready for review',
+                'completed': f'Task "{task.title}" has been completed!',
+                'cancelled': f'Task "{task.title}" has been cancelled',
+                'in_progress': f'Work has started on task "{task.title}"'
+            }
+            
+            if task.status in status_messages and assigned_users.exists():
+                for user in assigned_users:
+                    send_mail(
+                        subject=f'Task Status Update: {task.title}',
+                        message=f'{status_messages[task.status]}\n\nStatus: {task.get_status_display()}\nDescription: {task.description}',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+                logger.info(f"Status change notifications sent for task {task_id} - new status: {task.status}")
+            
+        elif notification_type == 'due_date_changed':
+            # Notify about due date changes
+            assigned_users = task.assigned_to.all()
+            if assigned_users.exists():
+                for user in assigned_users:
+                    send_mail(
+                        subject=f'Due Date Updated: {task.title}',
+                        message=f'The due date for task "{task.title}" has been updated.\n\nNew Due Date: {task.due_date}\nDescription: {task.description}\n\nPlease adjust your schedule accordingly.',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+                logger.info(f"Due date change notifications sent for task {task_id}")
             
         return f"Notification sent for task {task_id} - type: {notification_type}"
         

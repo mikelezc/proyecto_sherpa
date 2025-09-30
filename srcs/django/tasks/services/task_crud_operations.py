@@ -12,12 +12,8 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from ..models import Task, Tag, TaskAssignment, Comment
-from ..core.business import (
-    validate_task_due_date,
-    validate_parent_task, 
-    validate_metadata,
-    update_task_search_vector
-)
+from ..core.validations import TaskValidationUtils
+from ..core.search import update_task_search_vector
 
 User = get_user_model()
 
@@ -64,9 +60,9 @@ class TaskCrudOperations:
             )
             
             # Apply business validations
-            validate_task_due_date(task)
-            validate_parent_task(task)
-            validate_metadata(task)
+            TaskValidationUtils.validate_due_date(task)
+            TaskValidationUtils.validate_parent_task(task)
+            TaskValidationUtils.validate_metadata(task)
             
             # Handle assignments
             if hasattr(data, 'assigned_to_ids') and data.assigned_to_ids:
@@ -97,9 +93,9 @@ class TaskCrudOperations:
                 task.metadata = data.metadata
             
             # Apply business validations
-            validate_task_due_date(task)
-            validate_parent_task(task)
-            validate_metadata(task)
+            TaskValidationUtils.validate_due_date(task)
+            TaskValidationUtils.validate_parent_task(task)
+            TaskValidationUtils.validate_metadata(task)
             
             task.save()
             
@@ -128,7 +124,7 @@ class TaskCrudOperations:
                         setattr(task, field, value)
             
             # Apply business validations
-            validate_task_due_date(task)
+            TaskValidationUtils.validate_due_date(task)
             
             task.save()
             

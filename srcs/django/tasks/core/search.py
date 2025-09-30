@@ -9,6 +9,25 @@ from django.contrib.postgres.search import SearchQuery, SearchRank
 from django.db import connection
 
 
+def update_task_search_vector(task_id):
+    """Update PostgreSQL full-text search vector for a specific task"""
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE tasks_task 
+                SET search_vector = to_tsvector('english', 
+                    COALESCE(title, '') || ' ' || COALESCE(description, '')
+                ) 
+                WHERE id = %s
+                """,
+                [task_id]
+            )
+    except Exception:
+        # If PostgreSQL full-text search is not available, skip silently
+        pass
+
+
 def update_all_search_vectors(batch_size=100):
     """
     Update search vectors for all existing tasks in batches

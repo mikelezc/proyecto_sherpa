@@ -17,14 +17,14 @@ class TaskPropertiesMixin:
     @property
     def is_past_due(self):
         """Check if task is past due date"""
-        from .core.task_helpers import TaskModelUtils
-        return TaskModelUtils.is_task_overdue(self)
+        from .core.business import TaskCalculationUtils
+        return TaskCalculationUtils.is_task_overdue(self)
     
     @property
     def progress_percentage(self):
         """Calculate progress based on subtasks"""
-        from .core.task_helpers import TaskModelUtils
-        return TaskModelUtils.calculate_progress_percentage(self)
+        from .core.business import TaskCalculationUtils
+        return TaskCalculationUtils.calculate_progress_percentage(self)
     
     @property
     def hours_worked(self):
@@ -51,14 +51,14 @@ class TaskValidationMixin:
     
     def clean(self):
         """Custom validation using task helpers"""
-        from .core.task_helpers import TaskValidationUtils
+        from .core.business import TaskValidationUtils
         TaskValidationUtils.validate_task_hierarchy(self)
         TaskValidationUtils.validate_due_date(self)
         TaskValidationUtils.validate_hours(self)
     
     def save(self, *args, **kwargs):
         """Save with metadata validation only"""
-        from .core.task_helpers import TaskMetadataUtils
+        from .core.business import TaskMetadataUtils
         
         # Ensure metadata has default structure
         TaskMetadataUtils.ensure_default_metadata(self)
