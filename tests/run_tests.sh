@@ -37,29 +37,18 @@ show_menu() {
     echo -e "${GREEN}🎭 DEMOS & DEMONSTRATIONS:${NC}"
     echo "1. 🚀 Run Complete Celery Demo      - Full automated demonstration"
     echo "2. 📧 Show Email Outputs           - View generated notifications"
-    echo "3. 📋 Show Demo Summary             - Overview of all demos"
     echo ""
-    
     echo -e "${GREEN}⚙️  SETUP & CONFIGURATION:${NC}"
-    echo "4. 🔧 Quick Project Setup           - Initialize project quickly"
+    echo "3. 🔧 Quick Project Setup           - Initialize project quickly"
     echo ""
-    
     echo -e "${GREEN}🧪 UNIT TESTS:${NC}"
-    echo "5. ✅ Run Unit Tests               - Execute Django test suite"
+    echo "4. ✅ Run Unit Tests               - Execute Django test suite"
     echo ""
-    
-    echo -e "${GREEN}� API TESTS:${NC}"
-    echo "6. 📡 Run API Tests                - Test Django Ninja endpoints"
+    echo -e "${GREEN}📡 API TESTS:${NC}"
+    echo "5. 📡 Run API Tests                - Test Django Ninja endpoints"
     echo ""
-    
-    echo -e "${GREEN}�📊 PROJECT STATUS:${NC}"
-    echo "7. 🐳 Check Docker Status          - Container health check"
-    echo "8. 📈 Show Celery Status           - Worker and beat status"
-    echo "9. 🗂️  Show Project Structure       - Directory tree"
-    echo ""
-    
     echo -e "${GREEN}🔍 UTILITIES:${NC}"
-    echo "10. 📝 Show All Available Scripts   - List all test scripts"
+    echo "6. 📝 Show All Available Scripts   - List all test scripts"
     echo "0. ❌ Exit"
     echo ""
 }
@@ -159,9 +148,8 @@ list_scripts() {
 # Main menu loop
 while true; do
     show_menu
-    echo -e "${YELLOW}Choose an option (0-10): ${NC}"
+    echo -e "${YELLOW}Choose an option (0-6): ${NC}"
     read -r choice
-    
     case $choice in
         1)
             run_demo
@@ -170,27 +158,15 @@ while true; do
             show_emails
             ;;
         3)
-            show_demo_summary
-            ;;
-        4)
             quick_setup
             ;;
-        5)
+        4)
             run_unit_tests
             ;;
-        6)
+        5)
             run_api_tests
             ;;
-        7)
-            check_docker
-            ;;
-        8)
-            show_celery_status
-            ;;
-        9)
-            show_structure
-            ;;
-        10)
+        6)
             list_scripts
             ;;
         0)
@@ -198,10 +174,9 @@ while true; do
             exit 0
             ;;
         *)
-            echo -e "${RED}❌ Invalid option. Please choose 0-10.${NC}"
+            echo -e "${RED}❌ Invalid option. Please choose 0-6.${NC}"
             ;;
     esac
-    
     echo -e "\n${YELLOW}Press ENTER to return to menu...${NC}"
     read -r
     clear
