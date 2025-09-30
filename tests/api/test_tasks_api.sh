@@ -24,9 +24,9 @@ print_header() {
     echo -e "${BLUE}"
     echo "  ╔══════════════════════════════════════════════════════════════╗"
     echo "  ║                                                              ║"
-    echo "  ║           🚀 TASKS API TEST SUITE 🚀                       ║"
+    echo "  ║           🚀 TASKS API COMPREHENSIVE TEST SUITE 🚀         ║"
     echo "  ║                                                              ║"
-    echo "  ║      Testing Django Ninja API endpoints                     ║"
+    echo "  ║      Testing ALL Django Ninja API endpoints                 ║"
     echo "  ║                                                              ║"
     echo "  ╚══════════════════════════════════════════════════════════════╝"
     echo -e "${NC}\n"
@@ -192,6 +192,279 @@ test_search_functionality() {
     return 0
 }
 
+test_update_task() {
+    print_test "Testing PUT /api/tasks/{task_id} - Update Task"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Fallback: get first available task
+        TASK_LIST=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/")
+        TASK_ID=$(echo "$TASK_LIST" | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" -X PUT "$BASE_URL/api/tasks/$TASK_ID" \
+            -H "Content-Type: application/json" \
+            -d "{
+                \"title\": \"Updated API Test Task\",
+                \"description\": \"Task updated via API test suite\",
+                \"status\": \"in_progress\",
+                \"priority\": \"high\"
+            }")
+        
+        # Check if response contains the task ID and shows successful update
+        if [[ $RESPONSE == *"$TASK_ID"* ]] && [[ $RESPONSE == *"in_progress"* ]]; then
+            print_success "Successfully updated task"
+            print_info "Task ID: $TASK_ID updated to 'in_progress'"
+        else
+            print_error "Failed to update task"
+            print_info "Response: ${RESPONSE:0:300}..."
+            return 1
+        fi
+    else
+        print_error "No task available for update test"
+        return 1
+    fi
+    return 0
+}
+
+test_partial_update_task() {
+    print_test "Testing PATCH /api/tasks/{task_id} - Partial Update Task"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Fallback: get first available task
+        TASK_LIST=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/")
+        TASK_ID=$(echo "$TASK_LIST" | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" -X PATCH "$BASE_URL/api/tasks/$TASK_ID" \
+            -H "Content-Type: application/json" \
+            -d "{
+                \"status\": \"review\"
+            }")
+        
+        # Check if response contains the task ID and shows successful partial update
+        if [[ $RESPONSE == *"$TASK_ID"* ]] && [[ $RESPONSE == *"review"* ]]; then
+            print_success "Successfully partially updated task"
+            print_info "Task ID: $TASK_ID status changed to 'review'"
+        else
+            print_error "Failed to partially update task"
+            print_info "Response: ${RESPONSE:0:300}..."
+            return 1
+        fi
+    else
+        print_error "No task available for partial update test"
+        return 1
+    fi
+    return 0
+}
+
+test_assign_user_to_task() {
+    print_test "Testing POST /api/tasks/{task_id}/assign - Assign User to Task"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Fallback: get first available task
+        TASK_LIST=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/")
+        TASK_ID=$(echo "$TASK_LIST" | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        # Try to assign the current user (demo_admin) to the task
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" -X POST "$BASE_URL/api/tasks/$TASK_ID/assign" \
+            -H "Content-Type: application/json" \
+            -d "{
+                \"user_ids\": [1]
+            }")
+        
+        if [[ $RESPONSE == *"success"* ]] || [[ $RESPONSE == *"assigned"* ]]; then
+            print_success "Successfully assigned user to task"
+            print_info "User assigned to task ID: $TASK_ID"
+        else
+            print_error "Failed to assign user to task"
+            print_info "Response: ${RESPONSE:0:300}..."
+            return 1
+        fi
+    else
+        print_error "No task available for assignment test"
+        return 1
+    fi
+    return 0
+}
+
+test_get_task_assignments() {
+    print_test "Testing GET /api/tasks/{task_id}/assignments - Get Task Assignments"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Fallback: get first available task
+        TASK_LIST=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/")
+        TASK_ID=$(echo "$TASK_LIST" | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/$TASK_ID/assignments")
+        
+        # Check if response is a valid JSON array (even if empty)
+        if [[ $RESPONSE == "["*"]" ]]; then
+            print_success "Successfully retrieved task assignments"
+            print_info "Assignments for task ID: $TASK_ID"
+        else
+            print_error "Failed to retrieve task assignments"
+            print_info "Response: ${RESPONSE:0:200}..."
+            return 1
+        fi
+    else
+        print_error "No task available for assignments test"
+        return 1
+    fi
+    return 0
+}
+
+test_add_comment_to_task() {
+    print_test "Testing POST /api/tasks/{task_id}/comments - Add Comment to Task"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Fallback: get first available task
+        TASK_LIST=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/")
+        TASK_ID=$(echo "$TASK_LIST" | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" -X POST "$BASE_URL/api/tasks/$TASK_ID/comments" \
+            -H "Content-Type: application/json" \
+            -d "{
+                \"content\": \"Test comment from API test suite\"
+            }")
+        
+        if [[ $RESPONSE == *"\"content\":"* ]] && [[ $RESPONSE == *"Test comment"* ]]; then
+            print_success "Successfully added comment to task"
+            print_info "Comment added to task ID: $TASK_ID"
+        else
+            print_error "Failed to add comment to task"
+            print_info "Response: ${RESPONSE:0:300}..."
+            return 1
+        fi
+    else
+        print_error "No task available for comment test"
+        return 1
+    fi
+    return 0
+}
+
+test_get_task_comments() {
+    print_test "Testing GET /api/tasks/{task_id}/comments - Get Task Comments"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Fallback: get first available task
+        TASK_LIST=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/")
+        TASK_ID=$(echo "$TASK_LIST" | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/$TASK_ID/comments")
+        
+        if [[ $RESPONSE == *"results"* ]] && [[ $RESPONSE == *"count"* ]]; then
+            COMMENT_COUNT=$(echo "$RESPONSE" | sed -n 's/.*"count": *\([0-9]*\).*/\1/p')
+            if [[ -z $COMMENT_COUNT ]]; then
+                COMMENT_COUNT="N/A"
+            fi
+            print_success "Successfully retrieved task comments"
+            print_info "Comments for task ID $TASK_ID: $COMMENT_COUNT found"
+        else
+            print_error "Failed to retrieve task comments"
+            print_info "Response: ${RESPONSE:0:200}..."
+            return 1
+        fi
+    else
+        print_error "No task available for comments test"
+        return 1
+    fi
+    return 0
+}
+
+test_get_task_history() {
+    print_test "Testing GET /api/tasks/{task_id}/history - Get Task History"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Fallback: get first available task
+        TASK_LIST=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/")
+        TASK_ID=$(echo "$TASK_LIST" | grep -o '"id": [0-9]*' | head -1 | grep -o '[0-9]*')
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" "$BASE_URL/api/tasks/$TASK_ID/history")
+        
+        if [[ $RESPONSE == *"results"* ]] && [[ $RESPONSE == *"count"* ]]; then
+            HISTORY_COUNT=$(echo "$RESPONSE" | sed -n 's/.*"count": *\([0-9]*\).*/\1/p')
+            if [[ -z $HISTORY_COUNT ]]; then
+                HISTORY_COUNT="N/A"
+            fi
+            print_success "Successfully retrieved task history"
+            print_info "History entries for task ID $TASK_ID: $HISTORY_COUNT found"
+        else
+            print_error "Failed to retrieve task history"
+            print_info "Response: ${RESPONSE:0:200}..."
+            return 1
+        fi
+    else
+        print_error "No task available for history test"
+        return 1
+    fi
+    return 0
+}
+
+test_delete_task() {
+    print_test "Testing DELETE /api/tasks/{task_id} - Delete Task"
+    
+    # Get the task ID created in test_create_task
+    if [[ -f /tmp/last_created_task_id.txt ]]; then
+        TASK_ID=$(cat /tmp/last_created_task_id.txt)
+    else
+        # Skip this test if no task was created by this test suite
+        print_success "No test-created task available for deletion - skipping"
+        print_info "This test only deletes tasks created by the test suite"
+        return 0
+    fi
+    
+    if [[ -n $TASK_ID ]] && [[ $TASK_ID != "" ]]; then
+        RESPONSE=$(curl -s -b "$COOKIES_FILE" -X DELETE "$BASE_URL/api/tasks/$TASK_ID")
+        
+        if [[ $RESPONSE == *"success"* ]] || [[ $RESPONSE == *"deleted"* ]] || [[ $RESPONSE == *"204"* ]]; then
+            print_success "Successfully deleted task"
+            print_info "Task ID: $TASK_ID deleted"
+            rm -f /tmp/last_created_task_id.txt  # Clean up
+        else
+            print_error "Failed to delete task"
+            print_info "Response: ${RESPONSE:0:300}..."
+            return 1
+        fi
+    else
+        print_success "No test-created task to delete - skipping"
+        return 0
+    fi
+    return 0
+}
+
 check_docker_status() {
     print_test "Checking Docker Container Status"
     
@@ -240,6 +513,14 @@ main() {
         "test_create_task"
         "test_get_task_detail"
         "test_search_functionality"
+        "test_update_task"
+        "test_partial_update_task"
+        "test_assign_user_to_task"
+        "test_get_task_assignments"
+        "test_add_comment_to_task"
+        "test_get_task_comments"
+        "test_get_task_history"
+        "test_delete_task"
     )
     
     for test in "${tests[@]}"; do
@@ -265,7 +546,7 @@ main() {
         exit 1
     else
         echo -e "${GREEN}🎉 All tests passed successfully!${NC}"
-        echo -e "${YELLOW}💡 Tasks API is fully functional${NC}"
+        echo -e "${YELLOW}💡 Tasks API is fully functional with complete endpoint coverage${NC}"
     fi
 }
 

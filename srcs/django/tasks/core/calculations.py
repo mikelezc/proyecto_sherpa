@@ -39,16 +39,6 @@ class TaskCalculationUtils:
         return int((completed_subtasks / total_subtasks) * 100)
     
     @staticmethod
-    def calculate_task_progress_simple(task):
-        """Alternative simple calculation method"""
-        subtasks = task.subtasks.all()
-        if not subtasks:
-            return 100 if task.status in ['done', 'completed'] else 0
-        
-        completed_subtasks = subtasks.filter(status__in=['done', 'completed']).count()
-        return (completed_subtasks / subtasks.count()) * 100
-    
-    @staticmethod
     def check_and_update_overdue_status(task):
         """Update task's overdue status based on current date and status"""
         if task.due_date and task.due_date < timezone.now():
@@ -57,21 +47,3 @@ class TaskCalculationUtils:
         else:
             task.is_overdue = False
         return task.is_overdue
-    
-    @staticmethod
-    def get_task_changes(old_task, new_task):
-        """Compare two task instances and return changes dictionary"""
-        changes = {}
-        
-        if old_task.status != new_task.status:
-            changes['old_status'] = old_task.status
-            changes['new_status'] = new_task.status
-            
-        if old_task.title != new_task.title:
-            changes['old_title'] = old_task.title
-            changes['new_title'] = new_task.title
-            
-        if old_task.description != new_task.description:
-            changes['description_changed'] = True
-            
-        return changes
