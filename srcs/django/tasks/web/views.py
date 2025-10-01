@@ -1,171 +1,138 @@
-"""
-Basic web views for task management using Django templates
-Required by the technical test to demonstrate frontend functionality
-"""
-
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.paginator import Paginator
-from django.db.models import Q
-from ..models import Task, TaskAssignment
+from ..services import TaskFormAdapter, TaskQueryBuilder
 from ..forms import TaskForm, TaskFilterForm
 
 
 @login_required
 def task_list(request):
-    """Display list of tasks with filtering and pagination"""
-    tasks = Task.objects.filter(is_archived=False).select_related('created_by', 'team')
-    
-    # Apply filters
     filter_form = TaskFilterForm(request.GET)
-    if filter_form.is_valid():
-        if filter_form.cleaned_data['status']:
-            tasks = tasks.filter(status=filter_form.cleaned_data['status'])
-        if filter_form.cleaned_data['priority']:
-            tasks = tasks.filter(priority=filter_form.cleaned_data['priority'])
-        if filter_form.cleaned_data['assigned_to_me']:
-            tasks = tasks.filter(assigned_to=request.user)
-        if filter_form.cleaned_data['search']:
-            search = filter_form.cleaned_data['search']
-            tasks = tasks.filter(
-                Q(title__icontains=search) | 
-                Q(description__icontains=search)
-            )
+    filter_params = filter_form.get_filter_params() if filter_form.is_valid() else {}
+    page = request.GET.get('page', 1)
     
-    # Pagination
-    paginator = Paginator(tasks, 10)  # 10 tasks per page
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    result = TaskFormAdapter.get_filtered_tasks_for_user(
+        user=request.user,
+        filter_params=filter_params,
+        page=page,
+        page_size=10
+    )
     
     context = {
-        'page_obj': page_obj,
+        'tasks': result['page_obj'],
         'filter_form': filter_form,
-        'total_tasks': tasks.count(),
+        'paginator': result['paginator'],
+        'page_obj': result['page_obj']
     }
     return render(request, 'tasks/task_list.html', context)
 
 
 @login_required
+def dashboard(request):
+    stats = TaskFormAdapter.get_dashboard_stats(request.user)
+    
+    recent_tasks_result = TaskFormAdapter.get_filtered_tasks_for_user(
+        user=request.user,
+        filter_params={'order_by': 'created_at', 'desc': True},
+        page=1,
+        page_size=5
+    )
+    
+    context = {
+        'stats': stats,
+        'recent_tasks': recent_tasks_result['tasks']
+    }
+    return render(request, 'tasks/dashboard.html', context)
+
+
+@login_required
+def task_create(request):
+    if request.method == 'POST':
+        form = TaskForm(request.POST)
+        if form.is_valid():
+            try:
+                task = TaskFormAdapter.create_task_from_form(form, request.user)
+                messages.success(request, f'Task "{task.title}" created successfully!')
+                return redirect('tasks_web:task_detail', task_id=task.id)
+            except Exception as e:
+                messages.error(request, f'Error creating task: {str(e)}')
+    else:
+        form = TaskForm()
+    
+    return render(request, 'tasks/task_form.html', {
+        'form': form,
+        'title': 'Create New Task',
+        'action': 'Create'
+    })
+
+
+@login_required
 def task_detail(request, task_id):
-    """Display task details"""
-    task = get_object_or_404(Task, id=task_id)
-    comments = task.comments.all().select_related('author')
-    history = task.history.all().select_related('user')[:10]  # Last 10 history entries
+    try:
+        result = TaskFormAdapter.get_task_detail_for_web(task_id, request.user)
+        task = result['task']
+    except Exception:
+        messages.error(request, 'Task not found')
+        return redirect('tasks_web:task_list')
     
     context = {
         'task': task,
-        'comments': comments,
-        'history': history,
+        'assignments': result.get('assignments', []),
+        'comments': result.get('comments', []),
+        'history': result.get('history', [])
     }
     return render(request, 'tasks/task_detail.html', context)
 
 
 @login_required
-def task_create(request):
-    """Create a new task"""
-    if request.method == 'POST':
-        form = TaskForm(request.POST)
-        if form.is_valid():
-            task = form.save(commit=False)
-            task.created_by = request.user
-            task.save()
-            
-            # Handle assigned_to manually to include assigned_by
-            assigned_users = form.cleaned_data.get('assigned_to', [])
-            for user in assigned_users:
-                TaskAssignment.objects.create(
-                    task=task,
-                    user=user,
-                    assigned_by=request.user
-                )
-            
-            # Save other many-to-many relationships (tags)
-            task.tags.set(form.cleaned_data.get('tags', []))
-            
-            messages.success(request, f'Task "{task.title}" created successfully!')
-            return redirect('tasks_web:task_detail', task_id=task.id)
-    else:
-        form = TaskForm()
-    
-    context = {
-        'form': form,
-        'title': 'Create New Task',
-    }
-    return render(request, 'tasks/task_form.html', context)
-
-
-@login_required
 def task_edit(request, task_id):
-    """Edit an existing task"""
-    task = get_object_or_404(Task, id=task_id)
+    try:
+        task = TaskQueryBuilder.get_task_with_relations(task_id)
+    except Exception:
+        messages.error(request, 'Task not found')
+        return redirect('tasks_web:task_list')
     
-    # Check permissions (only creator or assigned users can edit)
-    if task.created_by != request.user and request.user not in task.assigned_to.all():
-        messages.error(request, 'You do not have permission to edit this task.')
+    # Check permissions - user must be creator or assigned to task
+    if task.created_by != request.user and not task.assigned_to.filter(id=request.user.id).exists():
+        messages.error(request, 'You do not have permission to edit this task')
         return redirect('tasks_web:task_detail', task_id=task.id)
     
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
         if form.is_valid():
-            # Save task first
-            task = form.save(commit=False)
-            task.save()
-            
-            # Handle assigned_to changes manually
-            assigned_users = form.cleaned_data.get('assigned_to', [])
-            
-            # Remove existing assignments that are not in the new list
-            current_assignments = TaskAssignment.objects.filter(task=task)
-            for assignment in current_assignments:
-                if assignment.user not in assigned_users:
-                    assignment.delete()
-            
-            # Add new assignments
-            current_assigned_users = [a.user for a in current_assignments]
-            for user in assigned_users:
-                if user not in current_assigned_users:
-                    TaskAssignment.objects.create(
-                        task=task,
-                        user=user,
-                        assigned_by=request.user
-                    )
-            
-            # Save other many-to-many relationships (tags)
-            task.tags.set(form.cleaned_data.get('tags', []))
-            
-            messages.success(request, f'Task "{task.title}" updated successfully!')
-            return redirect('tasks_web:task_detail', task_id=task.id)
+            try:
+                updated_task = TaskFormAdapter.update_task_from_form(task, form, request.user)
+                messages.success(request, f'Task "{updated_task.title}" updated successfully!')
+                return redirect('tasks_web:task_detail', task_id=updated_task.id)
+            except Exception as e:
+                messages.error(request, f'Error updating task: {str(e)}')
     else:
         form = TaskForm(instance=task)
     
-    context = {
+    return render(request, 'tasks/task_form.html', {
         'form': form,
         'task': task,
-        'title': f'Edit Task: {task.title}',
-    }
-    return render(request, 'tasks/task_form.html', context)
+        'title': 'Edit Task',
+        'action': 'Update'
+    })
 
 
 @login_required
-def dashboard(request):
-    """Simple dashboard with task statistics"""
-    user_tasks = Task.objects.filter(assigned_to=request.user, is_archived=False)
+def my_tasks(request):
+    filter_params = {'assigned_to_me': True}
+    page = request.GET.get('page', 1)
     
-    stats = {
-        'total_tasks': user_tasks.count(),
-        'todo': user_tasks.filter(status='todo').count(),
-        'in_progress': user_tasks.filter(status='in_progress').count(),
-        'review': user_tasks.filter(status='review').count(),
-        'done': user_tasks.filter(status='done').count(),
-        'overdue': user_tasks.filter(is_overdue=True).count(),
-    }
-    
-    # Recent tasks
-    recent_tasks = user_tasks.order_by('-updated_at')[:5]
+    result = TaskFormAdapter.get_filtered_tasks_for_user(
+        user=request.user,
+        filter_params=filter_params,
+        page=page,
+        page_size=10
+    )
     
     context = {
-        'stats': stats,
-        'recent_tasks': recent_tasks,
+        'tasks': result['page_obj'],
+        'title': 'My Tasks',
+        'paginator': result['paginator'],
+        'page_obj': result['page_obj']
     }
-    return render(request, 'tasks/dashboard.html', context)
+    return render(request, 'tasks/my_tasks.html', context)

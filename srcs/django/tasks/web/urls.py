@@ -1,5 +1,5 @@
 """
-URL configuration for task management web interface
+URL configuration for task management web interface (templates)
 """
 
 from django.urls import path

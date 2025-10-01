@@ -1,14 +1,16 @@
 from django.urls import path
 from ninja import NinjaAPI
+from ninja.security import django_auth
 from authentication.api.controllers.user_controller import router as user_router
 
 # User Management API Configuration
 api = NinjaAPI(
     title="User Management API",
     version="1.0.0",
-    description="API para gestión de usuarios",
+    description="API for user management - CRUD operations (it needs authentication)",
     urls_namespace="users_api",
     docs_url="/docs",
+    auth=django_auth,
 )
 
 # Add user router to root level to match /api/users/ routes

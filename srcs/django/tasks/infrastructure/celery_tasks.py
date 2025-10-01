@@ -1,6 +1,8 @@
 """
 Celery tasks for the task management system
-(Required by the technical test)
+
+- Event-driven tasks: Triggered by user actions or API calls
+- Periodic tasks: Scheduled to run automatically (cron-like)
 """
 
 from celery import shared_task
@@ -14,11 +16,36 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+# ============================================================================
+# EVENT-DRIVEN TASKS (Triggered by user actions, API calls, signals)
+# ============================================================================
+
 @shared_task
 def send_task_notification(task_id, notification_type):
-    """Send email notifications for task events"""
+    """
+    Send email notifications for task events
+    
+    TRIGGER: Called when tasks are assigned/updated/become overdue
+    USAGE: 
+        send_task_notification.delay(task_id, 'assigned')
+        send_task_notification.delay(task_id, 'status_changed')
+        send_task_notification.delay(task_id, 'due_date_changed')
+        send_task_notification.delay(task_id, 'overdue')
+    
+    TYPES:
+        - 'assigned': New task assignment
+        - 'status_changed': Important status changes (review, completed, cancelled, in_progress)
+        - 'due_date_changed': Due date modifications
+        - 'due_soon': Upcoming due date warning
+        - 'overdue': Past due date alert
+    """
     try:
         from tasks.models import Task
+        
+        # Check if task exists before proceeding
+        if not Task.objects.filter(id=task_id).exists():
+            logger.error(f"Task with ID {task_id} does not exist")
+            return f"Error: Task {task_id} does not exist"
         
         task = Task.objects.get(id=task_id)
         
@@ -61,6 +88,41 @@ def send_task_notification(task_id, notification_type):
                 )
             logger.info(f"Overdue notifications sent for task {task_id}")
             
+        elif notification_type == 'status_changed':
+            # Notify about important status changes
+            assigned_users = task.assigned_to.all()
+            status_messages = {
+                'review': f'Task "{task.title}" is ready for review',
+                'completed': f'Task "{task.title}" has been completed!',
+                'cancelled': f'Task "{task.title}" has been cancelled',
+                'in_progress': f'Work has started on task "{task.title}"'
+            }
+            
+            if task.status in status_messages and assigned_users.exists():
+                for user in assigned_users:
+                    send_mail(
+                        subject=f'Task Status Update: {task.title}',
+                        message=f'{status_messages[task.status]}\n\nStatus: {task.get_status_display()}\nDescription: {task.description}',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+                logger.info(f"Status change notifications sent for task {task_id} - new status: {task.status}")
+            
+        elif notification_type == 'due_date_changed':
+            # Notify about due date changes
+            assigned_users = task.assigned_to.all()
+            if assigned_users.exists():
+                for user in assigned_users:
+                    send_mail(
+                        subject=f'Due Date Updated: {task.title}',
+                        message=f'The due date for task "{task.title}" has been updated.\n\nNew Due Date: {task.due_date}\nDescription: {task.description}\n\nPlease adjust your schedule accordingly.',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+                logger.info(f"Due date change notifications sent for task {task_id}")
+            
         return f"Notification sent for task {task_id} - type: {notification_type}"
         
     except Exception as e:
@@ -68,9 +130,18 @@ def send_task_notification(task_id, notification_type):
         return f"Error: {e}"
 
 
+# ============================================================================
+# PERIODIC TASKS (Scheduled to run automatically)
+# ============================================================================
+
 @shared_task
 def generate_daily_summary():
-    """Generate daily task summary for all users"""
+    """
+    Generate daily task summary for all users
+    
+    SCHEDULE: Daily at configured time
+    PURPOSE: Send users their daily task overview via email
+    """
     try:
         from tasks.models import Task
         
@@ -132,7 +203,12 @@ Tasks Overview:
 
 @shared_task
 def check_overdue_tasks():
-    """Mark tasks as overdue and notify assignees"""
+    """
+    Mark tasks that are overdue and notify assignees
+    
+    SCHEDULE: Every 15 minutes during business hours
+    PURPOSE: Automatically detect and mark overdue tasks + send notifications
+    """
     try:
         from tasks.models import Task, TaskHistory
         
@@ -176,7 +252,12 @@ def check_overdue_tasks():
 
 @shared_task
 def cleanup_archived_tasks():
-    """Delete archived tasks older than 30 days"""
+    """
+    Delete archived tasks older than 30 days
+    
+    SCHEDULE: Weekly
+    PURPOSE: Prevent database bloat by removing old archived tasks
+    """
     try:
         from tasks.models import Task
         
@@ -200,103 +281,24 @@ def cleanup_archived_tasks():
 
 
 @shared_task
-def auto_assign_tasks():
-    """Auto-assign tasks based on workload and availability"""
+def weekly_search_maintenance():
+    """
+    Weekly maintenance of search vectors
+    
+    SCHEDULE: Weekly
+    PURPOSE: Update search vectors for better search performance - only if needed
+    """
     try:
-        from tasks.models import Task, TaskAssignment
+        from tasks.core.search import update_all_search_vectors
         
-        # Find unassigned tasks
-        unassigned_tasks = Task.objects.filter(
-            assigned_to__isnull=True,
-            status='todo',
-            is_archived=False
-        )
+        # Only update search vectors that are empty/null
+        result = update_all_search_vectors()
         
-        assigned_count = 0
+        if result.get('updated', 0) > 0:
+            logger.info(f"Search maintenance: {result['message']}")
         
-        for task in unassigned_tasks:
-            # Simple algorithm: assign to user with least active tasks
-            # You can implement more sophisticated logic here
-            
-            if task.team:
-                # Assign within team
-                team_members = task.team.members.all()
-                if team_members.exists():
-                    # Find team member with least active tasks
-                    least_busy_user = min(
-                        team_members,
-                        key=lambda u: u.assigned_tasks.filter(
-                            status__in=['todo', 'in_progress'],
-                            is_archived=False
-                        ).count()
-                    )
-                    
-                    # Create assignment
-                    TaskAssignment.objects.create(
-                        task=task,
-                        user=least_busy_user,
-                        assigned_by=task.created_by,
-                        is_primary=True
-                    )
-                    
-                    # Send notification
-                    send_task_notification.delay(task.id, 'assigned')
-                    
-                    assigned_count += 1
-        
-        logger.info(f"Auto-assigned {assigned_count} tasks")
-        return f"Auto-assigned {assigned_count} tasks"
+        return result.get('message', 'No maintenance needed')
         
     except Exception as e:
-        logger.error(f"Error auto-assigning tasks: {e}")
-        return f"Error: {e}"
-
-
-@shared_task  
-def calculate_team_velocity():
-    """Calculate team velocity metrics"""
-    try:
-        from tasks.models import Task, Team
-        
-        # Calculate for the last 30 days
-        end_date = timezone.now().date()
-        start_date = end_date - timezone.timedelta(days=30)
-        
-        teams = Team.objects.all()
-        
-        for team in teams:
-            completed_tasks = Task.objects.filter(
-                team=team,
-                status='done',
-                updated_at__date__range=[start_date, end_date]
-            )
-            
-            total_estimated_hours = sum(
-                task.estimated_hours for task in completed_tasks
-            )
-            
-            total_actual_hours = sum(
-                task.actual_hours or 0 for task in completed_tasks
-            )
-            
-            velocity_data = {
-                'period_start': start_date.isoformat(),
-                'period_end': end_date.isoformat(),
-                'completed_tasks': completed_tasks.count(),
-                'total_estimated_hours': float(total_estimated_hours),
-                'total_actual_hours': float(total_actual_hours),
-                'efficiency': (
-                    float(total_estimated_hours / total_actual_hours) 
-                    if total_actual_hours > 0 else 0
-                )
-            }
-            
-            # Store in team metadata or create a separate model
-            # For now, we'll just log it
-            logger.info(f"Team {team.name} velocity: {velocity_data}")
-        
-        return f"Calculated velocity for {teams.count()} teams"
-        
-    except Exception as e:
-        logger.error(f"Error calculating team velocity: {e}")
+        logger.error(f"Error in search maintenance: {e}")
         return f"Error: {e}"

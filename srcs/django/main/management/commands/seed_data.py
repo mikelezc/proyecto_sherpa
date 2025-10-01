@@ -13,6 +13,7 @@ from datetime import timedelta
 
 from authentication.models import CustomUser
 from tasks.models import Task, Tag, Team, Comment, TaskHistory, TaskAssignment
+from tasks.constants import TASK_STATUS_CHOICES, TASK_PRIORITY_CHOICES
 
 
 class Command(BaseCommand):
@@ -101,14 +102,15 @@ class Command(BaseCommand):
         
         users = []
         
-        # Create a demo admin user
+        # Create a demo admin user (SUPERUSER with full admin access)
         admin_user, created = CustomUser.objects.get_or_create(
             username='demo_admin',
             defaults={
                 'email': 'admin@taskmanagement.demo',
                 'first_name': 'Admin',
                 'last_name': 'User',
-                'is_staff': True
+                'is_staff': True,
+                'is_superuser': True
             }
         )
         if created:
@@ -231,8 +233,9 @@ class Command(BaseCommand):
             'Create API documentation'
         ]
         
-        statuses = ['TODO', 'IN_PROGRESS', 'DONE']
-        priorities = ['LOW', 'MEDIUM', 'HIGH']
+        # Use proper constants for status and priority
+        statuses = [choice[0] for choice in TASK_STATUS_CHOICES]  # Extract keys: 'todo', 'pending', etc.
+        priorities = [choice[0] for choice in TASK_PRIORITY_CHOICES]  # Extract keys: 'low', 'medium', etc.
         
         tasks = []
         for i in range(count):

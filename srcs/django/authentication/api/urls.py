@@ -1,5 +1,6 @@
 from django.urls import path
 from ninja import NinjaAPI
+from ninja.security import django_auth
 from authentication.api.controllers import router as auth_router
 from authentication.api.controllers.user_controller import router as user_router
 
@@ -27,7 +28,7 @@ from .views.user_views import (
     UserMeAPIView,
 )
 
-# Django Ninja Configuration
+# Django Ninja Configuration - NO global auth (endpoints handle their own)
 api = NinjaAPI(
     title="Authentication API",
     version="2.0.0",

@@ -2,7 +2,7 @@
 Custom Test Runner for Task Management System
 Provides colored output for better test result visualization
 """
-import sys
+
 from django.test.runner import DiscoverRunner
 
 

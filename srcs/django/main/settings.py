@@ -37,7 +37,6 @@ DJANGO_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
-    # Third party apps
     "rest_framework",
     "corsheaders",
     "django_celery_beat",
@@ -45,7 +44,6 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    # Local apps
     "main",  # Main app for management commands
     "authentication",
     "tasks",  # New task management app
@@ -57,7 +55,7 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+    "main.middleware.APICsrfExemptMiddleware",  # Custom CSRF middleware for APIs
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -128,9 +126,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
 
 # Media files
 MEDIA_URL = "/media/"
@@ -154,6 +149,19 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
 ]
 
+# CSRF settings for APIs
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+]
+
+# Exempt API endpoints from CSRF
+CSRF_EXEMPT_URLS = [
+    r'api/tasks/',    # Tasks API - remove leading slash
+    r'api/auth/',     # Authentication API  
+    r'api/users/',    # Users API
+]
+
 # Celery Configuration
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://redis:6379/0")
@@ -165,22 +173,26 @@ CELERY_TIMEZONE = TIME_ZONE
 # Celery Beat Configuration
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
-# Periodic tasks
+# Periodic tasks (crontab of tasks)
 CELERY_BEAT_SCHEDULE = {
     "cleanup-inactive-users": {
         "task": "authentication.tasks.cleanup_inactive_users",
         "schedule": 300.0,  # Every 5 minutes for demo
     },
     "check-overdue-tasks": {
-        "task": "tasks.tasks.check_overdue_tasks",
+        "task": "tasks.infrastructure.celery_tasks.check_overdue_tasks",
         "schedule": 3600.0,  # Every hour
     },
     "generate-daily-summary": {
-        "task": "tasks.tasks.generate_daily_summary",
+        "task": "tasks.infrastructure.celery_tasks.generate_daily_summary",
         "schedule": 86400.0,  # Every day
     },
     "cleanup-archived-tasks": {
-        "task": "tasks.tasks.cleanup_archived_tasks",
+        "task": "tasks.infrastructure.celery_tasks.cleanup_archived_tasks",
+        "schedule": 604800.0,  # Every week (7 days * 24 hours * 60 minutes * 60 seconds)
+    },
+    "weekly-search-maintenance": {
+        "task": "tasks.infrastructure.celery_tasks.weekly_search_maintenance",
         "schedule": 604800.0,  # Every week (7 days * 24 hours * 60 minutes * 60 seconds)
     },
 }
@@ -197,17 +209,25 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_FILTER_BACKENDS": [
-        "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
+    # API throttling to prevent abuse - limits requests per hour
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "100/hour",
+        "user": "1000/hour",
+    },
 }
 
 # Testing configuration
 TEST_RUNNER = 'main.test_runner.ColoredTestRunner'
 
 # Email backend for development
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"  # Show emails in console for verification
 EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
@@ -241,6 +261,17 @@ SESSION_COOKIE_AGE = INACTIVITY_THRESHOLD * 2
 SECURE_BROWSER_XSS_FILTER = True
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Cookie security settings
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Additional security headers
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin"
+
 
 # Logging configuration
 LOGGING = {
@@ -293,12 +324,3 @@ JWT_REFRESH_TOKEN_LIFETIME = timedelta(days=int(os.environ.get("JWT_REFRESH_TOKE
 
 # Site configuration
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
-
-# Email configuration (using console backend for development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "noreply@localhost")
-EMAIL_HOST = os.environ.get("EMAIL_HOST", "localhost")
-EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "25"))
-EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "False").lower() == "true"
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")

@@ -1,32 +1,32 @@
 # Core Django and database
-Django>=4.2.4
-psycopg2-binary>=2.9.6
+Django>=4.2.4	 				# Main web framework
+psycopg2-binary>=2.9.6			# PostgreSQL database adapter
 
 # Django REST Framework and related packages
-djangorestframework>=3.14.0
-django-filter>=23.3
-django-cors-headers>=4.3.0
+djangorestframework>=3.14.0		# API framework (used in tests)
+django-filter>=23.3				# Filtering for Django (used in REST framework for query parameter filtering)
+django-cors-headers>=4.3.0		# CORS headers for Django (Cross-Origin Resource Sharing, used in middleware and settings)
 
 # Celery and task queue
-celery>=5.3.0
-django-celery-beat>=2.5.0
-django-celery-results>=2.5.0
-redis>=4.5.4
+celery>=5.3.0					# Asynchronous task queue (used for background tasks)
+django-celery-beat>=2.5.0		# Celery beat integration (scheduler for periodic tasks, in INSTALLED_APPS)
+django-celery-results>=2.5.0	# Celery results backend (task results storage, in INSTALLED_APPS)
+redis>=4.5.4					# Redis (used for caching, message broker, rate limiting, and entrypoint wait)
 
 # Authentication and security
-PyJWT>=2.8.0
-cryptography>=41.0.0
-django-ninja>=0.22.0
+PyJWT>=2.8.0					# JSON Web Token (JWT) for authentication (used in token service)
+cryptography>=41.0.0			# Cryptography library (PyJWT dependency)
+django-ninja>=0.22.0			# API framework (used for automatic Swagger documentation and API endpoints)
 
 # HTTP and utilities
-requests>=2.31.0
-python-dotenv>=1.0.0
+requests>=2.31.0				# HTTP library (required by some dependencies or indirect usage)
+# python-dotenv>=1.0.0			# Environment variables loader - NOT CURRENTLY USED
 
 # Production server
-gunicorn>=21.2.0
+gunicorn>=21.2.0				# Production WSGI server (used in entrypoint.py production mode)
 
-# Development and debugging
-django-debug-toolbar>=4.2.0
+# Development and debugging - CURRENTLY UNUSED
+# django-debug-toolbar>=4.2.0		# Development debugging tool - NOT CURRENTLY USED
 
-# Time zone support
-pytz>=2023.3
+# Time zone support - CURRENTLY UNUSED
+# pytz>=2023.3					# Time zone library - NOT CURRENTLY USED (Django uses zoneinfo by default)

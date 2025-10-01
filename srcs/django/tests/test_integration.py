@@ -13,7 +13,7 @@ from decimal import Decimal
 import time
 from tasks.models import Task, Comment, Tag, Team
 from authentication.tasks import cleanup_inactive_users
-from tasks.tasks import send_task_notification, generate_daily_summary, check_overdue_tasks
+from tasks.infrastructure.celery_tasks import send_task_notification, generate_daily_summary, check_overdue_tasks
 
 User = get_user_model()
 
@@ -546,7 +546,7 @@ class DatabaseIntegrationTest(TransactionTestCase):
         ]
         
         # Test search functionality (implementation depends on your search setup)
-        from tasks.models import TaskQuerySet
+        from tasks.managers import TaskQuerySet
         
         # These tests verify the search infrastructure is in place
         # Actual search testing depends on your SearchVector implementation

@@ -47,20 +47,6 @@ class SystemFunctionalityTest(TestCase):
         response = self.client.get('/tasks/')
         self.assertEqual(response.status_code, 302)  # Redirect to login
 
-    # Frontend CRUD tests disabled - this is an API backend project  
-    # def test_task_creation_and_management(self):
-    #     """Test task CRUD operations"""
-    #     # These tests are disabled because this is primarily an API backend
-    #     # Task CRUD functionality is tested in the API and model tests
-    #     pass
-
-    # Frontend tests disabled - this is an API backend project
-    # def test_frontend_pages_load(self):
-    #     """Test that frontend pages load correctly"""
-    #     # These tests are disabled because this is primarily an API backend
-    #     # Frontend functionality is handled by the separate frontend service
-    #     pass
-
     def test_task_assignment_functionality(self):
         """Test task assignment through model layer"""
         # Create a task
@@ -127,7 +113,8 @@ class SystemFunctionalityTest(TestCase):
         
         response = self.client.get('/admin/')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Django administration')
+        # Verify our customized admin title is displayed
+        self.assertContains(response, 'Task Management Administration')
 
     def test_static_files_served(self):
         """Test that static files are being served"""
@@ -209,7 +196,7 @@ class CeleryTaskTest(TestCase):
     def test_celery_tasks_importable(self):
         """Test that all Celery tasks can be imported"""
         try:
-            from tasks.tasks import (
+            from tasks.infrastructure.celery_tasks import (
                 send_task_notification,
                 generate_daily_summary,
                 check_overdue_tasks,
@@ -240,7 +227,7 @@ class CeleryTaskTest(TestCase):
         )
         
         # Test that we can create the notification data
-        from tasks.tasks import send_task_notification
+        from tasks.infrastructure.celery_tasks import send_task_notification
         
         # In a real scenario, this would be called with .delay()
         # For testing, we just verify the function exists and is callable

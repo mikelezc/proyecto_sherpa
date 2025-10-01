@@ -1,17 +1,20 @@
 """
-Django forms for task management
+Task Forms - Core task creation and editing forms
+
+Shared forms for task management operations.
 """
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from .models import Task, Tag, Team
+
+from ..models import Task, Tag, Team
 
 User = get_user_model()
 
 
 class TaskForm(forms.ModelForm):
-    """Form for creating and editing tasks"""
+    """Form for creating and editing tasks - used by both API and WEB"""
     
     class Meta:
         model = Task
@@ -45,39 +48,6 @@ class TaskForm(forms.ModelForm):
             self.fields['parent_task'].queryset = Task.objects.exclude(
                 Q(id=self.instance.pk) | Q(parent_task=self.instance.pk)
             )
-
-
-class TaskFilterForm(forms.Form):
-    """Form for filtering tasks in the list view"""
-    
-    STATUS_CHOICES = [('', 'All Statuses')] + Task.STATUS_CHOICES
-    PRIORITY_CHOICES = [('', 'All Priorities')] + Task.PRIORITY_CHOICES
-    
-    search = forms.CharField(
-        required=False,
-        widget=forms.TextInput(attrs={
-            'class': 'form-control',
-            'placeholder': 'Search tasks...',
-            'type': 'search'
-        })
-    )
-    
-    status = forms.ChoiceField(
-        choices=STATUS_CHOICES,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    
-    priority = forms.ChoiceField(
-        choices=PRIORITY_CHOICES,
-        required=False,
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-    
-    assigned_to_me = forms.BooleanField(
-        required=False,
-        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
-    )
 
 
 class CommentForm(forms.Form):
